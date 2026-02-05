@@ -9,6 +9,21 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      animation: {
+        'gradient': 'gradient 3s ease infinite',
+      },
+      keyframes: {
+        gradient: {
+          '0%, 100%': {
+            'background-size': '200% 200%',
+            'background-position': 'left center'
+          },
+          '50%': {
+            'background-size': '200% 200%',
+            'background-position': 'right center'
+          },
+        },
+      },
       colors: {
         brand: {
           mint: "#98FF98", // Mint tươi (hoặc #A0E7E5 tùy sở thích)

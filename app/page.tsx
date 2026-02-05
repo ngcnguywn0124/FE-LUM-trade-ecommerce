@@ -2,19 +2,12 @@
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import ProductSection from "@/components/ProductSection";
+import Header from "@/components/layout/Header";
 
 export default function Home() {
   return (
     <main className="min-h-screen font-sans">
-      {/* Navbar có thể tách riêng */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="text-2xl font-black text-emerald-600 tracking-tighter">
-            PassĐồ<span className="text-brand-dark">.vn</span>
-          </div>
-          {/* Menu items... */}
-        </div>
-      </nav>
+      <Header />
 
       <Hero />
       <Features />
