@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import LocationSelector from "../shared/LocationSelector";
 import CategorySelector from "../shared/CategorySelector";
+import CategoryMegaMenu from "./CategoryMegaMenu";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -59,10 +60,7 @@ const Header = () => {
                  />
               </Link>
 
-              <div className="hidden lg:flex items-center gap-1 text-sm font-bold text-gray-800 cursor-pointer hover:bg-black/10 px-4 py-2 rounded-lg transition-colors">
-                <span>Danh mục</span>
-                <ChevronDown size={14} />
-              </div>
+              <CategoryMegaMenu />
             </div>
 
             {/* --- CENTER: Danh mục nhanh (Chưa scroll) OR Thanh Search (Đã scroll) --- */}
