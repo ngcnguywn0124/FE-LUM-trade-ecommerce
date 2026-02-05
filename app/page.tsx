@@ -3,6 +3,7 @@ import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import ProductSection from "@/components/ProductSection";
 import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 
 export default function Home() {
   return (
@@ -20,7 +21,7 @@ export default function Home() {
          <button className="bg-white text-emerald-700 font-bold py-3 px-8 rounded-full shadow-lg">Đăng tin ngay</button>
       </section>
       
-      {/* Footer... */}
+      <Footer />
     </main>
   );
 }

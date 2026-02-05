@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import LocationSelector from "../shared/LocationSelector";
 import CategorySelector from "../shared/CategorySelector";
-import CategoryMegaMenu from "./CategoryMegaMenu";
+import CategoryMegaMenu from "../shared/CategoryMegaMenu";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
