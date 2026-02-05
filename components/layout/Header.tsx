@@ -29,7 +29,7 @@ const Header = () => {
       ========================================================================= */}
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-            isScrolled ? "shadow-md bg-[#FFBA00]" : "bg-[#ffbb0000]"
+            isScrolled ? "shadow-md bg-[#8cceae]" : "bg-[#b8f3d700]"
         } py-3`}
       >
         <div className="max-w-360 mx-auto px-4 sm:px-6 lg:px-8">
@@ -117,7 +117,7 @@ const Header = () => {
                  </button>
               </div>
 
-              <button className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-white rounded-full text-sm font-bold shadow-sm hover:shadow-md transition-all">
+              <button className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-sm font-bold shadow-sm hover:shadow-md transition-all">
                  <User size={18} />
                  <span>Tài khoản</span>
               </button>
@@ -136,7 +136,7 @@ const Header = () => {
           - Nằm dưới Navbar
           - Có background vàng nối tiếp
       ========================================================================= */}
-      <div className="pt-16 pb-8 bg-linear-to-b from-[#FFBA00] to-[#FFF5C3]">
+      <div className="pt-16 pb-8 bg-linear-to-b from-[#8cceae] to-[#b8f3d7]">
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
             <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
