@@ -66,6 +66,7 @@ const Header = () => {
                   <a href="#" className="hover:text-white transition-colors">Lụm</a>
                   <a href="#" className="hover:text-white transition-colors">Về chúng tôi</a>
                   <a href="#" className="hover:text-white transition-colors">Xếp hạng</a>
+                  <a href="#" className="hover:text-white transition-colors">Blog</a>
                 </div>
               ) : (
                 /* CENTER: THANH SEARCH (Khi cuộn xuống) */
