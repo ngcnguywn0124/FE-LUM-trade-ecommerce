@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { 
   Menu, Search, MapPin, Bell, MessageCircle, 
   Heart, User, ChevronDown, PlusCircle, Laptop, BookOpen, Home, X
@@ -28,8 +29,8 @@ const Header = () => {
       ========================================================================= */}
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-            isScrolled ? "shadow-md bg-[#FFBA00] py-2" : "bg-[#FFBA00] py-3"
-        }`}
+            isScrolled ? "shadow-md bg-[#FFBA00]" : "bg-[#ffbb0000]"
+        } py-3`}
       >
         <div className="max-w-360 mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-4 h-10">
@@ -40,14 +41,18 @@ const Header = () => {
                 <Menu size={20} />
               </button>
               
-              <Link href="/" className="flex items-center gap-1 group">
-                 <div className="bg-black text-[#FFBA00] font-black text-xl px-2 py-0.5 rounded tracking-tighter transform -rotate-2 group-hover:rotate-0 transition-transform">
-                    LỤM
-                 </div>
-                 <span className="font-bold text-black text-lg hidden sm:block">.vn</span>
+              <Link href="/" className="flex items-center gap-1 group transition-transform duration-300 hover:scale-105 active:scale-95">
+                 <Image 
+                    src="/logo/lum-logo.png" 
+                    alt="Lụm Logo" 
+                    width={100} 
+                    height={40} 
+                    className="h-9 w-auto object-contain transition-transform duration-300 transform -rotate-2 group-hover:rotate-2"
+                    priority
+                 />
               </Link>
 
-              <div className="hidden lg:flex items-center gap-1 text-sm font-semibold text-gray-800 cursor-pointer hover:bg-black/5 px-2 py-1 rounded-md transition-colors">
+              <div className="hidden lg:flex items-center gap-1 text-sm font-bold text-gray-800 cursor-pointer hover:bg-black/10 px-4 py-2 rounded-lg transition-colors">
                 <span>Danh mục</span>
                 <ChevronDown size={14} />
               </div>
@@ -99,14 +104,14 @@ const Header = () => {
             {/* --- RIGHT: Actions --- */}
             <div className="flex items-center gap-2 sm:gap-3 shrink-0 z-10">
               <div className="flex items-center gap-1 text-gray-800">
-                 <button className="p-2 hover:bg-black/10 rounded-full transition-colors relative group">
-                    <Heart size={20} strokeWidth={2.5} className="group-hover:text-white" />
+                 <button className="px-3 py-3 hover:bg-black/10 rounded-full transition-colors relative group">
+                    <Heart size={20} strokeWidth={2.5} />
                  </button>
-                 <button className="p-2 hover:bg-black/10 rounded-full transition-colors relative group">
-                    <Bell size={20} strokeWidth={2.5} className="group-hover:text-white" />
-                    <span className="absolute top-1.5 right-2.5 w-2 h-2 bg-red-600 rounded-full border border-[#FFBA00]"></span>
+                 <button className="px-3 py-3 hover:bg-black/10 rounded-full transition-colors relative group">
+                    <Bell size={20} strokeWidth={2.5} />
+                    <span className="absolute top-2 right-4 w-2 h-2 bg-red-600 rounded-full border border-[#FFBA00]"></span>
                  </button>
-                 <button className="hidden sm:flex items-center gap-2 px-3 py-1.5 hover:bg-black/10 rounded-full font-bold text-sm transition-colors">
+                 <button className="hidden sm:flex items-center gap-2 px-4 py-2 hover:bg-black/10 rounded-lg font-bold text-sm transition-colors">
                     <MessageCircle size={20} strokeWidth={2.5} />
                     <span className="hidden xl:inline">Chat</span>
                  </button>
