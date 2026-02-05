@@ -54,11 +54,11 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
           setLocationSearch("");
         }}
         className={isHero 
-          ? "hidden sm:flex items-center gap-1 px-4 h-12 text-gray-600 hover:text-orange-600 font-semibold text-sm transition-colors whitespace-nowrap"
+          ? "hidden sm:flex items-center gap-1 px-4 h-12 text-gray-600 hover:text-emerald-600 font-semibold text-sm transition-colors whitespace-nowrap"
           : "flex items-center gap-1 px-3 h-full border-r border-gray-100 hover:bg-gray-50 rounded-l-lg transition-colors group shrink-0"
         }
       >
-        <MapPin size={isHero ? 16 : 16} className={!isHero ? "text-orange-600 group-hover:scale-110 transition-transform" : ""} />
+        <MapPin size={isHero ? 16 : 16} className={!isHero ? "text-emerald-600 group-hover:scale-110 transition-transform" : ""} />
         <span className={isHero ? "max-w-37.5 truncate" : "text-sm font-bold text-gray-700 whitespace-nowrap max-w-30 truncate"}>
           {isHero 
             ? (selectedCampus ? `${selectedSchool} - ${selectedCampus}` : selectedSchool)
@@ -164,7 +164,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
                       placeholder={locationView === "school" ? "Tìm trường..." : "Tìm cơ sở..."}
                       value={locationSearch}
                       onChange={(e) => setLocationSearch(e.target.value)}
-                      className={`w-full bg-gray-50 border-none rounded-full outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all ${
+                      className={`w-full bg-gray-50 text-gray-700 border-none rounded-full outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all ${
                         isHero ? "h-10 pl-9 pr-3 text-sm" : "h-8 pl-8 pr-3 text-xs"
                       }`}
                     />
@@ -184,9 +184,9 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
                             setLocationView("main");
                             setLocationSearch("");
                           }}
-                          className={`w-full flex items-center justify-between hover:bg-gray-50 rounded-lg transition-colors group ${isHero ? "p-3" : "p-2.5"}`}
+                          className={`w-full flex items-center justify-between hover:bg-[#b8f3d7]/20 rounded-lg transition-colors group ${isHero ? "p-3" : "p-2.5"}`}
                         >
-                          <span className={`font-semibold ${isHero ? "text-sm" : "text-xs"} ${selectedSchool === school.name ? "text-orange-600" : "text-gray-700"}`}>
+                          <span className={`font-semibold ${isHero ? "text-sm" : "text-xs"} ${selectedSchool === school.name ? "text-emerald-600" : "text-gray-700"}`}>
                             {school.name}
                           </span>
                           <div className={`rounded-full border-2 flex items-center justify-center transition-all ${
@@ -205,7 +205,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
                           setSelectedCampus("");
                           setLocationView("main");
                         }}
-                        className={`w-full flex items-center justify-between hover:bg-gray-50 rounded-lg transition-colors group bg-emerald-50/30 ${isHero ? "p-3" : "p-2"}`}
+                        className={`w-full flex items-center justify-between hover:bg-[#b8f3d7]/20 rounded-lg transition-colors group bg-emerald-50/30 ${isHero ? "p-3" : "p-2"}`}
                       >
                         <span className={`font-bold ${isHero ? "text-sm" : "text-[11px]"} ${!selectedCampus ? "text-emerald-700" : "text-gray-500"}`}>
                           Tất cả cơ sở
@@ -229,9 +229,9 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
                               setLocationView("main");
                               setLocationSearch("");
                             }}
-                            className={`w-full flex items-center justify-between hover:bg-gray-50 rounded-lg transition-colors group ${isHero ? "p-3" : "p-2.5"}`}
+                            className={`w-full flex items-center justify-between hover:bg-[#b8f3d7]/20 rounded-lg transition-colors group ${isHero ? "p-3" : "p-2.5"}`}
                           >
-                            <span className={`font-semibold ${isHero ? "text-sm" : "text-xs"} ${selectedCampus === campus ? "text-orange-600" : "text-gray-700"}`}>
+                            <span className={`font-semibold ${isHero ? "text-sm" : "text-xs"} ${selectedCampus === campus ? "text-emerald-600" : "text-gray-700"}`}>
                               {campus}
                             </span>
                             <div className={`rounded-full border-2 flex items-center justify-center transition-all ${
