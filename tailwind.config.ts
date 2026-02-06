@@ -33,7 +33,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['var(--font-jakarta)', 'sans-serif'], // Cần config font trong layout.tsx
+        heading: ['var(--font-comfortaa)', 'sans-serif'],
+        content: ['var(--font-be-vietnam-pro)', 'sans-serif'],
+        sans: ['var(--font-be-vietnam-pro)', 'sans-serif'],
       },
     },
   },
