@@ -8,7 +8,7 @@ export default function Hero() {
       <div className="container mx-auto px-4 py-16 md:py-24 grid md:grid-cols-2 gap-8 items-center">
         {/* Text Content */}
         <div className="space-y-6 z-10">
-          <span className="inline-block px-4 py-1 rounded-full bg-brand-mint text-brand-dark text-sm font-bold tracking-wide">
+          <span className="inline-block px-4 py-1 rounded-full bg-brand-mint text-brand-dark text-sm font-heading font-bold tracking-wide">
             #PassDoHUTECH #SinhVien
           </span>
           <h1 className="text-4xl md:text-6xl font-extrabold text-brand-dark leading-tight">
@@ -20,10 +20,10 @@ export default function Hero() {
           </p>
           
           <div className="flex gap-4">
-            <Link href="/explore" className="bg-brand-dark text-white px-8 py-3 rounded-xl font-semibold hover:bg-black transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+            <Link href="/explore" className="bg-brand-dark text-white px-8 py-3 rounded-xl font-heading font-semibold hover:bg-black transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1">
               Săn đồ ngay
             </Link>
-            <Link href="/post" className="bg-white border-2 border-brand-dark text-brand-dark px-8 py-3 rounded-xl font-semibold hover:bg-brand-mint transition-all">
+            <Link href="/post" className="bg-white border-2 border-brand-dark text-brand-dark px-8 py-3 rounded-xl font-heading font-semibold hover:bg-brand-mint transition-all">
               Đăng tin (30s)
             </Link>
           </div>

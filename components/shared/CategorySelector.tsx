@@ -34,7 +34,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
     <div className="relative sm:w-40 shrink-0">
       <button 
         onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-        className="w-full h-10 sm:h-12 px-3 flex items-center justify-between hover:bg-gray-50 rounded-lg text-gray-700 font-bold text-sm transition-colors"
+        className="w-full h-10 sm:h-12 px-3 flex items-center justify-between hover:bg-gray-50 rounded-lg text-gray-700 font-heading font-bold text-sm transition-colors"
       >
         <span className="truncate">
           {selectedCategories.length > 0 
@@ -53,14 +53,14 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
           ></div>
           
           <div className="absolute top-full left-0 w-64 bg-white shadow-2xl rounded-xl mt-2 p-3 border border-gray-100 z-40 animate-in fade-in zoom-in-95 duration-200">
-            <div className="text-[10px] font-black text-gray-400 mb-2 px-2 uppercase tracking-widest">Lọc theo danh mục</div>
+            <div className="text-[10px] font-black text-gray-400 mb-2 px-2 uppercase tracking-widest font-heading">Lọc theo danh mục</div>
             <div className="space-y-0.5">
               {categories.map((cat) => (
                 <label 
                   key={cat.id}
                   className="flex items-center justify-between p-2 hover:bg-[#b8f3d7]/20 rounded-lg cursor-pointer transition-all group"
                 >
-                  <div className="flex items-center gap-2 text-gray-700 font-bold text-sm group-hover:text-emerald-700">
+                  <div className="flex items-center gap-2 text-gray-700 font-heading font-bold text-sm group-hover:text-emerald-700">
                     <span className="text-gray-400 group-hover:text-emerald-600 transition-colors">
                       {cat.icon}
                     </span>

@@ -54,12 +54,12 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
           setLocationSearch("");
         }}
         className={isHero 
-          ? "hidden sm:flex items-center gap-1 px-4 h-12 text-gray-600 hover:text-emerald-600 font-semibold text-sm transition-colors whitespace-nowrap"
+          ? "hidden sm:flex items-center gap-1 px-4 h-12 text-gray-600 hover:text-emerald-600 font-heading font-semibold text-sm transition-colors whitespace-nowrap"
           : "flex items-center gap-1 px-3 h-full border-r border-gray-100 hover:bg-gray-50 rounded-l-lg transition-colors group shrink-0"
         }
       >
         <MapPin size={isHero ? 16 : 16} className={!isHero ? "text-emerald-600 group-hover:scale-110 transition-transform" : ""} />
-        <span className={isHero ? "max-w-37.5 truncate" : "text-sm font-bold text-gray-700 whitespace-nowrap max-w-30 truncate"}>
+        <span className={isHero ? "max-w-37.5 truncate" : "text-sm font-heading font-bold text-gray-700 whitespace-nowrap max-w-30 truncate"}>
           {isHero 
             ? (selectedCampus ? `${selectedSchool} - ${selectedCampus}` : selectedSchool)
             : (selectedCampus || selectedSchool)
@@ -90,8 +90,8 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
                   {/* Field Trường */}
                   <div className="space-y-1">
                     <label className={isHero 
-                      ? "text-xs font-bold text-gray-400 ml-1 uppercase tracking-wider"
-                      : "text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1"
+                      ? "text-xs font-heading font-bold text-gray-400 ml-1 uppercase tracking-wider"
+                      : "text-[10px] font-heading font-bold text-gray-400 uppercase tracking-wider ml-1"
                     }>
                       Chọn trường <span className="text-red-500">*</span>
                     </label>

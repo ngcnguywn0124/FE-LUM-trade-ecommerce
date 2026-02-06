@@ -67,7 +67,7 @@ const Header = () => {
             <div className="flex-1 flex justify-center items-center">
               {!isScrolled ? (
                 /* CENTER: Danh mục nhanh (Khi ở Top) */
-                <div className="hidden xl:flex items-center space-x-10 text-sm font-bold text-gray-800">
+                <div className="hidden xl:flex items-center space-x-10 text-sm font-heading font-bold text-gray-800">
                   <a href="#" className="hover:text-white transition-colors">Lụm</a>
                   <a href="#" className="hover:text-white transition-colors">Về chúng tôi</a>
                   <a href="#" className="hover:text-white transition-colors">Xếp hạng</a>

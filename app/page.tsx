@@ -18,7 +18,7 @@ export default function Home() {
       <section className="bg-brand-mint py-12 text-center">
          <h2 className="text-2xl font-bold text-brand-dark">Bạn có đồ không dùng?</h2>
          <p className="mb-6">Đăng bán ngay để dọn phòng đón đồ mới!</p>
-         <button className="bg-white text-emerald-700 font-bold py-3 px-8 rounded-full shadow-lg">Đăng tin ngay</button>
+         <button className="bg-white text-emerald-700 font-heading font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all">Đăng tin ngay</button>
       </section>
       
       <Footer />

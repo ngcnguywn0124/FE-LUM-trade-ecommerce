@@ -5,6 +5,7 @@ import "./globals.css";
 const comfortaa = Comfortaa({
   variable: "--font-comfortaa",
   subsets: ["latin", "vietnamese"],
+  weight: ['400', '700'],
 });
 
 const beVietnamPro = Be_Vietnam_Pro({

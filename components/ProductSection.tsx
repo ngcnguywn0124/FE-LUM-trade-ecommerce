@@ -26,7 +26,7 @@ export default function ProductSection() {
             <div key={product.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
               {/* Image Container */}
               <div className="relative aspect-square bg-gray-200 overflow-hidden">
-                <span className="absolute top-2 left-2 bg-black/50 backdrop-blur-md text-white text-xs px-2 py-1 rounded-md z-10">
+                <span className="absolute top-2 left-2 bg-black/50 backdrop-blur-md text-white text-xs font-heading px-2 py-1 rounded-md z-10">
                   {product.tag}
                 </span>
                 {/* Thay bằng component Image của Next.js */}
@@ -37,8 +37,8 @@ export default function ProductSection() {
 
               {/* Info */}
               <div className="p-4">
-                <h3 className="font-bold text-gray-800 truncate">{product.name}</h3>
-                <div className="text-brand-accent font-extrabold text-lg mt-1">{product.price}</div>
+                <h3 className="font-heading font-bold text-gray-800 truncate">{product.name}</h3>
+                <div className="text-brand-accent font-heading font-extrabold text-lg mt-1">{product.price}</div>
                 
                 <div className="flex items-center mt-3 text-xs text-gray-500 bg-gray-100 py-1 px-2 rounded-lg w-fit">
                   <MapPin className="w-3 h-3 mr-1" />
