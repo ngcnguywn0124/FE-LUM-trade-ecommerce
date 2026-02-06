@@ -34,7 +34,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
     <div className="relative sm:w-40 shrink-0">
       <button 
         onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-        className="w-full h-10 sm:h-12 px-3 flex items-center justify-between hover:bg-gray-50 rounded-lg text-gray-700 font-heading font-bold text-sm transition-colors"
+        className="w-full h-12 px-3 flex items-center justify-between hover:bg-gray-50 rounded-lg text-gray-700 font-heading font-bold text-sm transition-colors"
       >
         <span className="truncate">
           {selectedCategories.length > 0 

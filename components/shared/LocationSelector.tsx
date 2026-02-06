@@ -55,7 +55,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
         }}
         className={isHero 
           ? "hidden sm:flex items-center gap-1 px-4 h-12 text-gray-600 hover:text-emerald-600 font-heading font-semibold text-sm transition-colors whitespace-nowrap"
-          : "flex items-center gap-1 px-3 h-full border-r border-gray-100 hover:bg-gray-50 rounded-l-lg transition-colors group shrink-0"
+          : "hidden sm:flex items-center gap-1 px-3 h-full border-r border-gray-100 hover:bg-gray-50 rounded-l-lg transition-colors group shrink-0"
         }
       >
         <MapPin size={isHero ? 16 : 16} className={!isHero ? "text-emerald-600 group-hover:scale-110 transition-transform" : ""} />

@@ -35,26 +35,28 @@ const Header = () => {
         } py-3`}
       >
         <div className="max-w-360 mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4 h-10">
+          <div className="flex items-center justify-between gap-2 sm:gap-4 h-12">
             
             {/* --- LEFT: Logo & Hamburger --- */}
-            <div className="flex items-center gap-3 shrink-0 z-10">
-              <button className="p-2 bg-white/20 rounded-full hover:bg-white/30 text-gray-900 transition-colors lg:hidden">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 z-10">
+              <button className="p-1.5 sm:p-2 bg-white/20 rounded-full hover:bg-white/30 text-gray-900 transition-colors lg:hidden">
                 <Menu size={20} />
               </button>
               
-              <Link href="/" className="flex items-center gap-1 group transition-transform duration-300 hover:scale-105 active:scale-95">
+              <Link href="/" className={`${isScrolled ? "hidden sm:flex" : "flex"} items-center gap-1 group transition-transform duration-300 hover:scale-105 active:scale-95`}>
                  <Image 
                     src="/logo/lum-logo.png" 
                     alt="Lụm Logo" 
                     width={100} 
                     height={40} 
-                    className="h-9 w-auto object-contain transition-transform duration-300 transform -rotate-2 group-hover:rotate-2"
+                    className="h-8 sm:h-9 w-auto object-contain transition-transform duration-300 transform -rotate-2 group-hover:rotate-2"
                     priority
                  />
               </Link>
 
-              <CategoryMegaMenu />
+              <div className={isScrolled ? "hidden md:block" : "block"}>
+                <CategoryMegaMenu />
+              </div>
             </div>
 
             {/* --- CENTER: Danh mục nhanh (Chưa scroll) OR Thanh Search (Đã scroll) --- */}
@@ -69,8 +71,8 @@ const Header = () => {
                 </div>
               ) : (
                 /* CENTER: THANH SEARCH (Khi cuộn xuống) */
-                <div className="hidden md:flex flex-1 max-w-2xl mx-auto animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="w-full flex items-center h-10 bg-white rounded-lg shadow-sm border border-transparent focus-within:border-black/20 focus-within:shadow-md transition-all">
+                <div className="flex flex-1 max-w-2xl mx-auto animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="w-full flex items-center h-10 sm:h-10 bg-white rounded-lg shadow-sm border border-transparent focus-within:border-black/20 focus-within:shadow-md transition-all">
                       
                       <LocationSelector 
                         variant="sticky"
@@ -81,12 +83,13 @@ const Header = () => {
                       />
 
                       <div className="flex-1 flex items-center px-3 h-full">
+                        <Search size={16} className="text-gray-400 mr-2 md:hidden" />
                         <input 
                             type="text"
                             value={keyword}
                             onChange={(e) => setKeyword(e.target.value)}
-                            placeholder="Tìm bàn học, giáo trình..."
-                            className="w-full bg-transparent text-sm text-gray-800 placeholder-gray-400 font-medium focus:outline-none"
+                            placeholder="Tìm kiếm..."
+                            className="w-full bg-transparent text-base sm:text-sm text-gray-800 placeholder-gray-400 font-medium focus:outline-none"
                         />
                         {keyword && (
                             <button onClick={() => setKeyword("")} className="text-gray-400 hover:text-gray-600 p-1">
@@ -95,7 +98,7 @@ const Header = () => {
                         )}
                       </div>
 
-                      <button className="h-8 w-8 mr-1 rounded-md bg-[#FFBA00] hover:bg-[#ffc82a] flex items-center justify-center text-black transition-colors shrink-0">
+                      <button className="hidden sm:flex h-8 w-8 mr-1 rounded-md bg-[#FFBA00] hover:bg-[#ffc82a] items-center justify-center text-black transition-colors shrink-0">
                         <Search size={18} strokeWidth={2.5} />
                       </button>
                   </div>
@@ -104,16 +107,16 @@ const Header = () => {
             </div>
 
             {/* --- RIGHT: Actions --- */}
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0 z-10">
-              <div className="flex items-center gap-1 text-gray-800">
-                 <button className="px-3 py-3 hover:bg-black/10 rounded-full transition-colors relative group">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 z-10">
+              <div className="flex items-center gap-0.5 sm:gap-1 text-gray-800">
+                 <button className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group">
                     <Heart size={20} strokeWidth={2.5} />
                  </button>
-                 <button className="px-3 py-3 hover:bg-black/10 rounded-full transition-colors relative group">
+                 <button className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group">
                     <Bell size={20} strokeWidth={2.5} />
-                    <span className="absolute top-2 right-3 w-2 h-2 bg-red-600 rounded-full border border-[#FFBA00]"></span>
+                    <span className="absolute top-2 right-2 sm:right-3 w-2 h-2 bg-red-600 rounded-full border border-[#FFBA00]"></span>
                  </button>
-                 <button className="hidden sm:flex items-center gap-2 px-4 py-2 hover:bg-black/10 rounded-lg font-bold text-sm transition-colors">
+                 <button className="hidden sm:flex items-center gap-2 px-4 py-2 hover:bg-black/10 rounded-lg font-bold text-sm transition-colors text-gray-800">
                     <MessageCircle size={20} strokeWidth={2.5} />
                     <span className="hidden xl:inline">Chat</span>
                  </button>
@@ -124,7 +127,7 @@ const Header = () => {
                  <span>Tài khoản</span>
               </button>
 
-              <button className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 bg-gray-900 text-[#FFBA00] rounded-lg font-bold hover:bg-gray-800 hover:scale-105 transition-all shadow-lg">
+              <button className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 bg-gray-900 text-[#FFBA00] rounded-lg font-bold hover:bg-gray-800 hover:scale-105 transition-all shadow-lg active:scale-95">
                  <PlusCircle size={18} />
                  <span className="text-[10px] sm:text-sm whitespace-nowrap">ĐĂNG TIN</span>
               </button>

@@ -49,12 +49,12 @@ export default function Home() {
                      />
 
                      {/* 2. Input Field */}
-                     <div className="flex-1 flex items-center px-3 h-10 sm:h-12 bg-gray-50 sm:bg-white rounded-lg sm:rounded-none">
-                        <Search size={18} className="text-gray-400 mr-2 shrink-0" />
+                     <div className="flex-1 flex items-center px-3 h-12 sm:h-12 bg-gray-50 sm:bg-white rounded-lg sm:rounded-none">
+                        <Search size={20} className="text-gray-400 mr-2 shrink-0" />
                         <input 
                            type="text" 
                            placeholder="Tìm MacBook, sách Triết, tủ lạnh..." 
-                           className="w-full bg-transparent outline-none text-gray-900 placeholder-gray-500 text-sm font-medium"
+                           className="w-full bg-transparent outline-none text-gray-900 placeholder-gray-500 text-base sm:text-sm font-medium"
                         />
                      </div>
 
@@ -68,7 +68,7 @@ export default function Home() {
                      />
 
                      {/* 4. Search Button (Yellow) */}
-                     <button className="bg-[#FFBA00] hover:bg-[#ffc82a] text-black font-bold h-10 sm:h-full px-6 py-2 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95">
+                     <button className="bg-[#FFBA00] hover:bg-[#ffc82a] text-black font-bold h-12 sm:h-full px-6 py-2 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95">
                         Tìm kiếm
                      </button>
                   </div>
