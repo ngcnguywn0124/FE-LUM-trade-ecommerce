@@ -16,7 +16,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen font-sans">
-      <Header />
       <div className="pt-24 pb-16 bg-linear-to-b from-[#8cceae] to-[#b8f3d7]">
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
