@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Comfortaa, Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
+import AppShell from "@/components/layout/AppShell";
+import { Toaster } from "sonner";
 
 const comfortaa = Comfortaa({
   variable: "--font-comfortaa",
@@ -32,7 +34,10 @@ export default function RootLayout({
       <body
         className={`${comfortaa.variable} ${beVietnamPro.variable} antialiased font-content`}
       >
-        {children}
+        <AppShell>
+            {children}
+        </AppShell>
+        <Toaster position="bottom-right" richColors />
       </body>
     </html>
   );

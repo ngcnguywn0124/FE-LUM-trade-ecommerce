@@ -4,11 +4,10 @@ import React, { useState } from "react";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import ProductSection from "@/components/ProductSection";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import { Laptop, Search } from "lucide-react";
 import CategorySelector from "@/components/shared/CategorySelector";
 import LocationSelector from "@/components/shared/LocationSelector";
+import Header from "@/components/layout/Header";
 
 export default function Home() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -18,7 +17,6 @@ export default function Home() {
   return (
     <main className="min-h-screen font-sans">
       <Header />
-
       <div className="pt-24 pb-16 bg-linear-to-b from-[#8cceae] to-[#b8f3d7]">
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
@@ -90,15 +88,6 @@ export default function Home() {
       <Hero />
       <Features />
       <ProductSection />
-      
-      {/* Banner phụ: Kêu gọi tải App hoặc tham gia cộng đồng */}
-      <section className="bg-brand-mint py-12 text-center">
-         <h2 className="text-2xl font-bold text-brand-dark">Bạn có đồ không dùng?</h2>
-         <p className="mb-6">Đăng bán ngay để dọn phòng đón đồ mới!</p>
-         <button className="bg-white text-emerald-700 font-heading font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all">Đăng tin ngay</button>
-      </section>
-      
-      <Footer />
     </main>
   );
 }
