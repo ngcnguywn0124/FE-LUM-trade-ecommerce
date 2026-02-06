@@ -1,123 +1,130 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Facebook, Instagram, Youtube, Mail, MapPin, Phone, ArrowRight } from 'lucide-react';
+import { 
+  Facebook, Instagram, Youtube, Send, 
+  MapPin, Phone, Mail, ShieldCheck, Heart, Star 
+} from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="relative bg-[#8cceae] text-gray-900 pt-20 pb-10 overflow-hidden font-sans">
+    <footer className="bg-[#111111] text-white pt-16 pb-8 font-sans border-t-4 border-[#8cceae]">
       
-      {/* --- Decoration: Đường cong mềm mại nối giữa nội dung và Footer --- */}
-      <div className="absolute top-0 left-0 right-0 -mt-1">
-        <svg viewBox="0 0 1440 320" className="w-full h-auto block text-white fill-current transform rotate-180">
-          <path fillOpacity="1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-        </svg>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* --- Phần 1: Grid Links & Thông tin --- */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-20">
+        {/* --- PHẦN 1: CALL TO ACTION & NEWSLETTER --- */}
+        <div className="flex flex-col lg:flex-row items-center justify-between bg-[#1A1A1A] p-8 rounded-2xl mb-16 shadow-2xl border border-gray-800">
+            <div className="mb-6 lg:mb-0 text-center lg:text-left">
+                <h3 className="text-2xl font-bold mb-2">Đăng ký nhận tin từ Lụm.vn</h3>
+                <p className="text-gray-400">Nhận thông báo về deal hời, giáo trình free và sự kiện sinh viên.</p>
+            </div>
+            <div className="w-full lg:w-auto flex flex-col sm:flex-row gap-3">
+                <div className="relative">
+                    <input 
+                        type="email" 
+                        placeholder="Email của bạn..." 
+                        className="w-full sm:w-80 bg-[#2A2A2A] border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-[#FFBA00] transition-colors"
+                    />
+                    <Mail className="absolute right-3 top-3.5 text-gray-500" size={20} />
+                </div>
+                <button className="bg-[#FFBA00] text-black font-bold px-6 py-3 rounded-lg hover:bg-white transition-all flex items-center justify-center gap-2">
+                    <Send size={18} />
+                    <span>Đăng ký</span>
+                </button>
+            </div>
+        </div>
+
+        {/* --- PHẦN 2: MAIN LINKS GRID --- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 border-b border-gray-800 pb-16">
           
-          {/* Cột 1: Giới thiệu */}
-          <div className="space-y-4">
-            <h3 className="text-2xl font-black uppercase tracking-tighter">Về Lụm.vn</h3>
-            <p className="font-medium text-gray-800 leading-relaxed">
-              Sàn thương mại điện tử dành riêng cho sinh viên. Nơi mua bán, trao đổi giáo trình, đồ dùng học tập và trọ giá rẻ uy tín nhất.
+          {/* Cột 1: Brand Info (Chiếm 4 phần) */}
+          <div className="lg:col-span-4 space-y-6">
+            <h4 className="text-lg font-bold text-[#FFBA00] uppercase tracking-wider">Về chúng tôi</h4>
+            <p className="text-gray-400 leading-relaxed pr-4">
+              Lụm.vn là nền tảng kết nối cộng đồng sinh viên, giúp việc mua bán đồ cũ trở nên an toàn, nhanh chóng và tiết kiệm. "Cũ người mới ta" - Lan tỏa giá trị xanh trong môi trường đại học.
             </p>
-            <div className="flex gap-4 pt-2">
-              <SocialButton icon={<Facebook size={20} />} href="#" />
-              <SocialButton icon={<Instagram size={20} />} href="#" />
-              <SocialButton icon={<Youtube size={20} />} href="#" />
+            <div className="flex gap-4">
+               {/* Các chỉ số uy tín */}
+               <div className="flex items-center gap-2 bg-[#222] px-3 py-2 rounded-lg border border-gray-800">
+                  <ShieldCheck className="text-[#FFBA00]" size={20}/>
+                  <div className="text-xs">
+                     <div className="font-bold text-white">100%</div>
+                     <div className="text-gray-500">Xác thực SV</div>
+                  </div>
+               </div>
+               <div className="flex items-center gap-2 bg-[#222] px-3 py-2 rounded-lg border border-gray-800">
+                  <Star className="text-[#FFBA00]" size={20}/>
+                  <div className="text-xs">
+                     <div className="font-bold text-white">4.9/5</div>
+                     <div className="text-gray-500">Đánh giá</div>
+                  </div>
+               </div>
             </div>
           </div>
 
-          {/* Cột 2: Hỗ trợ */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold uppercase">Hỗ trợ sinh viên</h3>
-            <ul className="space-y-2 font-medium text-gray-800">
-              <li><FooterLink href="#">Quy chế hoạt động</FooterLink></li>
-              <li><FooterLink href="#">Chính sách bảo mật</FooterLink></li>
-              <li><FooterLink href="#">Giải quyết tranh chấp</FooterLink></li>
-              <li><FooterLink href="#">Câu hỏi thường gặp (FAQ)</FooterLink></li>
+          {/* Cột 2: Links (2 phần) */}
+          <div className="lg:col-span-2 space-y-6">
+            <h4 className="text-lg font-bold text-white">Khám phá</h4>
+            <ul className="space-y-3 text-gray-400">
+              <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Giáo trình</Link></li>
+              <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Đồ công nghệ</Link></li>
+              <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Xe cộ</Link></li>
+              <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Thời trang</Link></li>
+              <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Phụ kiện</Link></li>
             </ul>
           </div>
 
-          {/* Cột 3: Danh mục hot */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold uppercase">Khám phá</h3>
-            <ul className="space-y-2 font-medium text-gray-800">
-              <li><FooterLink href="#">Giáo trình cũ</FooterLink></li>
-              <li><FooterLink href="#">Laptop sinh viên</FooterLink></li>
-              <li><FooterLink href="#">Xe máy đi học</FooterLink></li>
-              <li><FooterLink href="#">Tìm người ở ghép</FooterLink></li>
+          {/* Cột 3: Links (3 phần) */}
+          <div className="lg:col-span-3 space-y-6">
+            <h4 className="text-lg font-bold text-white">Chính sách & Hỗ trợ</h4>
+            <ul className="space-y-3 text-gray-400">
+              <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Trung tâm trợ giúp</Link></li>
+              <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Quy chế hoạt động</Link></li>
+              <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Bảo mật thông tin</Link></li>
+              <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Giải quyết khiếu nại</Link></li>
             </ul>
           </div>
 
-          {/* Cột 4: Liên hệ */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold uppercase">Liên hệ</h3>
-            <ul className="space-y-3 font-medium text-gray-800">
+          {/* Cột 4: Contact (3 phần) */}
+          <div className="lg:col-span-3 space-y-6">
+            <h4 className="text-lg font-bold text-white">Liên hệ</h4>
+            <ul className="space-y-4 text-gray-400">
               <li className="flex items-start gap-3">
-                <MapPin className="shrink-0 mt-1" size={18} />
-                <span>Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh</span>
+                <MapPin className="text-[#FFBA00] mt-1" size={18} />
+                <span>Trụ sở chính: Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh</span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone className="shrink-0" size={18} />
-                <span>0909.999.999 (Hotline 24/7)</span>
+                <Phone className="text-[#FFBA00]" size={18} />
+                <span className="text-lg font-bold text-white">1900 1234</span>
               </li>
-              <li className="flex items-center gap-3">
-                <Mail className="shrink-0" size={18} />
-                <span>cskh@lum.vn</span>
+              <li className="flex gap-4 mt-4">
+                 <SocialIcon icon={<Facebook size={18}/>} />
+                 <SocialIcon icon={<Instagram size={18}/>} />
+                 <SocialIcon icon={<Youtube size={18}/>} />
               </li>
             </ul>
           </div>
         </div>
 
-        {/* --- Phần 2: BIG LOGO AREA (Điểm nhấn) --- */}
-        <div className="flex flex-col items-center justify-center border-t border-black/10 pt-16 pb-8">
-          <p className="text-sm font-bold tracking-widest uppercase mb-6 opacity-60">Sản phẩm của sinh viên HUTECH</p>
-          
-          {/* Logo to ở đây */}
-          <div className="relative w-64 md:w-96 transition-transform duration-500 hover:scale-105">
-             <Image 
-                src="/logo/lum-logo.png" 
-                alt="Lụm.vn Logo Footer" 
-                width={500} 
-                height={200} 
-                className="w-full h-auto drop-shadow-2xl"
-             />
-          </div>
-
-          <p className="mt-8 text-sm font-semibold opacity-70">
-            © 2025 Lụm.vn. All rights reserved. Design by nguyenquyngoc.
-          </p>
+        {/* --- COPYRIGHT --- */}
+        <div className="pt-12 pb-8 flex flex-col md:flex-row items-center justify-center gap-2 text-gray-500 text-sm font-medium">
+            <span>© 2026 Công ty TNHH mụt thành viên Hehehe.</span>
+            <span className="hidden md:inline">•</span>
+            <span className="flex items-center gap-1">
+                Design <Heart size={12} className="text-red-500 fill-red-500" /> by nguyenquyngoc
+            </span>
         </div>
 
       </div>
-
-      {/* Background Pattern trang trí mờ mờ */}
-      <div className="absolute inset-0 z-0 opacity-5 pointer-events-none" 
-           style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
-      </div>
-
     </footer>
   );
 };
 
-// Component con cho Link
-const FooterLink = ({ href, children }: { href: string, children: React.ReactNode }) => (
-  <Link href={href} className="flex items-center gap-1 hover:gap-2 hover:text-black transition-all group">
-    <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-    {children}
-  </Link>
-);
-
-// Component con cho Social Button
-const SocialButton = ({ icon, href }: { icon: React.ReactNode, href: string }) => (
-  <a href={href} className="w-10 h-10 bg-black text-[#8cceae] rounded-full flex items-center justify-center hover:bg-white hover:text-black hover:scale-110 transition-all shadow-lg">
-    {icon}
-  </a>
+// Sub-component cho nút Social
+const SocialIcon = ({ icon }: { icon: React.ReactNode }) => (
+    <a href="#" className="w-10 h-10 rounded-full bg-[#2A2A2A] text-white flex items-center justify-center hover:bg-[#FFBA00] hover:text-black hover:-translate-y-1 transition-all duration-300">
+        {icon}
+    </a>
 );
 
 export default Footer;
