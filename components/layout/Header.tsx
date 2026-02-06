@@ -29,12 +29,6 @@ const Header = () => {
 
   return (
     <div className="flex flex-col w-full font-sans">
-      
-      {/* =========================================================================
-          PHẦN 1: TOP NAVIGATION (Thanh điều hướng trên cùng)
-          - Luôn cố định (Sticky)
-          - Màu Vàng đặc trưng giống ảnh
-      ========================================================================= */}
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
             isScrolled ? "shadow-md bg-[#8cceae]" : "bg-[#b8f3d700]"
@@ -138,81 +132,6 @@ const Header = () => {
           </div>
         </div>
       </nav>
-
-      {/* =========================================================================
-          PHẦN 2: HERO SECTION & SEARCH BAR (Khu vực Tìm kiếm lớn)
-          - Nằm dưới Navbar
-          - Có background vàng nối tiếp
-      ========================================================================= */}
-      <div className="pt-24 pb-16 bg-linear-to-b from-[#8cceae] to-[#b8f3d7]">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-               
-               {/* Slogan & Intro Text */}
-               <div className="text-center lg:text-left space-y-2 max-w-lg">
-                  <h1 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight">
-                    Cũ người mới ta, <br/>
-                    <span className="text-orange-700">Sinh viên</span> chốt giá! 
-                  </h1>
-                  <p className="text-gray-800 font-medium">Sàn thương mại điện tử dành riêng cho HUTECH-ers</p>
-               </div>
-
-               {/* 3D Illustration Placeholder (Trang trí) */}
-               {/* Bạn có thể thay thế bằng thẻ <img /> thật */}
-               <div className="hidden lg:block absolute right-10 top-24 opacity-20 pointer-events-none">
-                  <Laptop size={120} strokeWidth={1} />
-               </div>
-
-               {/* --- SEARCH BAR "SUPER APP" STYLE --- */}
-               <div className="w-full lg:max-w-3xl">
-                  {/* The White Box Container */}
-                  <div className="bg-white p-1.5 rounded-xl shadow-xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
-                     
-                     {/* 1. Category Dropdown */}
-                     <CategorySelector 
-                        selectedCategories={selectedCategories}
-                        setSelectedCategories={setSelectedCategories}
-                     />
-
-                     {/* 2. Input Field */}
-                     <div className="flex-1 flex items-center px-3 h-10 sm:h-12 bg-gray-50 sm:bg-white rounded-lg sm:rounded-none">
-                        <Search size={18} className="text-gray-400 mr-2 shrink-0" />
-                        <input 
-                           type="text" 
-                           placeholder="Tìm MacBook, sách Triết, tủ lạnh..." 
-                           className="w-full bg-transparent outline-none text-gray-900 placeholder-gray-500 text-sm font-medium"
-                        />
-                     </div>
-
-                     {/* 3. Location Selector */}
-                     <LocationSelector 
-                        variant="hero"
-                        selectedSchool={selectedSchool}
-                        setSelectedSchool={setSelectedSchool}
-                        selectedCampus={selectedCampus}
-                        setSelectedCampus={setSelectedCampus}
-                     />
-
-                     {/* 4. Search Button (Yellow) */}
-                     <button className="bg-[#FFBA00] hover:bg-[#ffc82a] text-black font-bold h-10 sm:h-full px-6 py-2 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95">
-                        Tìm kiếm
-                     </button>
-                  </div>
-
-                  {/* Quick Tags (Dưới thanh search) */}
-                  <div className="mt-3 flex flex-wrap gap-2 justify-center lg:justify-start">
-                     {['Mac Mini M4', 'Màn hình 24"', 'Bàn học', 'Quạt máy'].map((tag) => (
-                        <span key={tag} className="px-3 py-1 bg-white/60 hover:bg-white text-xs font-semibold text-gray-800 rounded-full cursor-pointer transition-colors backdrop-blur-sm">
-                           ⏱ {tag}
-                        </span>
-                     ))}
-                  </div>
-               </div>
-            </div>
-
-         </div>
-      </div>
     </div>
   );
 };

@@ -72,7 +72,7 @@ const CategoryMegaMenu = () => {
       {/* Mega Menu Content */}
       {isOpen && (
         <div className="absolute top-full left-0 pt-2 z-100 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="bg-white shadow-2xl rounded-xl border border-gray-100 flex overflow-hidden min-w-125 h-87.5">
+          <div className="bg-white shadow-2xl rounded-xl border border-gray-100 flex overflow-hidden min-w-125 h-90.5 max-h-96">
             
             {/* Sidebar: Parent Categories */}
             <div className="w-56 bg-gray-50/50 border-r border-gray-100 py-3 overflow-y-auto">
