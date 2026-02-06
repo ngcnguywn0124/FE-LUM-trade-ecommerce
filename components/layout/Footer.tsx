@@ -27,7 +27,7 @@ const Footer = () => {
                     />
                     <Mail className="absolute right-3 top-3.5 text-gray-500" size={20} />
                 </div>
-                <button className="bg-[#FFBA00] text-black font-bold px-6 py-3 rounded-lg hover:bg-white transition-all flex items-center justify-center gap-2">
+                <button className="bg-[#FFBA00] text-black font-bold px-6 py-3 rounded-lg hover:bg-white transition-all flex items-center justify-center gap-2 cursor-pointer">
                     <Send size={18} />
                     <span>Đăng ký</span>
                 </button>

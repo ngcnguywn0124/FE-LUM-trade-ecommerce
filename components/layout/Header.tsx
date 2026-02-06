@@ -109,25 +109,25 @@ const Header = () => {
             {/* --- RIGHT: Actions --- */}
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 z-10">
               <div className="flex items-center gap-0.5 sm:gap-1 text-gray-800">
-                 <button className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group">
+                 <button className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer">
                     <Heart size={20} strokeWidth={2.5} />
                  </button>
-                 <button className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group">
+                 <button className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer">
                     <Bell size={20} strokeWidth={2.5} />
                     <span className="absolute top-2 right-2 sm:right-3 w-2 h-2 bg-red-600 rounded-full border border-[#FFBA00]"></span>
                  </button>
-                 <button className="hidden sm:flex items-center gap-2 px-4 py-2 hover:bg-black/10 rounded-lg font-bold text-sm transition-colors text-gray-800">
+                 <button className="hidden sm:flex items-center gap-2 px-4 py-2 hover:bg-black/10 rounded-lg font-bold text-sm transition-colors text-gray-800 cursor-pointer">
                     <MessageCircle size={20} strokeWidth={2.5} />
                     <span className="hidden xl:inline">Chat</span>
                  </button>
               </div>
 
-              <button className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-sm font-bold shadow-sm hover:shadow-md transition-all">
+              <button className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-sm font-bold shadow-sm hover:shadow-md transition-all cursor-pointer">
                  <User size={18} />
                  <span>Tài khoản</span>
               </button>
 
-              <button className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 bg-gray-900 text-[#FFBA00] rounded-lg font-bold hover:bg-gray-800 hover:scale-105 transition-all shadow-lg active:scale-95">
+              <button className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 bg-gray-900 text-[#FFBA00] rounded-lg font-bold hover:bg-gray-800 hover:scale-105 transition-all shadow-lg active:scale-95 cursor-pointer">
                  <PlusCircle size={18} />
                  <span className="text-[10px] sm:text-sm whitespace-nowrap">ĐĂNG TIN</span>
               </button>

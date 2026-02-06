@@ -34,7 +34,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
     <div className="relative sm:w-40 shrink-0">
       <button 
         onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-        className="w-full h-12 px-3 flex items-center justify-between hover:bg-gray-50 rounded-lg text-gray-700 font-heading font-bold text-sm transition-colors"
+        className="w-full h-12 px-3 flex items-center justify-between hover:bg-gray-50 rounded-lg text-gray-700 font-heading font-bold text-sm transition-colors cursor-pointer"
       >
         <span className="truncate">
           {selectedCategories.length > 0 
@@ -83,7 +83,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
               <div className="mt-2 pt-2 border-t border-gray-50">
                 <button 
                   onClick={() => setSelectedCategories([])}
-                  className="w-full py-1.5 text-xs text-gray-500 hover:text-emerald-600 font-bold transition-colors"
+                  className="w-full py-1.5 text-xs text-gray-500 hover:text-emerald-600 font-bold transition-colors cursor-pointer"
                 >
                   Làm mới lựa chọn
                 </button>
