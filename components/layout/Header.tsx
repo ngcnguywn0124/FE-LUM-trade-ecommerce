@@ -124,9 +124,9 @@ const Header = () => {
                  <span>Tài khoản</span>
               </button>
 
-              <button className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-[#FFBA00] rounded-lg font-bold text-sm hover:bg-gray-800 hover:scale-105 transition-all shadow-lg">
+              <button className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 bg-gray-900 text-[#FFBA00] rounded-lg font-bold hover:bg-gray-800 hover:scale-105 transition-all shadow-lg">
                  <PlusCircle size={18} />
-                 <span className="hidden sm:inline">ĐĂNG TIN</span>
+                 <span className="text-[10px] sm:text-sm whitespace-nowrap">ĐĂNG TIN</span>
               </button>
             </div>
           </div>

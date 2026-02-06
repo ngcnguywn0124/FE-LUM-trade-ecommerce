@@ -13,7 +13,7 @@ const Footer = () => {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* --- PHẦN 1: CALL TO ACTION & NEWSLETTER --- */}
-        <div className="flex flex-col lg:flex-row items-center justify-between bg-[#1A1A1A] p-8 rounded-2xl mb-16 shadow-2xl border border-gray-800">
+        <div className="flex flex-col lg:flex-row items-center justify-between bg-[#1A1A1A] p-8 rounded-2xl mb-16 shadow-2xl border border-[#8cceae]">
             <div className="mb-6 lg:mb-0 text-center lg:text-left">
                 <h3 className="text-2xl font-bold mb-2">Đăng ký nhận tin từ Lụm.vn</h3>
                 <p className="text-gray-400">Nhận thông báo về deal hời, giáo trình free và sự kiện sinh viên.</p>
@@ -23,7 +23,7 @@ const Footer = () => {
                     <input 
                         type="email" 
                         placeholder="Email của bạn..." 
-                        className="w-full sm:w-80 bg-[#2A2A2A] border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-[#FFBA00] transition-colors"
+                        className="w-full sm:w-80 bg-[#2A2A2A] border border-[#8cceae]/90 text-white px-4 py-3 rounded-lg focus:outline-none focus:border-[#FFBA00] transition-colors"
                     />
                     <Mail className="absolute right-3 top-3.5 text-gray-500" size={20} />
                 </div>
