@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import ErrorComponent, { ErrorType } from '@/components/ErrorComponent';
+import ErrorComponent, { ErrorType } from '@/components/common/ErrorComponent';
 
 export default function TestErrorPage() {
     const [lastAction, setLastAction] = useState<string>('None');

@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import Hero from "@/components/Hero";
-import Features from "@/components/Features";
-import ProductSection from "@/components/ProductSection";
+import Hero from "@/components/features/Hero";
+import Features from "@/components/features/Features";
+import ProductSection from "@/components/features/ProductSection";
 import { Laptop, Search } from "lucide-react";
 import CategorySelector from "@/components/shared/CategorySelector";
 import LocationSelector from "@/components/shared/LocationSelector";
