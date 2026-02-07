@@ -16,7 +16,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen font-sans">
-      <div className="pt-24 pb-16 bg-linear-to-b from-[#8cceae] to-[#b8f3d7]">
+      <div className="pt-24 pb-12 bg-linear-to-b from-[#8cceae] to-[#b8f3d7]">
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
             <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
@@ -27,11 +27,9 @@ export default function Home() {
                     Cũ người mới ta, <br/>
                     <span className="text-orange-700">Sinh viên</span> chốt giá! 
                   </h1>
-                  <p className="text-gray-800 font-medium">Sàn thương mại điện tử dành riêng cho HUTECH-ers</p>
+                  <p className="text-gray-800 font-medium">Sàn thương mại điện tử dành riêng cho <strong className="text-emerald-600">Sinh Viên</strong>.</p>
                </div>
 
-               {/* 3D Illustration Placeholder (Trang trí) */}
-               {/* Bạn có thể thay thế bằng thẻ <img /> thật */}
                <div className="hidden lg:block absolute right-10 top-24 opacity-20 pointer-events-none">
                   <Laptop size={120} strokeWidth={1} />
                </div>
@@ -85,8 +83,8 @@ export default function Home() {
          </div>
       </div>
       <Hero />
-      <Features />
       <ProductSection />
+      <Features />
     </main>
   );
 }
