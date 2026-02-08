@@ -86,7 +86,7 @@ export default function Home() {
          {/* Categories Grid */}
          <CategoryGrid />
          <ProductSection />
-         <Features />
+         {/* <Features /> */}
       </main>
    );
 }
