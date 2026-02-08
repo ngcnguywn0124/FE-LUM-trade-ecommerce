@@ -22,8 +22,8 @@ const CategoryGrid = () => {
       </h3>
       <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
         {heroCategories.map((cat) => (
-          <Link 
-            key={cat.id} 
+          <Link
+            key={cat.id}
             href={`/explore?category=${cat.id}`}
             className="group flex flex-col items-center gap-3 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300 border border-transparent hover:border-emerald-200"
           >
