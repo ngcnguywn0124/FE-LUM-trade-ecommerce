@@ -2,15 +2,16 @@
 
 import React from "react";
 import Link from "next/link";
-import { BookOpen, Laptop, Home, ShoppingBag, Utensils, Zap, ChevronRight } from "lucide-react";
+import Image from "next/image";
+import { ChevronRight } from "lucide-react";
 
 const heroCategories = [
-  { id: 'giaotrinh', label: 'Giáo trình', icon: <BookOpen className="w-7 h-7" />, color: 'bg-blue-50 text-blue-600', hover: 'hover:bg-blue-600', hoverIcon: 'group-hover:text-white', description: 'Sách, tài liệu' },
-  { id: 'dientu', label: 'Điện tử', icon: <Laptop className="w-7 h-7" />, color: 'bg-purple-50 text-purple-600', hover: 'hover:bg-purple-600', hoverIcon: 'group-hover:text-white', description: 'Laptop, phụ kiện' },
-  { id: 'phongtro', label: 'Phòng trọ', icon: <Home className="w-7 h-7" />, color: 'bg-orange-50 text-orange-600', hover: 'hover:bg-orange-600', hoverIcon: 'group-hover:text-white', description: 'Tìm ở ghép' },
-  { id: 'dodung', label: 'Đồ dùng', icon: <ShoppingBag className="w-7 h-7" />, color: 'bg-emerald-50 text-emerald-600', hover: 'hover:bg-emerald-600', hoverIcon: 'group-hover:text-white', description: 'Đồ gia dụng' },
-  { id: 'anuong', label: 'Ăn uống', icon: <Utensils className="w-7 h-7" />, color: 'bg-red-50 text-red-600', hover: 'hover:bg-red-600', hoverIcon: 'group-hover:text-white', description: 'Deal ăn uống' },
-  { id: 'khac', label: 'Gom nhanh', icon: <Zap className="w-7 h-7" />, color: 'bg-yellow-50 text-yellow-600', hover: 'hover:bg-yellow-600', hoverIcon: 'group-hover:text-white', description: 'Mua chung' },
+  { id: 'giaotrinh', label: 'Giáo trình', image: '/cate/giao-trinh-v1.png', color: 'bg-blue-50', description: 'Sách, tài liệu' },
+    { id: 'quanao', label: 'Quần áo', image: '/cate/quan-ao-v1.jpg', color: 'bg-yellow-50', description: 'Đồng phục, đồ thể thao' },
+  { id: 'dientu', label: 'Điện tử', image: '/cate/quan-ao-v1.jpg', color: 'bg-purple-50', description: 'Laptop, phụ kiện' },
+  { id: 'phongtro', label: 'Phòng trọ', image: '/cate/quan-ao-v1.jpg', color: 'bg-orange-50', description: 'Tìm ở ghép' },
+  { id: 'dodung', label: 'Đồ dùng', image: '/cate/quan-ao-v1.jpg', color: 'bg-emerald-50', description: 'Đồ gia dụng' },
+  { id: 'anuong', label: 'Ăn uống', image: '/cate/quan-ao-v1.jpg', color: 'bg-red-50', description: 'Deal ăn uống' },
 ];
 
 const CategoryGrid = () => {
@@ -37,16 +38,18 @@ const CategoryGrid = () => {
               href={`/explore?category=${cat.id}`}
               className="group flex flex-col items-center"
             >
-              <div className="relative w-full aspect-square bg-[#F8FAFC] rounded-4xl flex items-center justify-center mb-4 transition-all duration-500 group-hover:bg-white group-hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] group-hover:-translate-y-2 overflow-hidden">
+              <div className="relative w-full aspect-square bg-white flex items-center justify-center mb-0 transition-all duration-500 group-hover:-translate-y-2 overflow-hidden">
                 {/* Glow Effect on Hover */}
                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 ${cat.color}`}></div>
+
+                  <Image 
+                    src={cat.image} 
+                    alt={cat.label} 
+                    fill 
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
                 
-                <div className={`w-16 h-16 flex items-center justify-center rounded-2xl transition-all duration-500 shadow-sm ${cat.color} group-hover:scale-110`}>
-                  {cat.icon}
-                </div>
-                
-                {/* Hover Indicator Line */}
-                <div className="absolute bottom-0 left-0 w-0 h-1.5 bg-emerald-500 group-hover:w-full transition-all duration-500"></div>
               </div>
               
               <div className="text-center group-hover:transform group-hover:scale-105 transition-all duration-300">
