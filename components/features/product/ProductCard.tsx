@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Image from "next/image";
-import { Heart, Image as ImageIcon } from "lucide-react";
+import { Heart, Image as ImageIcon, MapPin } from "lucide-react";
 
 interface ProductProps {
   product: {
@@ -8,6 +8,7 @@ interface ProductProps {
     name: string;
     price: string;
     school: string;
+    campus?: string;
     image: string;
     tag: string;
     time?: string;
@@ -21,12 +22,12 @@ const ProductCard = ({ product }: ProductProps) => {
   return (
     <div className="group cursor-pointer">
       {/* Image Container */}
-      <div className="relative aspect-4/5 bg-gray-100 rounded-xl overflow-hidden shadow-sm transition-all duration-300">
+      <div className="relative aspect-5/6 bg-gray-100 rounded-xl overflow-hidden shadow-sm transition-all duration-300">
         <Image
           src={product.image}
           alt={product.name}
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          className="object-fill group-hover:scale-105 transition-transform duration-500"
         />
 
         {/* Favorite Button */}
@@ -62,8 +63,17 @@ const ProductCard = ({ product }: ProductProps) => {
           {product.name}
         </h3>
         <p className="text-emerald-600 font-bold mt-0.5">{product.price}</p>
-        <div className="flex items-center gap-1.5 mt-1">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{product.school}</span>
+                <div className="mt-2 flex items-center gap-2 overflow-hidden text-[11px]">
+          <div className="flex items-center gap-1 text-emerald-600/70 font-bold shrink-0">
+            <MapPin size={10} />
+            {product.school}
+          </div>
+          {product.campus && (
+            <>
+              <span className="text-gray-200">|</span>
+              <span className="text-gray-400 truncate font-medium">{product.campus}</span>
+            </>
+          )}
         </div>
       </div>
     </div>
