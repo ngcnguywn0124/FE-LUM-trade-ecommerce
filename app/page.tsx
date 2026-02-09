@@ -8,6 +8,7 @@ import { Laptop, Search } from "lucide-react";
 import CategorySelector from "@/components/shared/CategorySelector";
 import LocationSelector from "@/components/shared/LocationSelector";
 import CategoryGrid from "@/components/features/CategoryGrid";
+import PromoBanner from "@/components/features/PromoBanner";
 
 export default function Home() {
    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -86,6 +87,7 @@ export default function Home() {
          {/* Categories Grid */}
          <CategoryGrid />
          <ProductSection />
+         <PromoBanner />
          {/* <Features /> */}
       </main>
    );
