@@ -17,7 +17,10 @@ const beVietnamPro = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
-  title: "Lụm - Website Mua bán đồ cũ dành cho sinh viên",
+  title: {
+    default: "Lụm - Website Mua bán đồ cũ dành cho sinh viên",
+    template: "%s | Lụm"
+  },
   description: "Website Mua bán đồ cũ dành cho sinh viên",
   icons: {
     icon: "/logo/lum-meta-logo.ico",

@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useMemo } from 'react';
+import { ReactNode, useMemo, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from './Header';
 import Footer from './Footer';
@@ -11,6 +11,31 @@ interface AppShellProps {
 
 const AppShell = ({ children }: AppShellProps) => {
   const pathname = usePathname();
+  //---------- tự động cập nhật tiêu đề trang ----------
+
+  // Tự động cập nhật tiêu đề trang dựa trên URL
+  useEffect(() => {
+    if (!pathname) return;
+
+    if (pathname === '/') {
+      document.title = 'Lụm - Website Mua bán đồ cũ dành cho sinh viên';
+      return;
+    }
+
+    // Chuyển đổi /test-error thành "Test Error | Lụm"
+    const pageName = pathname
+      .split('/')
+      .filter(Boolean)
+      .pop()
+      ?.replace(/-/g, ' ')
+      .replace(/\b\w/g, (l) => l.toUpperCase());
+
+    if (pageName) {
+      document.title = `${pageName} | Lụm`;
+    }
+  }, [pathname]);
+
+  // ------------------------------------------------------
 
   const hideGlobalChrome = useMemo(() => {
     if (!pathname) {
