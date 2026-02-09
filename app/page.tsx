@@ -9,6 +9,7 @@ import CategorySelector from "@/components/shared/CategorySelector";
 import LocationSelector from "@/components/shared/LocationSelector";
 import CategoryGrid from "@/components/features/CategoryGrid";
 import PromoBanner from "@/components/features/PromoBanner";
+import PopularKeywords from "@/components/features/PopularKeywords"; 
 
 export default function Home() {
    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -88,6 +89,7 @@ export default function Home() {
          <CategoryGrid />
          <ProductSection />
          <PromoBanner />
+         <PopularKeywords />
          {/* <Features /> */}
       </main>
    );
