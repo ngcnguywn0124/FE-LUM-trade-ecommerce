@@ -29,7 +29,7 @@ const keywords = [
 
 export default function PopularKeywords() {
   return (
-    <section className="py-16 bg-white overflow-hidden">
+    <section className="pt-6 pb-12 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h3 className="text-2xl font-black text-gray-900 mb-6">Từ khoá phổ biến</h3>
         <div className="flex flex-wrap gap-x-10 gap-y-6">
