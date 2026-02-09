@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { 
@@ -12,6 +13,7 @@ import CategorySelector from "../shared/CategorySelector";
 import CategoryMegaMenu from "../shared/CategoryMegaMenu";
 
 const Header = () => {
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -20,18 +22,26 @@ const Header = () => {
   const [selectedSchool, setSelectedSchool] = useState("HUTECH");
   const [selectedCampus, setSelectedCampus] = useState("");
 
+  // Kiểm tra xem có đang ở trang chủ không
+  const isHomePage = pathname === "/";
+
   // Xử lý sticky header khi cuộn
   useEffect(() => {
+    if (!isHomePage) {
+      setIsScrolled(true);
+      return;
+    }
+
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isHomePage]);
 
   return (
     <div className="flex flex-col w-full font-sans">
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-            isScrolled ? "shadow-md bg-[#8cceae]" : "bg-[#b8f3d700]"
+            !isHomePage || isScrolled ? "shadow-md bg-[#8cceae]" : "bg-[#b8f3d700]"
         } py-3`}
       >
         <div className="max-w-360 mx-auto px-4 sm:px-6 lg:px-8">
