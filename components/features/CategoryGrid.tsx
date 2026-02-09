@@ -8,15 +8,15 @@ import { ChevronRight } from "lucide-react";
 const heroCategories = [
   { id: 'giaotrinh', label: 'Giáo trình', image: '/cate/giao-trinh-v1.png', color: 'bg-blue-50', description: 'Sách, tài liệu' },
     { id: 'quanao', label: 'Quần áo', image: '/cate/quan-ao-v1.jpg', color: 'bg-yellow-50', description: 'Đồng phục, đồ thể thao' },
-  { id: 'dientu', label: 'Điện tử', image: '/cate/quan-ao-v1.jpg', color: 'bg-purple-50', description: 'Laptop, phụ kiện' },
-  { id: 'phongtro', label: 'Phòng trọ', image: '/cate/quan-ao-v1.jpg', color: 'bg-orange-50', description: 'Tìm ở ghép' },
-  { id: 'dodung', label: 'Đồ dùng', image: '/cate/quan-ao-v1.jpg', color: 'bg-emerald-50', description: 'Đồ gia dụng' },
-  { id: 'anuong', label: 'Ăn uống', image: '/cate/quan-ao-v1.jpg', color: 'bg-red-50', description: 'Deal ăn uống' },
+  { id: 'dientu', label: 'Điện tử', image: '/cate/dien-tu-v1.jpg', color: 'bg-purple-50', description: 'Laptop, phụ kiện' },
+  { id: 'phongtro', label: 'Phòng trọ', image: '/cate/phong-tro-v2-1.jpg', color: 'bg-orange-50', description: 'Tìm ở ghép' },
+  { id: 'dodung', label: 'Đồ dùng', image: '/cate/do-dung-v1.jpg', color: 'bg-emerald-50', description: 'Đồ gia dụng' },
+  { id: 'anuong', label: 'Ăn uống', image: '/cate/an-uong-v2-1.jpg', color: 'bg-red-50', description: 'Deal ăn uống' },
 ];
 
 const CategoryGrid = () => {
   return (
-    <section className="py-20 bg-white">
+    <section className="pt-12 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div className="space-y-2">
@@ -31,7 +31,7 @@ const CategoryGrid = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8">
+        <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8">
           {heroCategories.map((cat) => (
             <Link
               key={cat.id}
