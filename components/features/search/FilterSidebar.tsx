@@ -14,9 +14,10 @@ interface FilterSidebarProps {
   onFiltersChange: (filters: SearchFilters) => void;
   isOpen: boolean;
   onClose: () => void;
+  hideCategories?: boolean;
 }
 
-const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose }: FilterSidebarProps) => {
+const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategories = false }: FilterSidebarProps) => {
   // State cho expanded sections
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [expandedSchool, setExpandedSchool] = useState<string | null>(null);
@@ -175,6 +176,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose }: FilterSide
         </button>
 
         {/* Category Filter với Subcategories */}
+        {!hideCategories && (
         <div className="mb-8">
           <h3 className="font-semibold text-gray-900 mb-3 text-sm">Danh mục</h3>
           <div className="space-y-1">
@@ -261,6 +263,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose }: FilterSide
             })}
           </div>
         </div>
+        )}
 
         {/* Condition Filter */}
         <div className="mb-8">

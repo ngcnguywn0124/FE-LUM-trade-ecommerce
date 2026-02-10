@@ -159,6 +159,9 @@ const SearchPage = () => {
     },
   ];
 
+  // Determine if popular categories are shown
+  const showSuggestedCategories = !keyword && !filters.category && filters.condition === 'all' && !filters.priceRange;
+
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -173,6 +176,7 @@ const SearchPage = () => {
               onFiltersChange={handleFiltersChange}
               isOpen={isFilterOpen}
               onClose={() => setIsFilterOpen(false)}
+              hideCategories={showSuggestedCategories}
             />
           </div>
 
@@ -194,6 +198,7 @@ const SearchPage = () => {
                 onFiltersChange={handleFiltersChange}
                 isOpen={isFilterOpen}
                 onClose={() => setIsFilterOpen(false)}
+                hideCategories={showSuggestedCategories}
               />
             </div>
 
@@ -212,7 +217,7 @@ const SearchPage = () => {
             <ActiveFilters filters={filters} onRemoveFilter={handleRemoveFilter} />
 
             {/* Suggested Categories - show when no filters applied */}
-            {!keyword && !filters.category && filters.condition === 'all' && !filters.priceRange && (
+            {showSuggestedCategories && (
               <SuggestedCategories />
             )}
 
