@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { 
   SlidersHorizontal, X, ChevronDown, ChevronRight,
   Laptop, BookOpen, Shirt, Bike, Smartphone, Headphones, PenTool, Layers,
-  MapPin
+  MapPin, Search
 } from "lucide-react";
 import { SearchFilters, ConditionFilter } from "@/types";
 import { mockCategories, mockSchools, getCampusesBySchool, getSubcategoriesByCategory } from "@/lib/categoriesData";
@@ -21,6 +21,9 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
   // State cho expanded sections
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [expandedSchool, setExpandedSchool] = useState<string | null>(null);
+
+  // State cho tìm kiếm trường học
+  const [schoolSearchQuery, setSchoolSearchQuery] = useState("");
 
   // Local state cho custom price inputs để tránh lọc ngay lập tức
   const [localMinPrice, setLocalMinPrice] = useState<string>(filters.priceRange?.min?.toString() || '');
@@ -145,6 +148,14 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
       campus: campusName === filters.campus ? undefined : campusName,
     });
   };
+
+  // Filter trường học dựa trên search query
+  const filteredSchools = mockSchools.filter(school => 
+    school.name.toLowerCase().includes(schoolSearchQuery.toLowerCase())
+  );
+
+  // Chỉ hiển thị tối đa 6 trường để giao diện gọn gàng
+  const displayedSchools = filteredSchools.slice(0, 6);
 
   const clearFilters = () => {
     onFiltersChange({
@@ -411,102 +422,134 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
 
         {/* School Filter với Campuses */}
         <div className="mb-8">
-          <h3 className="font-semibold text-gray-900 mb-3 text-sm">Trường học</h3>
-          <div className="space-y-1">
-            {mockSchools.map((school) => {
-              const hasCampuses = school.campuses && school.campuses.length > 0;
-              const isSelected = filters.school === school.name;
-              const isExpanded = expandedSchool === school.name;
-              
-              return (
-                <div key={school.id}>
-                  {/* Main School */}
-                  <div
-                    className={`flex items-center justify-between py-2 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group ${isSelected ? 'bg-emerald-50/50' : ''}`}
-                    onClick={() => handleSchoolChange(school.name)}
-                  >
-                    <label className="flex items-center gap-3 cursor-pointer flex-1">
-                      <input
-                        type="radio"
-                        name="school"
-                        checked={isSelected}
-                        onChange={() => handleSchoolChange(school.name)}
-                        className="hidden" // Hidden radio
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <span className={`${isSelected ? 'text-emerald-600' : 'text-gray-500 group-hover:text-gray-700'}`}>
-                        <MapPin size={18} />
-                      </span>
-                      <span className={`text-sm group-hover:text-gray-900 ${isSelected ? 'text-emerald-600 font-medium' : 'text-gray-700'}`}>
-                        {school.name}
-                      </span>
-                    </label>
-                    {hasCampuses && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isSelected) {
-                            setExpandedSchool(isExpanded ? null : school.name);
-                          }
-                        }}
-                        className={`p-1 rounded transition-colors ${
-                          isSelected 
-                            ? 'hover:bg-gray-200' 
-                            : 'opacity-50'
-                        }`}
-                        disabled={!isSelected}
-                        title={!isSelected ? 'Chọn trường để xem cơ sở' : 'Xem cơ sở'}
-                      >
-                        {isExpanded && isSelected ? (
-                          <ChevronDown size={16} className="text-gray-500" />
-                        ) : (
-                          <ChevronRight size={16} className="text-gray-500" />
-                        )}
-                      </button>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-900 text-sm">Trường học</h3>
+            <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">
+              {mockSchools.length} trường
+            </span>
+          </div>
+
+          {/* Search bar for schools - Show if more than 6 schools */}
+          {mockSchools.length > 6 && (
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+              <input
+                type="text"
+                placeholder="Tìm trường học..."
+                className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                value={schoolSearchQuery}
+                onChange={(e) => setSchoolSearchQuery(e.target.value)}
+              />
+              {schoolSearchQuery && (
+                <button 
+                  onClick={() => setSchoolSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+          )}
+
+          <div className="space-y-1 max-h-75 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-200">
+            {displayedSchools.length > 0 ? (
+              displayedSchools.map((school) => {
+                const hasCampuses = school.campuses && school.campuses.length > 0;
+                const isSelected = filters.school === school.name;
+                const isExpanded = expandedSchool === school.name;
+                
+                return (
+                  <div key={school.id}>
+                    {/* Main School */}
+                    <div
+                      className={`flex items-center justify-between py-2 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group ${isSelected ? 'bg-emerald-50/50' : ''}`}
+                      onClick={() => handleSchoolChange(school.name)}
+                    >
+                      <label className="flex items-center gap-3 cursor-pointer flex-1">
+                        <input
+                          type="radio"
+                          name="school"
+                          checked={isSelected}
+                          onChange={() => handleSchoolChange(school.name)}
+                          className="hidden" // Hidden radio
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <span className={`${isSelected ? 'text-emerald-600' : 'text-gray-500 group-hover:text-gray-700'}`}>
+                          <MapPin size={18} />
+                        </span>
+                        <span className={`text-sm group-hover:text-gray-900 ${isSelected ? 'text-emerald-600 font-medium' : 'text-gray-700'}`}>
+                          {school.name}
+                        </span>
+                      </label>
+                      {hasCampuses && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isSelected) {
+                              setExpandedSchool(isExpanded ? null : school.name);
+                            }
+                          }}
+                          className={`p-1 rounded transition-colors ${
+                            isSelected 
+                              ? 'hover:bg-gray-200' 
+                              : 'opacity-50'
+                          }`}
+                          disabled={!isSelected}
+                          title={!isSelected ? 'Chọn trường để xem cơ sở' : 'Xem cơ sở'}
+                        >
+                          {isExpanded && isSelected ? (
+                            <ChevronDown size={16} className="text-gray-500" />
+                          ) : (
+                            <ChevronRight size={16} className="text-gray-500" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Campuses */}
+                    {isSelected && isExpanded && availableCampuses.length > 0 && (
+                      <div className="ml-7 mt-1 space-y-1 pb-2">
+                        {availableCampuses.map((campus) => {
+                          const isCampusSelected = filters.campus === campus.name;
+                          return (
+                            <label
+                              key={campus.id}
+                              className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
+                            >
+                              <div className="relative flex items-center justify-center">
+                                <input
+                                  type="radio"
+                                  name="campus"
+                                  checked={isCampusSelected}
+                                  onChange={() => handleCampusChange(campus.name)}
+                                  className="sr-only"
+                                />
+                                <div className={`w-3.5 h-3.5 rounded-full border transition-all ${
+                                  isCampusSelected 
+                                    ? 'border-emerald-600 border-[4.5px]' 
+                                    : 'border-gray-300 group-hover:border-emerald-500'
+                                }`} />
+                              </div>
+                              <span className={`text-sm transition-colors ${
+                                isCampusSelected ? 'text-emerald-700 font-medium' : 'text-gray-600 group-hover:text-gray-900'
+                              }`}>
+                                {campus.name}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
-
-                  {/* Campuses */}
-                  {isSelected && isExpanded && availableCampuses.length > 0 && (
-                    <div className="ml-7 mt-1 space-y-1 pb-2">
-                      {availableCampuses.map((campus) => {
-                        const isCampusSelected = filters.campus === campus.name;
-                        return (
-                          <label
-                            key={campus.id}
-                            className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
-                          >
-                            <div className="relative flex items-center justify-center">
-                              <input
-                                type="radio"
-                                name="campus"
-                                checked={isCampusSelected}
-                                onChange={() => handleCampusChange(campus.name)}
-                                className="sr-only"
-                              />
-                              <div className={`w-3.5 h-3.5 rounded-full border transition-all ${
-                                isCampusSelected 
-                                  ? 'border-emerald-600 border-[4.5px]' 
-                                  : 'border-gray-300 group-hover:border-emerald-500'
-                              }`} />
-                            </div>
-                            <span className={`text-sm transition-colors ${
-                              isCampusSelected ? 'text-emerald-700 font-medium' : 'text-gray-600 group-hover:text-gray-900'
-                            }`}>
-                              {campus.name}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <div className="py-4 text-center">
+                <p className="text-xs text-gray-500">Không tìm thấy trường nào</p>
+              </div>
+            )}
           </div>
-        </div>
-
-        {/* Apply Filters Button (Mobile) */}
+        </div>        {/* Apply Filters Button (Mobile) */}
         <button
           onClick={onClose}
           className="lg:hidden w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors"
