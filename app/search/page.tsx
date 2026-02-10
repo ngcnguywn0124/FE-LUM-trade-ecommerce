@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 import FilterSidebar from "@/components/features/search/FilterSidebar";
 import SearchHeader from "@/components/features/search/SearchHeader";
@@ -18,6 +18,7 @@ const mockProducts: Product[] = generateMockProducts(100);
 
 const SearchPage = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const keyword = searchParams.get("q") || "";
   const categoryParam = searchParams.get("category") || "";
 
@@ -33,6 +34,23 @@ const SearchPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const itemsPerPage = 24;
+
+  // Sync URL params with local state
+  useEffect(() => {
+    const categoryParam = searchParams.get("category") || undefined;
+    
+    setFilters(prev => {
+      // Chỉ update nếu thực sự có sự thay đổi để tránh vòng lặp vô tận
+      if (prev.category === categoryParam) return prev;
+      
+      return {
+        ...prev,
+        category: categoryParam,
+        subcategory: undefined, // Reset subcategory khi đổi category
+      };
+    });
+    setCurrentPage(1);
+  }, [searchParams]);
 
   // Filter and sort products
   const filteredProducts = mockProducts.filter((product) => {
@@ -106,14 +124,30 @@ const SearchPage = () => {
   const handleFiltersChange = (newFilters: SearchFilters) => {
     setFilters(newFilters);
     setCurrentPage(1); // Reset to first page when filters change
+
+    // Sync specific filters to URL for better UX
+    const params = new URLSearchParams(searchParams.toString());
+    if (newFilters.category) {
+      params.set("category", newFilters.category);
+    } else {
+      params.delete("category");
+    }
+    router.push(`/search?${params.toString()}`, { scroll: false });
   };
 
   const handleRemoveFilter = (filterKey: keyof SearchFilters) => {
-    setFilters({
+    const newFilters = {
       ...filters,
       [filterKey]: filterKey === 'condition' ? 'all' : undefined,
-    });
+    };
+    setFilters(newFilters);
     setCurrentPage(1);
+
+    if (filterKey === 'category') {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("category");
+      router.push(`/search?${params.toString()}`, { scroll: false });
+    }
   };
 
   const handleSortChange = (sortBy: SortOption) => {
@@ -144,6 +178,11 @@ const SearchPage = () => {
       sortBy: 'newest',
     });
     setCurrentPage(1);
+
+    // Update URL - remove category but keep keyword (q)
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("category");
+    router.push(`/search?${params.toString()}`);
   };
 
   // Breadcrumb items
