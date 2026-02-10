@@ -236,26 +236,38 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                   {/* Subcategories */}
                   {isSelected && isExpanded && availableSubcategories.length > 0 && (
                     <div className="ml-7 mt-1 space-y-1 pb-2">
-                      {availableSubcategories.map((subcategory) => (
-                        <label
-                          key={subcategory.id}
-                          className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
-                        >
-                          <input
-                            type="radio"
-                            name="subcategory"
-                            checked={filters.subcategory === subcategory.name}
-                            onChange={() => handleSubcategoryChange(subcategory.name)}
-                            className="w-3.5 h-3.5 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                          />
-                          <span className="text-sm text-gray-600 group-hover:text-gray-900">
-                            {subcategory.name}
-                            {subcategory.count && (
-                              <span className="text-xs text-gray-400 ml-1">({subcategory.count})</span>
-                            )}
-                          </span>
-                        </label>
-                      ))}
+                      {availableSubcategories.map((subcategory) => {
+                        const isSubSelected = filters.subcategory === subcategory.name;
+                        return (
+                          <label
+                            key={subcategory.id}
+                            className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
+                          >
+                            <div className="relative flex items-center justify-center">
+                              <input
+                                type="radio"
+                                name="subcategory"
+                                checked={isSubSelected}
+                                onChange={() => handleSubcategoryChange(subcategory.name)}
+                                className="sr-only"
+                              />
+                              <div className={`w-3.5 h-3.5 rounded-full border transition-all ${
+                                isSubSelected 
+                                  ? 'border-emerald-600 border-[4.5px]' 
+                                  : 'border-gray-300 group-hover:border-emerald-500'
+                              }`} />
+                            </div>
+                            <span className={`text-sm transition-colors ${
+                              isSubSelected ? 'text-emerald-700 font-medium' : 'text-gray-600 group-hover:text-gray-900'
+                            }`}>
+                              {subcategory.name}
+                              {subcategory.count && (
+                                <span className="text-xs text-gray-400 ml-1">({subcategory.count})</span>
+                              )}
+                            </span>
+                          </label>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -269,23 +281,35 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
         <div className="mb-8">
           <h3 className="font-semibold text-gray-900 mb-3 text-sm">Tình trạng</h3>
           <div className="space-y-2">
-            {conditions.map((condition) => (
-              <label
-                key={condition.value}
-                className="flex items-center gap-3 cursor-pointer group"
-              >
-                <input
-                  type="radio"
-                  name="condition"
-                  checked={filters.condition === condition.value}
-                  onChange={() => handleConditionChange(condition.value)}
-                  className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                />
-                <span className="text-sm text-gray-700 group-hover:text-gray-900">
-                  {condition.label}
-                </span>
-              </label>
-            ))}
+            {conditions.map((condition) => {
+              const checked = filters.condition === condition.value;
+              return (
+                <label
+                  key={condition.value}
+                  className="flex items-center gap-3 cursor-pointer group"
+                >
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="radio"
+                      name="condition"
+                      checked={checked}
+                      onChange={() => handleConditionChange(condition.value)}
+                      className="sr-only"
+                    />
+                    <div className={`w-4 h-4 rounded-full border transition-all ${
+                      checked 
+                        ? 'border-emerald-600 border-[5px]' 
+                        : 'border-gray-300 group-hover:border-emerald-500'
+                    }`} />
+                  </div>
+                  <span className={`text-sm transition-colors ${
+                    checked ? 'text-emerald-700 font-medium' : 'text-gray-700 group-hover:text-gray-900'
+                  }`}>
+                    {condition.label}
+                  </span>
+                </label>
+              );
+            })}
           </div>
         </div>
 
@@ -293,26 +317,37 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
         <div className="mb-8">
           <h3 className="font-semibold text-gray-900 mb-3 text-sm">Khoảng giá</h3>
           <div className="space-y-2">
-            {priceRanges.map((range) => (
-              <label
-                key={range.label}
-                className="flex items-center gap-3 cursor-pointer group"
-              >
-                <input
-                  type="radio"
-                  name="priceRange"
-                  checked={
-                    filters.priceRange?.min === range.min &&
-                    filters.priceRange?.max === range.max
-                  }
-                  onChange={() => handlePriceRangeChange(range.min, range.max)}
-                  className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                />
-                <span className="text-sm text-gray-700 group-hover:text-gray-900">
-                  {range.label}
-                </span>
-              </label>
-            ))}
+            {priceRanges.map((range) => {
+              const checked = 
+                filters.priceRange?.min === range.min &&
+                filters.priceRange?.max === range.max;
+              return (
+                <label
+                  key={range.label}
+                  className="flex items-center gap-3 cursor-pointer group"
+                >
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="radio"
+                      name="priceRange"
+                      checked={checked}
+                      onChange={() => handlePriceRangeChange(range.min, range.max)}
+                      className="sr-only"
+                    />
+                    <div className={`w-4 h-4 rounded-full border transition-all ${
+                      checked 
+                        ? 'border-emerald-600 border-[5px]' 
+                        : 'border-gray-300 group-hover:border-emerald-500'
+                    }`} />
+                  </div>
+                  <span className={`text-sm transition-colors ${
+                    checked ? 'text-emerald-700 font-medium' : 'text-gray-700 group-hover:text-gray-900'
+                  }`}>
+                    {range.label}
+                  </span>
+                </label>
+              );
+            })}
           </div>
 
           {/* Custom Price Range */}
@@ -406,23 +441,35 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                   {/* Campuses */}
                   {isSelected && isExpanded && availableCampuses.length > 0 && (
                     <div className="ml-7 mt-1 space-y-1 pb-2">
-                      {availableCampuses.map((campus) => (
-                        <label
-                          key={campus.id}
-                          className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
-                        >
-                          <input
-                            type="radio"
-                            name="campus"
-                            checked={filters.campus === campus.name}
-                            onChange={() => handleCampusChange(campus.name)}
-                            className="w-3.5 h-3.5 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                          />
-                          <span className="text-sm text-gray-600 group-hover:text-gray-900">
-                            {campus.name}
-                          </span>
-                        </label>
-                      ))}
+                      {availableCampuses.map((campus) => {
+                        const isCampusSelected = filters.campus === campus.name;
+                        return (
+                          <label
+                            key={campus.id}
+                            className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
+                          >
+                            <div className="relative flex items-center justify-center">
+                              <input
+                                type="radio"
+                                name="campus"
+                                checked={isCampusSelected}
+                                onChange={() => handleCampusChange(campus.name)}
+                                className="sr-only"
+                              />
+                              <div className={`w-3.5 h-3.5 rounded-full border transition-all ${
+                                isCampusSelected 
+                                  ? 'border-emerald-600 border-[4.5px]' 
+                                  : 'border-gray-300 group-hover:border-emerald-500'
+                              }`} />
+                            </div>
+                            <span className={`text-sm transition-colors ${
+                              isCampusSelected ? 'text-emerald-700 font-medium' : 'text-gray-600 group-hover:text-gray-900'
+                            }`}>
+                              {campus.name}
+                            </span>
+                          </label>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

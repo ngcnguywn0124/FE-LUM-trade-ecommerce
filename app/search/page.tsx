@@ -199,7 +199,7 @@ const SearchPage = () => {
   ];
 
   // Determine if popular categories are shown
-  const showSuggestedCategories = !keyword && !filters.category && filters.condition === 'all' && !filters.priceRange;
+  const showSuggestedCategories = !keyword && !filters.category;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
