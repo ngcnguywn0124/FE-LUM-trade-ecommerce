@@ -199,21 +199,24 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
             <SlidersHorizontal size={20} className="text-emerald-600" />
             <h2 className="text-lg font-bold text-gray-900">Bộ lọc</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="lg:hidden p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <X size={20} />
-          </button>
+          
+          <div className="flex items-center gap-3">
+            <button
+              onClick={clearFilters}
+              className="text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+            >
+              Xóa lọc
+            </button>
+            <button
+              onClick={onClose}
+              className="lg:hidden p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
-        {/* Clear Filters */}
-        <button
-          onClick={clearFilters}
-          className="w-full mb-6 text-sm text-emerald-600 hover:text-emerald-700 font-medium text-left"
-        >
-          Xóa tất cả bộ lọc
-        </button>
+        {/* Categories, etc. */}
 
         {/* Category Filter với Subcategories */}
         {!hideCategories && (
