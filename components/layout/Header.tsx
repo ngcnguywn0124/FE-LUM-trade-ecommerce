@@ -33,6 +33,10 @@ const Header = () => {
     }
 
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    
+    // Kiểm tra ngay khi load trang
+    handleScroll();
+    
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHomePage]);
