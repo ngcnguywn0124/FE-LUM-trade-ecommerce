@@ -10,7 +10,7 @@ interface ProductProps {
     school: string;
     campus?: string;
     image: string;
-    tag: string;
+    tag?: string;
     time?: string;
     imageCount?: number;
   };
