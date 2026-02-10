@@ -21,6 +21,20 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
   // State cho expanded sections
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [expandedSchool, setExpandedSchool] = useState<string | null>(null);
+
+  // Local state cho custom price inputs để tránh lọc ngay lập tức
+  const [localMinPrice, setLocalMinPrice] = useState<string>(filters.priceRange?.min?.toString() || '');
+  const [localMaxPrice, setLocalMaxPrice] = useState<string>(
+    filters.priceRange?.max === 999999999 ? '' : filters.priceRange?.max?.toString() || ''
+  );
+
+  // Cập nhật lại local state khi filters.priceRange thay đổi từ bên ngoài (ví dụ: chọn khoảng giá nhanh hoặc xóa bộ lọc)
+  useEffect(() => {
+    setLocalMinPrice(filters.priceRange?.min?.toString() || '');
+    setLocalMaxPrice(
+      filters.priceRange?.max === 999999999 ? '' : filters.priceRange?.max?.toString() || ''
+    );
+  }, [filters.priceRange]);
   
   // Get available campuses based on selected school
   const availableCampuses = filters.school 
@@ -91,6 +105,21 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
 
   const handlePriceRangeChange = (min: number, max: number) => {
     onFiltersChange({ ...filters, priceRange: { min, max } });
+  };
+
+  const handleApplyCustomPrice = () => {
+    const min = localMinPrice === '' ? 0 : Number(localMinPrice);
+    const max = localMaxPrice === '' ? 999999999 : Number(localMaxPrice);
+    
+    // Nếu cả 2 đều trống thì coi như xóa bộ lọc giá
+    if (localMinPrice === '' && localMaxPrice === '') {
+      onFiltersChange({ ...filters, priceRange: undefined });
+      return;
+    }
+
+    if (!isNaN(min) && !isNaN(max)) {
+      handlePriceRangeChange(min, max);
+    }
   };
 
   const handleSchoolChange = (schoolName: string) => {
@@ -352,32 +381,31 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
 
           {/* Custom Price Range */}
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center gap-2 mb-3">
               <input
                 type="number"
                 placeholder="Từ"
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                value={filters.priceRange?.min || ''}
-                onChange={(e) =>
-                  handlePriceRangeChange(
-                    Number(e.target.value),
-                    filters.priceRange?.max || 999999999
-                  )
-                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                value={localMinPrice}
+                onChange={(e) => setLocalMinPrice(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleApplyCustomPrice()}
               />
+              <span className="text-gray-400">-</span>
               <input
                 type="number"
                 placeholder="Đến"
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                value={filters.priceRange?.max === 999999999 ? '' : filters.priceRange?.max || ''}
-                onChange={(e) =>
-                  handlePriceRangeChange(
-                    filters.priceRange?.min || 0,
-                    Number(e.target.value)
-                  )
-                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                value={localMaxPrice}
+                onChange={(e) => setLocalMaxPrice(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleApplyCustomPrice()}
               />
             </div>
+            <button
+              onClick={handleApplyCustomPrice}
+              className="w-full py-2 bg-gray-100 hover:bg-emerald-600 hover:text-white text-gray-700 text-sm font-medium rounded-lg transition-all"
+            >
+              Áp dụng
+            </button>
           </div>
         </div>
 
