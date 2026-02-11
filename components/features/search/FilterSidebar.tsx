@@ -399,7 +399,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
               <input
                 type="number"
                 placeholder="Từ"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-emerald-600 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                 value={localMinPrice}
                 onChange={(e) => setLocalMinPrice(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleApplyCustomPrice()}
@@ -408,7 +408,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
               <input
                 type="number"
                 placeholder="Đến"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-emerald-600 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                 value={localMaxPrice}
                 onChange={(e) => setLocalMaxPrice(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleApplyCustomPrice()}
@@ -439,7 +439,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
               <input
                 type="text"
                 placeholder="Tìm trường học..."
-                className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-emerald-600 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                 value={schoolSearchQuery}
                 onChange={(e) => setSchoolSearchQuery(e.target.value)}
               />

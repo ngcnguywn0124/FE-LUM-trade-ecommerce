@@ -12,7 +12,7 @@ interface PaginationProps {
 const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) => {
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
-    const maxVisible = 5;
+    const maxVisible = 10;
 
     if (totalPages <= maxVisible) {
       // Show all pages if total is small
@@ -56,10 +56,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
         aria-label="Trang trước"
       >
-        <ChevronLeft size={20} />
+        <ChevronLeft size={20} className="text-emerald-600" />
       </button>
 
       {/* Page Numbers */}
@@ -71,7 +71,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
             ) : (
               <button
                 onClick={() => onPageChange(page as number)}
-                className={`min-w-10 h-10 px-3 rounded-lg font-medium transition-all ${
+                className={`min-w-10 h-10 px-3 rounded-lg font-medium transition-all cursor-pointer ${
                   currentPage === page
                     ? 'bg-emerald-600 text-white shadow-sm'
                     : 'border border-gray-300 hover:bg-gray-50 text-gray-700'
@@ -88,10 +88,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
         aria-label="Trang sau"
       >
-        <ChevronRight size={20} />
+        <ChevronRight size={20} className="text-emerald-600"/>
       </button>
     </div>
   );
