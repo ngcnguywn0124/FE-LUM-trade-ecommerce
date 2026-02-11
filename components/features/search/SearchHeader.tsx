@@ -52,7 +52,7 @@ const SearchHeader = ({
         </div>
 
         {/* View Mode Toggle (Desktop) */}
-        <div className="hidden md:flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+        <div className="hidden lg:flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
           <button
             onClick={() => onViewModeChange('grid-4')}
             className={`p-2 rounded transition-colors ${

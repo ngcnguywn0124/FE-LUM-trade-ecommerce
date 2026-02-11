@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, LayoutGrid, List } from "lucide-react";
 import FilterSidebar from "@/components/features/search/FilterSidebar";
 import SearchHeader from "@/components/features/search/SearchHeader";
 import ActiveFilters from "@/components/features/search/ActiveFilters";
@@ -221,14 +221,39 @@ const SearchPage = () => {
 
           {/* Main Content */}
           <div className="flex-1 min-w-0">
-            {/* Mobile Filter Button */}
-            <button
-              onClick={() => setIsFilterOpen(true)}
-              className="lg:hidden w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <SlidersHorizontal size={20} />
-              <span className="font-medium">Bộ lọc & Sắp xếp</span>
-            </button>
+            {/* Mobile Filter & View Toggle */}
+            <div className="lg:hidden flex items-center gap-2 mb-4">
+              <button
+                onClick={() => setIsFilterOpen(true)}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                <SlidersHorizontal size={18} className="text-gray-600" />
+                <span className="font-medium text-sm text-gray-700">Bộ lọc & Sắp xếp</span>
+              </button>
+              
+              <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200 shadow-sm">
+                <button
+                  onClick={() => setViewMode('grid-4')}
+                  className={`p-1.5 rounded-md transition-all ${
+                    viewMode === 'grid-4'
+                      ? 'bg-white text-emerald-600 shadow-sm'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  <LayoutGrid size={18} />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-1.5 rounded-md transition-all ${
+                    viewMode === 'list'
+                      ? 'bg-white text-emerald-600 shadow-sm'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  <List size={18} />
+                </button>
+              </div>
+            </div>
 
             {/* Mobile Filter Sidebar */}
             <div className="lg:hidden">
