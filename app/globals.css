@@ -29,3 +29,48 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-comfortaa), sans-serif;
 }
+
+/* Custom Scrollbar - Giao diện thân hiện và mượt mà */
+@layer base {
+  /* Cho Chrome, Edge, và Safari */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    border-radius: 20px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #98FF98; /* Brand Mint */
+  }
+
+  /* Chế độ Dark mode */
+  @media (prefers-color-scheme: dark) {
+    ::-webkit-scrollbar-thumb {
+      background-color: #4b5563;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: #98FF98;
+    }
+  }
+
+  /* Cho Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db transparent;
+  }
+
+  /* Giữ layout ổn định khi scrollbar xuất hiện */
+  html {
+    scrollbar-gutter: stable;
+  }
+}
