@@ -28,7 +28,7 @@ const SearchPage = () => {
     condition: 'all',
     sortBy: 'newest',
   });
-  const [viewMode, setViewMode] = useState<'grid-3' | 'grid-4'>('grid-4');
+  const [viewMode, setViewMode] = useState<'grid-4' | 'list'>('grid-4');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);

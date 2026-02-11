@@ -3,7 +3,6 @@ export interface Product {
   id: number;
   name: string;
   price: string;
-  originalPrice?: string;
   school: string;
   campus?: string;
   image: string;

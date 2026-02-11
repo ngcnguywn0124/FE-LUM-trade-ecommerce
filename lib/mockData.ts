@@ -54,7 +54,6 @@ export const generateMockProducts = (count: number = 50) => {
     else if (category.name === 'Sách') basePrice = 50000;
 
     const price = basePrice + Math.floor(seededRandom.random() * basePrice);
-    const discount = seededRandom.random() > 0.5 ? 1.2 + seededRandom.random() * 0.5 : 1;
 
     // Create product name with subcategory
     const productName = `${subcategory} ${i} - ${condition === 'new' ? 'Mới 100%' : condition === 'like-new' ? 'Như mới' : 'Đã qua sử dụng'}`;
@@ -63,7 +62,6 @@ export const generateMockProducts = (count: number = 50) => {
       id: i,
       name: productName,
       price: `${price.toLocaleString('vi-VN')}đ`,
-      originalPrice: discount > 1 ? `${Math.floor(price * discount).toLocaleString('vi-VN')}đ` : undefined,
       school: school.name,
       campus: campus,
       image: `/product/${category.name.toLowerCase().replace(/\s+/g, '%20')}.jpg`,

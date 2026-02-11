@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ArrowUpDown, Grid3x3, LayoutGrid } from "lucide-react";
+import { ArrowUpDown, LayoutGrid, List } from "lucide-react";
 import { SortOption } from "@/types";
 
 interface SearchHeaderProps {
@@ -10,8 +10,8 @@ interface SearchHeaderProps {
   category?: string;
   sortBy: SortOption;
   onSortChange: (sort: SortOption) => void;
-  viewMode: 'grid-3' | 'grid-4';
-  onViewModeChange: (mode: 'grid-3' | 'grid-4') => void;
+  viewMode: 'grid-4' | 'list';
+  onViewModeChange: (mode: 'grid-4' | 'list') => void;
 }
 
 const SearchHeader = ({
@@ -54,17 +54,6 @@ const SearchHeader = ({
         {/* View Mode Toggle (Desktop) */}
         <div className="hidden md:flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
           <button
-            onClick={() => onViewModeChange('grid-3')}
-            className={`p-2 rounded transition-colors ${
-              viewMode === 'grid-3'
-                ? 'bg-white text-emerald-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-            title="3 cột"
-          >
-            <Grid3x3 size={18} />
-          </button>
-          <button
             onClick={() => onViewModeChange('grid-4')}
             className={`p-2 rounded transition-colors ${
               viewMode === 'grid-4'
@@ -74,6 +63,17 @@ const SearchHeader = ({
             title="4 cột"
           >
             <LayoutGrid size={18} />
+          </button>
+          <button
+            onClick={() => onViewModeChange('list')}
+            className={`p-2 rounded transition-colors ${
+              viewMode === 'list'
+                ? 'bg-white text-emerald-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+            title="Danh sách"
+          >
+            <List size={18} />
           </button>
         </div>
       </div>

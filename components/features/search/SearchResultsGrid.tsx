@@ -2,12 +2,13 @@
 
 import React from "react";
 import ProductCard from "../product/ProductCard";
+import ProductCardList from "../product/ProductCardList";
 import { Product } from "@/types";
 import EmptyState from "./EmptyState";
 
 interface SearchResultsGridProps {
   products: Product[];
-  viewMode: 'grid-3' | 'grid-4';
+  viewMode: 'grid-4' | 'list';
   isLoading?: boolean;
   onClearFilters?: () => void;
   keyword?: string;
@@ -32,10 +33,19 @@ const SearchResultsGrid = ({ products, viewMode, isLoading = false, onClearFilte
     return <EmptyState type="no-results" keyword={keyword} onClearFilters={onClearFilters} />;
   }
 
-  const gridClass =
-    viewMode === 'grid-3'
-      ? 'grid-cols-2 sm:grid-cols-2 lg:grid-cols-3'
-      : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4';
+  // List view
+  if (viewMode === 'list') {
+    return (
+      <div className="flex flex-col gap-4">
+        {products.map((product) => (
+          <ProductCardList key={product.id} product={product} />
+        ))}
+      </div>
+    );
+  }
+
+  // Grid view
+  const gridClass = 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4';
 
   return (
     <div className={`grid ${gridClass} gap-4 md:gap-5`}>
