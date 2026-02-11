@@ -2,17 +2,17 @@
 
 import React from "react";
 import Link from "next/link";
-import { Laptop, BookOpen, Shirt, Bike, Smartphone, Headphones, ShoppingBag, Sparkles } from "lucide-react";
+import Image from "next/image";
 
 const categories = [
-  { name: "Laptop", icon: Laptop, count: 234, color: "bg-blue-500" },
-  { name: "Sách", icon: BookOpen, count: 567, color: "bg-orange-500" },
-  { name: "Thời trang", icon: Shirt, count: 892, color: "bg-pink-500" },
-  { name: "Xe cộ", icon: Bike, count: 145, color: "bg-green-500" },
-  { name: "Điện thoại", icon: Smartphone, count: 321, color: "bg-purple-500" },
-  { name: "Phụ kiện", icon: Headphones, count: 456, color: "bg-red-500" },
-  { name: "Đồ dùng học tập", icon: ShoppingBag, count: 678, color: "bg-yellow-500" },
-  { name: "Khác", icon: Sparkles, count: 189, color: "bg-gray-500" },
+  { name: "Laptop", image: "/cate/giao-trinh-v1.png", count: 234 },
+  { name: "Sách", image: "/cate/quan-ao-v1.jpg", count: 567 },
+  { name: "Thời trang", image: "/cate/dien-tu-v1.jpg", count: 892 },
+  { name: "Xe cộ", image: "/cate/phong-tro-v2-1.jpg", count: 145 },
+  { name: "Điện thoại", image: "/cate/do-dung-v1.jpg", count: 321 },
+  { name: "Phụ kiện", image: "/cate/an-uong-v2-1.jpg", count: 456 },
+  { name: "Đồ dùng học tập", image: "/cate/mien-phi-v1.jpg", count: 678 },
+  { name: "Khác", image: "/cate/khac-v2.png", count: 189 },
 ];
 
 const SuggestedCategories = () => {
@@ -21,15 +21,19 @@ const SuggestedCategories = () => {
       <h2 className="text-lg font-bold text-gray-900 mb-4">Danh mục phổ biến</h2>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {categories.map((category) => {
-          const Icon = category.icon;
           return (
             <Link
               key={category.name}
               href={`/search?category=${encodeURIComponent(category.name)}`}
               className="group flex flex-col items-center gap-3 p-4 bg-gray-50 hover:bg-emerald-50 rounded-lg transition-all hover:shadow-md"
             >
-              <div className={`${category.color} w-12 h-12 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                <Icon size={24} className="text-white" />
+              <div className="relative w-12 h-12 group-hover:scale-110 transition-transform">
+                <Image
+                  src={category.image}
+                  alt={category.name}
+                  fill
+                  className="object-contain rounded-lg"
+                />
               </div>
               <div className="text-center">
                 <h3 className="text-sm font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors">
