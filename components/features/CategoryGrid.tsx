@@ -13,6 +13,7 @@ const heroCategories = [
   { id: 'dodung', label: 'Đồ dùng', image: '/cate/do-dung-v1.jpg', color: 'bg-emerald-50', description: 'Đồ gia dụng' },
   { id: 'anuong', label: 'Ăn uống', image: '/cate/an-uong-v2-1.jpg', color: 'bg-red-50', description: 'Deal ăn uống' },
   { id: 'chotangmienphi', label: 'Cho tặng miễn phí', image: '/cate/mien-phi-v1.jpg', color: 'bg-teal-50', description: 'Lấy ngay' },
+  { id: 'khac', label: 'Khác', image: '/cate/khac-v2.png', color: 'bg-gray-50', description: 'Vật dụng khác' },
 ];
 
 const CategoryGrid = () => {
