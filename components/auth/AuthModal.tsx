@@ -37,7 +37,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-999 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
@@ -62,26 +62,26 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
                     onClick={() => setActiveTab('login')}
                     className={`flex-1 pb-3 text-center text-lg font-bold transition-all relative ${
                         activeTab === 'login' 
-                        ? 'text-teal-500' 
+                        ? 'text-emerald-600' 
                         : 'text-gray-400 hover:text-gray-600'
                     }`}
                 >
                     Đăng nhập
                     {activeTab === 'login' && (
-                        <span className="absolute bottom-0 left-0 w-full h-[2px] bg-teal-500 rounded-t-full" />
+                        <span className="absolute bottom-0 left-0 w-full h-[2px] bg-emerald-600 rounded-t-full" />
                     )}
                 </button>
                 <button
                     onClick={() => setActiveTab('register')}
                     className={`flex-1 pb-3 text-center text-lg font-bold transition-all relative ${
                         activeTab === 'register' 
-                        ? 'text-teal-500' 
+                        ? 'text-emerald-600' 
                         : 'text-gray-400 hover:text-gray-600'
                     }`}
                 >
                     Đăng ký
                     {activeTab === 'register' && (
-                        <span className="absolute bottom-0 left-0 w-full h-[2px] bg-teal-500 rounded-t-full" />
+                        <span className="absolute bottom-0 left-0 w-full h-[2px] bg-emerald-600 rounded-t-full" />
                     )}
                 </button>
             </div>
@@ -91,6 +91,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
                  <h2 className="text-2xl font-bold text-gray-800">
                     {activeTab === 'login' ? 'Đăng nhập' : 'Đăng ký tài khoản'}
                  </h2>
+                 {activeTab === 'login' && (
+                     <p className="text-gray-500 text-sm mt-1">Chào mừng bạn trở lại! Vui lòng đăng nhập để tiếp tục.</p>
+                 )}
                  {activeTab === 'register' && (
                      <p className="text-gray-500 text-sm mt-1">Tạo tài khoản để khám phá nhiều tính năng hơn</p>
                  )}

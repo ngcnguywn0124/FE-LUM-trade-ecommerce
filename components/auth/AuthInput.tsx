@@ -31,7 +31,7 @@ const AuthInput: React.FC<AuthInputProps> = ({
         <input
           id={id}
           type={isPassword ? (showPassword ? 'text' : 'password') : props.type}
-          className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-teal-400 transition-all text-gray-800 placeholder-gray-400 ${
+          className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all text-gray-800 placeholder-gray-400 ${
             error ? 'border-red-500' : 'border-gray-200'
           } ${className}`}
           {...props}

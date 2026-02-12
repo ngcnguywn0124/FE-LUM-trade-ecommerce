@@ -32,13 +32,13 @@ const RegisterForm = () => {
         </div>
 
         <div className="flex items-center gap-2">
-            <input type="checkbox" id="terms" className="w-4 h-4 rounded border-gray-300 text-teal-500 focus:ring-teal-500 cursor-pointer" required />
+            <input type="checkbox" id="terms" className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600 cursor-pointer" required />
             <label htmlFor="terms" className="text-sm text-gray-600 cursor-pointer">
-                Tôi đồng ý với <a href="#" className="text-teal-600 hover:underline">Điều khoản & Chính sách</a>
+                Tôi đồng ý với <a href="#" className="text-emerald-600 hover:underline">Điều khoản & Chính sách</a>
             </label>
         </div>
 
-      <button className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 rounded-lg transition-colors shadow-md mt-2 text-base">
+      <button className="w-full bg-gray-900 hover:bg-emerald-700 text-[#FFBA00] font-bold py-3 rounded-lg transition-colors shadow-md mt-2 text-base cursor-pointer">
           Đăng ký
       </button>
     </form>

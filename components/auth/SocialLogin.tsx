@@ -13,7 +13,7 @@ const SocialLogin = () => {
 
       <div className="flex w-full">
         <button 
-          className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 border border-gray-200 py-3 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all font-semibold text-sm shadow-sm"
+          className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 border border-gray-200 py-3 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all font-semibold text-sm shadow-sm cursor-pointer"
         >
             {/* Google Icon/Logo - SVG for better quality */}
             <div className="relative w-5 h-5 flex items-center justify-center">

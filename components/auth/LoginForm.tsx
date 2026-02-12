@@ -21,15 +21,15 @@ const LoginForm = () => {
 
       <div className="flex items-center justify-between w-full">
          <label className="flex items-center gap-2 cursor-pointer group">
-             <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-teal-500 focus:ring-teal-500 cursor-pointer" />
+             <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
              <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">Ghi nhớ đăng nhập</span>
          </label>
-         <a href="#" className="text-sm text-blue-500 hover:text-blue-700 transition-colors font-medium">
+         <a href="#" className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors font-medium">
              Quên mật khẩu?
          </a>
       </div>
 
-      <button className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 rounded-lg transition-colors shadow-md mt-2 text-base">
+      <button className="w-full bg-gray-900 hover:bg-emerald-700 text-[#FFBA00] font-bold py-3 rounded-lg transition-colors shadow-md mt-2 text-base cursor-pointer">
           Đăng nhập
       </button>
     </form>
