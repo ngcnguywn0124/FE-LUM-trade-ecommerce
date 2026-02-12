@@ -45,7 +45,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
       />
 
       {/* Modal Content */}
-      <div className="relative bg-white rounded-2xl w-full max-w-[480px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+      <div className="relative bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
         
         {/* Close Button */}
         <button 
@@ -68,7 +68,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
                 >
                     Đăng nhập
                     {activeTab === 'login' && (
-                        <span className="absolute bottom-0 left-0 w-full h-[2px] bg-emerald-600 rounded-t-full" />
+                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-600 rounded-t-full" />
                     )}
                 </button>
                 <button
@@ -81,7 +81,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
                 >
                     Đăng ký
                     {activeTab === 'register' && (
-                        <span className="absolute bottom-0 left-0 w-full h-[2px] bg-emerald-600 rounded-t-full" />
+                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-600 rounded-t-full" />
                     )}
                 </button>
             </div>

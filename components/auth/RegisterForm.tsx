@@ -11,30 +11,40 @@ const RegisterForm = () => {
                placeholder="Nhập họ và tên của bạn"
                type="text"
             />
-            <AuthInput 
-               id="register-email"
-               label="Email"
-               placeholder="Nhập email của bạn"
-               type="email"
-            />
-            <AuthInput 
-               id="register-password"
-               label="Mật khẩu"
-               placeholder="Nhập mật khẩu"
-               isPassword
-            />
-             <AuthInput 
-               id="register-confirm-password"
-               label="Nhập lại mật khẩu"
-               placeholder="Nhập lại mật khẩu"
-               isPassword
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <AuthInput 
+                   id="register-email"
+                   label="Email"
+                   placeholder="Nhập email"
+                   type="email"
+                />
+                <AuthInput 
+                   id="register-phone"
+                   label="Số điện thoại"
+                   placeholder="Nhập số điện thoại"
+                   type="tel"
+                />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <AuthInput 
+                id="register-password"
+                label="Mật khẩu"
+                placeholder="Nhập mật khẩu"
+                isPassword
+                />
+                <AuthInput 
+                id="register-confirm-password"
+                label="Nhập lại mật khẩu"
+                placeholder="Nhập lại mật khẩu"
+                isPassword
+                />
+            </div>
         </div>
 
         <div className="flex items-center gap-2">
             <input type="checkbox" id="terms" className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600 cursor-pointer" required />
             <label htmlFor="terms" className="text-sm text-gray-600 cursor-pointer">
-                Tôi đồng ý với <a href="#" className="text-emerald-600 hover:underline">Điều khoản & Chính sách</a>
+                Tôi đồng ý với <a href="#" className="text-emerald-600 hover:underline">Điều khoản dịch vụ</a> & <a href="#" className="text-emerald-600 hover:underline">Chính sách bảo mật</a>. 
             </label>
         </div>
 
