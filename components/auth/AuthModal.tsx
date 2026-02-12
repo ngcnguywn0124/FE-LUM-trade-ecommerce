@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 import SocialLogin from './SocialLogin';
@@ -51,7 +52,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
         {/* Close Button */}
         <button 
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1 rounded-full transition-colors z-10"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1 rounded-full transition-colors z-10 cursor-pointer"
         >
             <X size={24} />
         </button>
@@ -62,29 +63,49 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
                 <div className="flex w-full border-b border-gray-100 mb-6">
                     <button
                         onClick={() => setActiveTab('login')}
-                        className={`flex-1 pb-3 text-center text-lg font-bold transition-all relative ${
+                        className={`flex-1 pb-3 text-center text-lg font-bold transition-all relative cursor-pointer ${
                             activeTab === 'login' 
                             ? 'text-emerald-600' 
                             : 'text-gray-400 hover:text-gray-600'
                         }`}
                     >
                         Đăng nhập
-                        {activeTab === 'login' && (
-                            <span className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-600 rounded-t-full" />
-                        )}
+                        <AnimatePresence>
+                            {activeTab === 'login' && (
+                                <motion.span 
+                                    key="login-underline"
+                                    initial={{ scaleX: 0 }}
+                                    animate={{ scaleX: 1 }}
+                                    exit={{ scaleX: 0 }}
+                                    transition={{ duration: 0.4, ease: "easeOut" }}
+                                    style={{ originX: 0 }}
+                                    className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-600 rounded-t-full" 
+                                />
+                            )}
+                        </AnimatePresence>
                     </button>
                     <button
                         onClick={() => setActiveTab('register')}
-                        className={`flex-1 pb-3 text-center text-lg font-bold transition-all relative ${
+                        className={`flex-1 pb-3 text-center text-lg font-bold transition-all relative cursor-pointer ${
                             activeTab === 'register' 
                             ? 'text-emerald-600' 
                             : 'text-gray-400 hover:text-gray-600'
                         }`}
                     >
                         Đăng ký
-                        {activeTab === 'register' && (
-                            <span className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-500 rounded-t-full" />
-                        )}
+                        <AnimatePresence>
+                            {activeTab === 'register' && (
+                                <motion.span 
+                                    key="register-underline"
+                                    initial={{ scaleX: 0 }}
+                                    animate={{ scaleX: 1 }}
+                                    exit={{ scaleX: 0 }}
+                                    transition={{ duration: 0.4, ease: "easeOut" }}
+                                    style={{ originX: 0 }}
+                                    className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-600 rounded-t-full" 
+                                />
+                            )}
+                        </AnimatePresence>
                     </button>
                 </div>
             )}
