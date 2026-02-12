@@ -1,23 +1,27 @@
 import React, { useState } from 'react';
 import AuthInput from './AuthInput';
 
-const LoginForm = () => {
+interface LoginFormProps {
+  onForgotPassword: () => void;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
   const [formData, setFormData] = useState({
-    email: '',
+    identifier: '',
     password: '',
   });
   const [errors, setErrors] = useState({
-    email: '',
+    identifier: '',
     password: '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors = { email: '', password: '' };
+    const newErrors = { identifier: '', password: '' };
     let isValid = true;
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Vui lòng nhập email';
+    if (!formData.identifier.trim()) {
+      newErrors.identifier = 'Vui lòng nhập email hoặc số điện thoại';
       isValid = false;
     }
     if (!formData.password) {
@@ -34,7 +38,7 @@ const LoginForm = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
-    const key = id === 'login-email' ? 'email' : 'password';
+    const key = id === 'login-identifier' ? 'identifier' : 'password';
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
@@ -42,13 +46,13 @@ const LoginForm = () => {
     <form className="flex flex-col gap-5 w-full mt-4" onSubmit={handleSubmit} noValidate>
       <div className="flex flex-col gap-4">
         <AuthInput 
-           id="login-email"
-           label="Email"
-           placeholder="Nhập email của bạn"
-           type="email"
-           value={formData.email}
+           id="login-identifier"
+           label="Email hoặc Số điện thoại"
+           placeholder="Nhập email hoặc số điện thoại của bạn"
+           type="text"
+           value={formData.identifier}
            onChange={handleChange}
-           error={errors.email}
+           error={errors.identifier}
            required
         />
         <AuthInput 
@@ -65,12 +69,19 @@ const LoginForm = () => {
 
       <div className="flex items-center justify-between w-full">
          <label className="flex items-center gap-2 cursor-pointer group">
-             <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" />
+             <input 
+                type="checkbox" 
+                className="w-4 h-4 rounded border-gray-300 accent-emerald-600 cursor-pointer" 
+             />
              <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">Ghi nhớ đăng nhập</span>
          </label>
-         <a href="#" className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors font-medium">
+         <button 
+           type="button"
+           onClick={onForgotPassword}
+           className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors font-medium cursor-pointer"
+         >
              Quên mật khẩu?
-         </a>
+         </button>
       </div>
 
       <button type="submit" className="w-full bg-gray-900 hover:bg-emerald-700 text-[#FFBA00] font-bold py-3 rounded-lg transition-colors shadow-md mt-2 text-base cursor-pointer">

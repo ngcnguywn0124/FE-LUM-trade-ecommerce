@@ -159,7 +159,12 @@ const RegisterForm = () => {
         </div>
 
         <div className="flex items-center gap-2">
-            <input type="checkbox" id="terms" className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600 cursor-pointer" required />
+            <input 
+                type="checkbox" 
+                id="terms" 
+                className="w-4 h-4 rounded border-gray-300 accent-emerald-600 cursor-pointer" 
+                required 
+            />
             <label htmlFor="terms" className="text-sm text-gray-600 cursor-pointer">
                 Tôi đồng ý với <a href="#" className="text-emerald-600 hover:underline">Điều khoản dịch vụ</a> & <a href="#" className="text-emerald-600 hover:underline">Chính sách bảo mật</a>. 
             </label>

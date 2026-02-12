@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 import SocialLogin from './SocialLogin';
+import ForgotPasswordForm from './ForgotPasswordForm';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,7 +14,7 @@ interface AuthModalProps {
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'login' }) => {
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>(defaultTab);
+  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>(defaultTab);
 
   // Reset tab when modal opens/closes or defaultTab changes
   useEffect(() => {
@@ -56,56 +57,68 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
         </button>
 
         <div className="p-6 sm:p-8">
-            {/* Tabs */}
-            <div className="flex w-full border-b border-gray-100 mb-6">
-                <button
-                    onClick={() => setActiveTab('login')}
-                    className={`flex-1 pb-3 text-center text-lg font-bold transition-all relative ${
-                        activeTab === 'login' 
-                        ? 'text-emerald-600' 
-                        : 'text-gray-400 hover:text-gray-600'
-                    }`}
-                >
-                    Đăng nhập
-                    {activeTab === 'login' && (
-                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-600 rounded-t-full" />
+            {/* Tabs - Hidden in forgot password mode */}
+            {activeTab !== 'forgot' && (
+                <div className="flex w-full border-b border-gray-100 mb-6">
+                    <button
+                        onClick={() => setActiveTab('login')}
+                        className={`flex-1 pb-3 text-center text-lg font-bold transition-all relative ${
+                            activeTab === 'login' 
+                            ? 'text-emerald-600' 
+                            : 'text-gray-400 hover:text-gray-600'
+                        }`}
+                    >
+                        Đăng nhập
+                        {activeTab === 'login' && (
+                            <span className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-600 rounded-t-full" />
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('register')}
+                        className={`flex-1 pb-3 text-center text-lg font-bold transition-all relative ${
+                            activeTab === 'register' 
+                            ? 'text-emerald-600' 
+                            : 'text-gray-400 hover:text-gray-600'
+                        }`}
+                    >
+                        Đăng ký
+                        {activeTab === 'register' && (
+                            <span className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-500 rounded-t-full" />
+                        )}
+                    </button>
+                </div>
+            )}
+
+            {activeTab === 'forgot' ? (
+                <ForgotPasswordForm onBack={() => setActiveTab('login')} />
+            ) : (
+                <>
+                    {/* Header Title */}
+                    <div className="text-center mb-6">
+                        <h2 className="text-2xl font-bold text-gray-800">
+                            {activeTab === 'login' ? 'Đăng nhập' : 'Đăng ký tài khoản'}
+                        </h2>
+                        {activeTab === 'login' && (
+                            <p className="text-gray-500 text-sm mt-1">Chào mừng bạn trở lại! Vui lòng đăng nhập để tiếp tục.</p>
+                        )}
+                        {activeTab === 'register' && (
+                            <p className="text-gray-500 text-sm mt-1">Tạo tài khoản để khám phá nhiều tính năng hơn</p>
+                        )}
+                    </div>
+
+                    {/* Forms */}
+                    {activeTab === 'login' ? (
+                        <LoginForm onForgotPassword={() => setActiveTab('forgot')} />
+                    ) : (
+                        <RegisterForm />
                     )}
-                </button>
-                <button
-                    onClick={() => setActiveTab('register')}
-                    className={`flex-1 pb-3 text-center text-lg font-bold transition-all relative ${
-                        activeTab === 'register' 
-                        ? 'text-emerald-600' 
-                        : 'text-gray-400 hover:text-gray-600'
-                    }`}
-                >
-                    Đăng ký
-                    {activeTab === 'register' && (
-                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-600 rounded-t-full" />
-                    )}
-                </button>
-            </div>
 
-            {/* Header Title */}
-            <div className="text-center mb-6">
-                 <h2 className="text-2xl font-bold text-gray-800">
-                    {activeTab === 'login' ? 'Đăng nhập' : 'Đăng ký tài khoản'}
-                 </h2>
-                 {activeTab === 'login' && (
-                     <p className="text-gray-500 text-sm mt-1">Chào mừng bạn trở lại! Vui lòng đăng nhập để tiếp tục.</p>
-                 )}
-                 {activeTab === 'register' && (
-                     <p className="text-gray-500 text-sm mt-1">Tạo tài khoản để khám phá nhiều tính năng hơn</p>
-                 )}
-            </div>
-
-            {/* Forms */}
-            {activeTab === 'login' ? <LoginForm /> : <RegisterForm />}
-
-            {/* Social Login */}
-            <div className="mt-6">
-                <SocialLogin />
-            </div>
+                    {/* Social Login */}
+                    <div className="mt-6">
+                        <SocialLogin />
+                    </div>
+                </>
+            )}
         </div>
       </div>
     </div>

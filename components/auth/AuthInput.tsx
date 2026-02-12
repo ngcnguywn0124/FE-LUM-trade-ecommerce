@@ -25,7 +25,7 @@ const AuthInput: React.FC<AuthInputProps> = ({
   return (
     <div className="flex flex-col gap-1.5 w-full">
       <label htmlFor={id} className="text-gray-700 text-sm font-medium">
-        {label}
+        {label} {props.required && <span className="text-red-500">*</span>}
       </label>
       <div className="relative">
         <input
@@ -40,7 +40,7 @@ const AuthInput: React.FC<AuthInputProps> = ({
           <button
             type="button"
             onClick={togglePasswordVisibility}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
