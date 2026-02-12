@@ -11,12 +11,14 @@ import {
 import LocationSelector from "../shared/LocationSelector";
 import CategorySelector from "../shared/CategorySelector";
 import CategoryMegaMenu from "../shared/CategoryMegaMenu";
+import AuthModal from "../auth/AuthModal";
 
 const Header = () => {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   
   // State cho Trường và Cơ sở
   const [selectedSchool, setSelectedSchool] = useState("HUTECH");
@@ -136,7 +138,10 @@ const Header = () => {
                  </button>
               </div>
 
-              <button className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-sm font-bold shadow-sm hover:shadow-md transition-all cursor-pointer">
+              <button 
+                onClick={() => setIsAuthModalOpen(true)}
+                className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-sm font-bold shadow-sm hover:shadow-md transition-all cursor-pointer"
+              >
                  <User size={18} />
                  <span>Tài khoản</span>
               </button>
@@ -146,6 +151,11 @@ const Header = () => {
                  <span className="text-[10px] sm:text-sm whitespace-nowrap">ĐĂNG TIN</span>
               </button>
             </div>
+      
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
           </div>
         </div>
       </nav>
