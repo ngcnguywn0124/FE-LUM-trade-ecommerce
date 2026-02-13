@@ -42,7 +42,7 @@ const AppShell = ({ children }: AppShellProps) => {
       return false;
     }
 
-    const authPaths = ['/dang-ky', '/dang-nhap', '/quen-mat-khau', '/doi-mat-khau',];
+    const authPaths = ['/dang-ky', '/dang-nhap', '/quen-mat-khau', '/dat-lai-mat-khau',];
     const specialPages = ['/unauthorized', '/not-found'];
     return pathname.startsWith('/admin') || authPaths.includes(pathname) || specialPages.includes(pathname);
   }, [pathname]);

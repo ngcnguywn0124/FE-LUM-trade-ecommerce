@@ -16,6 +16,7 @@ const AuthInput: React.FC<AuthInputProps> = ({
   error, 
   isPassword = false, 
   className = '', 
+  type,
   ...props 
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -32,7 +33,7 @@ const AuthInput: React.FC<AuthInputProps> = ({
       <div className="relative">
         <input
           id={id}
-          type={isPassword ? (showPassword ? 'text' : 'password') : props.type}
+          type={isPassword ? (showPassword ? 'text' : 'password') : type}
           className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all text-gray-800 placeholder-gray-400 ${
             error ? 'border-red-500' : 'border-gray-200'
           } ${className}`}
