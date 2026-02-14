@@ -67,7 +67,11 @@ const ProductDetailPage = () => {
     );
   }
 
-  const imageList = Array.from({ length: Math.max(product.imageCount || 1, 4) }, () => product.image);
+  const imageList = useMemo(() => {
+    // Ưu tiên ảnh chính, nếu không có thì dùng fallback
+    const mainImage = product.image || "/cate/khac-v2.png";
+    return Array.from({ length: Math.max(product.imageCount || 1, 4) }, () => mainImage);
+  }, [product]);
   const productCondition = conditionLabels[product.condition || "used"] || "Đã qua sử dụng";
   const productDescription = `Sản phẩm ${product.name} còn hoạt động tốt, phù hợp cho sinh viên cần tiết kiệm chi phí.
 
