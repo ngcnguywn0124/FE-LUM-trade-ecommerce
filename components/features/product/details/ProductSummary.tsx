@@ -1,0 +1,195 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import Image from "next/image";
+import {
+  Clock3,
+  Flag,
+  Heart,
+  MapPin,
+  MessageCircle,
+  PhoneCall,
+  Share2,
+  Star,
+  User,
+} from "lucide-react";
+
+interface ProductSummaryProps {
+  name: string;
+  price: string;
+  school: string;
+  campus?: string;
+  postedTime: string;
+  infoTags: string[];
+  seller: {
+    name: string;
+    avatar?: string;
+    rating?: number;
+    activityStatus?: string;
+    soldCount?: number;
+  };
+}
+
+const ProductSummary = ({
+  name,
+  price,
+  school,
+  campus,
+  postedTime,
+  infoTags,
+  seller,
+}: ProductSummaryProps) => {
+  const parsedPrice = useMemo(() => Number(price.replace(/[^\d]/g, "")) || 0, [price]);
+  const sellerRating = (seller.rating || 4.5).toFixed(1);
+  const sellerActivityStatus = seller.activityStatus || "Đang hoạt động";
+  const sellerSoldCount = seller.soldCount ?? 0;
+  const [offerPrice, setOfferPrice] = useState(
+    parsedPrice ? Math.round(parsedPrice * 0.9) : 100000
+  );
+
+  const formattedOfferPrice = useMemo(
+    () => `${Math.max(offerPrice, 0).toLocaleString("vi-VN")}đ`,
+    [offerPrice]
+  );
+
+  const quickOfferRates = [0.95, 0.9, 0.85];
+
+  return (
+    <section className="h-full rounded-2xl p-1">
+      <div className="flex items-start justify-between gap-3">
+        <h1 className="text-2xl leading-snug font-extrabold text-gray-900">{name}</h1>
+        <button className="shrink-0 inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+          <Heart size={16} />
+          Lưu tin
+        </button>
+      </div>
+
+      <p className="mt-3 text-3xl font-extrabold text-emerald-600">{price}</p>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {infoTags.map((tag) => (
+          <span
+            key={tag}
+            className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600">
+        <div className="inline-flex items-center gap-1.5">
+          <MapPin size={15} className="text-emerald-600" />
+          <span>
+            {school}
+            {campus ? ` | ${campus}` : ""}
+          </span>
+        </div>
+        <div className="inline-flex items-center gap-1.5">
+          <Clock3 size={15} className="text-gray-500" />
+          <span>Đăng {postedTime}</span>
+        </div>
+      </div>
+
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors cursor-pointer">
+          <MessageCircle size={18} />
+          Nhắn tin người bán
+        </button>
+        <button className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+          <PhoneCall size={18} />
+          Yêu cầu số điện thoại
+        </button>
+      </div>
+
+      <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 sm:p-4">
+        <p className="text-sm font-semibold text-gray-900">Deal giá với người bán</p>
+        <p className="mt-1 text-xs text-gray-600">Đề xuất mức giá hợp lý để bắt đầu thương lượng nhanh hơn</p>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {quickOfferRates.map((rate) => (
+            <button
+              key={rate}
+              onClick={() => setOfferPrice(Math.round(parsedPrice * rate))}
+              className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
+            >
+              {Math.round(rate * 100)}% giá niêm yết
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <input
+            type="number"
+            min={0}
+            value={offerPrice}
+            onChange={(event) => setOfferPrice(Number(event.target.value) || 0)}
+            className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 outline-none focus:border-emerald-500"
+            aria-label="Giá đề xuất"
+          />
+          <button className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">
+            Gửi đề xuất {formattedOfferPrice}
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-5 border-t border-gray-200 pt-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Thông tin người bán</p>
+
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="relative h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-white">
+              {seller.avatar ? (
+                <Image src={seller.avatar} alt={seller.name} fill className="object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-emerald-600">
+                  <User size={18} />
+                </div>
+              )}
+            </div>
+
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-gray-900">{seller.name}</p>
+              <div className="mt-1 flex items-center gap-1 text-xs text-amber-500">
+                <Star size={13} className="fill-amber-500" />
+                <span className="font-bold">{sellerRating}</span>
+                <span className="text-gray-500">đánh giá cộng đồng</span>
+              </div>
+            </div>
+          </div>
+
+          <button className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+            Xem trang
+          </button>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+          <div className="rounded-lg border border-gray-200 px-3 py-2">
+            <p className="text-gray-500">Trạng thái hoạt động</p>
+            <p className="mt-0.5 font-semibold text-gray-800">{sellerActivityStatus}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 px-3 py-2">
+            <p className="text-gray-500">Đã bán</p>
+            <p className="mt-0.5 font-semibold text-gray-800">{sellerSoldCount} sản phẩm</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer">
+          <Share2 size={16} />
+          Chia sẻ
+        </button>
+        <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer">
+          <Flag size={16} />
+          Báo xấu
+        </button>
+        <button className="inline-flex items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors sm:col-span-1 col-span-2 cursor-pointer">
+          Xem thêm tin người bán
+        </button>
+      </div>
+    </section>
+  );
+};
+
+export default ProductSummary;
