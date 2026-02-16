@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { MessageSquare, Send, ThumbsUp, User } from "lucide-react";
+import { Send, ThumbsUp, User } from "lucide-react";
 
 interface Comment {
   id: number;
@@ -55,7 +55,6 @@ const ProductComments = () => {
   return (
     <section className="flex flex-col rounded-2xl border border-gray-200 bg-white p-5 sm:p-6">
       <div className="mb-4 flex items-center gap-2 border-b border-gray-100 pb-3">
-        <MessageSquare size={20} className="text-emerald-600" />
         <h2 className="text-lg font-bold text-gray-900">Bình luận ({comments.length})</h2>
       </div>
 

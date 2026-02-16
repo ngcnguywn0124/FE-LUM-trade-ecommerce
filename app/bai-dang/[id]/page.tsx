@@ -11,6 +11,7 @@ import ProductDetailTabs from "@/components/features/product/details/ProductDeta
 import ProductComments from "@/components/features/product/details/ProductComments";
 import RelatedProducts from "@/components/features/product/details/RelatedProducts";
 import SimilarProducts from "@/components/features/product/details/SimilarProducts";
+import StickyMobileBar from "@/components/layout/StickyMobileBar";
 import { generateMockProducts } from "@/lib/mockData";
 import { Product } from "@/types";
 
@@ -134,7 +135,8 @@ Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt t�
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-12">
+    <div className="min-h-screen bg-gray-50 pt-24 pb-24 md:pb-12">
+      <StickyMobileBar />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Breadcrumb
           items={[
