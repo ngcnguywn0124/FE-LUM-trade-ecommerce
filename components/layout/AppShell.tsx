@@ -4,6 +4,7 @@ import { ReactNode, useMemo, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from './Header';
 import Footer from './Footer';
+import BackToTop from '@/components/common/BackToTop';
 
 interface AppShellProps {
   children: ReactNode;
@@ -74,6 +75,7 @@ const AppShell = ({ children }: AppShellProps) => {
         </div>
       </section>
       <Footer />
+      <BackToTop />
     </div>
   );
 };
