@@ -35,12 +35,12 @@ const Footer = () => {
         </div>
 
         {/* --- PHẦN 2: MAIN LINKS GRID --- */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 border-b border-gray-800 pb-16">
+        <div className="grid grid-cols-2 lg:grid-cols-12 gap-x-6 gap-y-10 border-b border-gray-800 pb-10 md:pb-16">
           
-          {/* Cột 1: Brand Info (Chiếm 4 phần) */}
-          <div className="lg:col-span-4 space-y-6">
+          {/* Cột 1: Brand Info (Full width on mobile) */}
+          <div className="col-span-2 lg:col-span-4 space-y-6">
             <h4 className="text-lg font-bold text-[#FFBA00] uppercase tracking-wider">Về chúng tôi</h4>
-            <p className="text-gray-400 leading-relaxed pr-4">
+            <p className="text-gray-400 leading-relaxed pr-4 text-sm md:text-base">
               Lụm.vn là nền tảng kết nối cộng đồng sinh viên, giúp việc mua bán đồ cũ trở nên an toàn, nhanh chóng và tiết kiệm. "Cũ người mới ta" - Lan tỏa giá trị xanh trong môi trường đại học.
             </p>
             <div className="flex gap-4">
@@ -62,10 +62,10 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Cột 2: Links (2 phần) */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Cột 2: Links (Half width on mobile) */}
+          <div className="col-span-1 lg:col-span-2 space-y-6">
             <h4 className="text-lg font-bold text-white">Khám phá</h4>
-            <ul className="space-y-3 text-gray-400">
+            <ul className="space-y-3 text-gray-400 text-sm md:text-base">
               <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Giáo trình</Link></li>
               <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Đồ công nghệ</Link></li>
               <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Xe cộ</Link></li>
@@ -74,10 +74,10 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Cột 3: Links (3 phần) */}
-          <div className="lg:col-span-3 space-y-6">
+          {/* Cột 3: Links (Half width on mobile) */}
+          <div className="col-span-1 lg:col-span-3 space-y-6">
             <h4 className="text-lg font-bold text-white">Chính sách & Hỗ trợ</h4>
-            <ul className="space-y-3 text-gray-400">
+            <ul className="space-y-3 text-gray-400 text-sm md:text-base">
               <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Trung tâm trợ giúp</Link></li>
               <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Quy chế hoạt động</Link></li>
               <li><Link href="#" className="hover:text-[#FFBA00] transition-colors">Bảo mật thông tin</Link></li>
@@ -85,16 +85,16 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Cột 4: Contact (3 phần) */}
-          <div className="lg:col-span-3 space-y-6">
+          {/* Cột 4: Contact (Full width on mobile) */}
+          <div className="col-span-2 lg:col-span-3 space-y-6">
             <h4 className="text-lg font-bold text-white">Liên hệ</h4>
-            <ul className="space-y-4 text-gray-400">
+            <ul className="space-y-4 text-gray-400 text-sm md:text-base">
               <li className="flex items-start gap-3">
-                <MapPin className="text-[#FFBA00] mt-1" size={18} />
+                <MapPin className="text-[#FFBA00] mt-1 shrink-0" size={18} />
                 <span>Trụ sở chính: Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh</span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone className="text-[#FFBA00]" size={18} />
+                <Phone className="text-[#FFBA00] shrink-0" size={18} />
                 <span className="text-lg font-bold text-white">1900 1234</span>
               </li>
               <li className="flex gap-4 mt-4">
