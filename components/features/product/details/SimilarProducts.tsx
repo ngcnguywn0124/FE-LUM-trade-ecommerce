@@ -23,8 +23,8 @@ const SimilarProducts = ({ products, currentProductId, category }: SimilarProduc
   if (!allSimilar.length) return null;
 
   return (
-    <section className="mt-6 pb-6 border-t border-gray-100 pt-10">
-      <div className="mb-8">
+    <section className="mt-4 pb-2 border-t border-gray-100 pt-6">
+      <div className="mb-6">
         <h2 className="text-lg md:text-xl font-bold text-gray-900 uppercase tracking-tight">
           Tin đăng tương tự
         </h2>
@@ -39,7 +39,7 @@ const SimilarProducts = ({ products, currentProductId, category }: SimilarProduc
 
       {/* Nút Xem thêm */}
       {visibleCount < allSimilar.length && (
-        <div className="mt-12 text-center">
+        <div className="mt-8 text-center">
           <button 
             onClick={() => setVisibleCount(prev => prev + 20)}
             className="px-10 py-3 rounded-full border-2 border-slate-100 font-bold text-gray-700 hover:bg-slate-50 transition-all hover:border-emerald-500 hover:text-emerald-600 cursor-pointer"

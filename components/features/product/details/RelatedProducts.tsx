@@ -101,7 +101,7 @@ const RelatedProducts = ({ products, sellerName }: RelatedProductsProps) => {
       </div>
 
       {/* Nút Xem thêm ở dưới */}
-      <div className="mt-6 text-center">
+      <div className="mt-2 text-center">
         <button className="px-10 py-3 rounded-full border-2 border-slate-100 font-bold text-gray-700 hover:bg-slate-50 transition-all hover:border-emerald-500 hover:text-emerald-600 cursor-pointer">
           Xem Thêm
         </button>
