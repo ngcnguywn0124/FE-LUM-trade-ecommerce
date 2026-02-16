@@ -36,13 +36,24 @@ const ProductDetailTabs = ({ description, specs }: ProductDetailTabsProps) => {
       {activeTab === "description" ? (
         <p className="whitespace-pre-line text-sm leading-7 text-gray-700">{description}</p>
       ) : (
-        <div className="space-y-2">
-          {specs.map((spec) => (
-            <div key={spec.label} className="flex items-start justify-between gap-4 rounded-lg bg-gray-50 px-4 py-3">
-              <span className="text-sm font-medium text-gray-600">{spec.label}</span>
-              <span className="text-sm font-semibold text-gray-800 text-right">{spec.value}</span>
-            </div>
-          ))}
+        <div className="overflow-hidden">
+          <table className="w-full border-collapse">
+            <tbody>
+              {specs.map((spec, index) => (
+                <tr 
+                  key={spec.label} 
+                  className={`${index !== specs.length - 1 ? "border-b border-gray-100" : ""}`}
+                >
+                  <td className="py-4 pr-4 text-sm font-medium text-gray-500 w-1/3">
+                    {spec.label}:
+                  </td>
+                  <td className="py-4 text-sm font-semibold text-gray-900">
+                    {spec.value}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </section>
