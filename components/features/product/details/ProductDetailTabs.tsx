@@ -14,7 +14,7 @@ const ProductDetailTabs = ({ description, specs }: ProductDetailTabsProps) => {
   const [showButton, setShowButton] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const maxHeight = 384; // Tương đương max-h-96 (~384px) của section comment
+  const maxHeight = 480; // Tương đương max-h-96 (~384px) của section comment
 
   useEffect(() => {
     if (contentRef.current) {

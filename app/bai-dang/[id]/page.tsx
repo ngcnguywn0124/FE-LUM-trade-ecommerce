@@ -118,6 +118,11 @@ Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt t�
     { label: "Khu vực", value: `${product.school}${product.campus ? ` • ${product.campus}` : ""}` },
     { label: "Số hình ảnh", value: `${product.imageCount || 1} ảnh` },
     { label: "Thời gian đăng", value: product.time || "Vừa xong" },
+    { label: "Người bán", value: product.seller?.name || "Người bán ẩn danh" },
+    { label: "Đánh giá người bán", value: "Chưa có đánh giá" },
+    { label: "Lượt xem", value: `${Math.floor(product.id * 3.7)} lượt` },
+    { label: "Lượt thích", value: `${Math.floor(product.id * 1.2)} lượt` },
+    { label: "Lượt bình luận", value: `${Math.floor(product.id * 0.8)} bình luận` },
   ];
 
   const infoTags = [
