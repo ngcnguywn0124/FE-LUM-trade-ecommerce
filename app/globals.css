@@ -30,46 +30,53 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-comfortaa), sans-serif;
 }
 
-/* Custom Scrollbar - Giao diện thân hiện và mượt mà */
+/* --- Custom Scrollbar - Chuẩn UX/UI Thân thiện --- */
 @layer base {
-  /* Cho Chrome, Edge, và Safari */
+  :root {
+    --sb-size: 8px;
+    --sb-track: transparent;
+    --sb-thumb: #d1d5db; /* Gray-300 */
+    --sb-thumb-hover: #98FF98; /* Brand Mint */
+  }
+
+  /* Dark mode variables */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --sb-thumb: #4b5563; /* Gray-600 */
+      --sb-thumb-hover: #A0E7E5; /* Alternative Mint for Dark mode */
+    }
+  }
+
+  /* Browser Compatibility: Chrome, Safari, Edge */
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: var(--sb-size);
+    height: var(--sb-size);
   }
 
   ::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--sb-track);
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: #d1d5db;
-    border-radius: 20px;
-    border: 3px solid transparent;
+    background: var(--sb-thumb);
+    border-radius: 10px;
+    /* Hiệu ứng 'floating' giúp thanh cuộn tách biệt với nội dung */
+    border: 2px solid transparent;
     background-clip: content-box;
+    transition: background 0.3s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: #98FF98; /* Brand Mint */
+    background-color: var(--sb-thumb-hover);
   }
 
-  /* Chế độ Dark mode */
-  @media (prefers-color-scheme: dark) {
-    ::-webkit-scrollbar-thumb {
-      background-color: #4b5563;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background-color: #98FF98;
-    }
-  }
-
-  /* Cho Firefox */
+  /* Browser Compatibility: Firefox */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #d1d5db transparent;
+    scrollbar-color: var(--sb-thumb) var(--sb-track);
   }
 
-  /* Giữ layout ổn định khi scrollbar xuất hiện */
+  /* Ngăn chặn nhảy layout khi scrollbar xuất hiện */
   html {
     scrollbar-gutter: stable;
   }
