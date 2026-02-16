@@ -8,6 +8,7 @@ import Breadcrumb from "@/components/shared/Breadcrumb";
 import ProductImageGallery from "@/components/features/product/details/ProductImageGallery";
 import ProductSummary from "@/components/features/product/details/ProductSummary";
 import ProductDetailTabs from "@/components/features/product/details/ProductDetailTabs";
+import ProductComments from "@/components/features/product/details/ProductComments";
 import RelatedProducts from "@/components/features/product/details/RelatedProducts";
 import { generateMockProducts } from "@/lib/mockData";
 import { Product } from "@/types";
@@ -129,8 +130,13 @@ Liên hệ qua chat để nhận thêm hình ảnh, video và thương lượng 
           </div>
         </section>
 
-        <div className="mt-6">
-          <ProductDetailTabs description={productDescription} specs={specs} />
+        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <div className="lg:col-span-8">
+            <ProductDetailTabs description={productDescription} specs={specs} />
+          </div>
+          <div className="lg:col-span-4">
+            <ProductComments />
+          </div>
         </div>
 
         <RelatedProducts products={relatedProducts} />

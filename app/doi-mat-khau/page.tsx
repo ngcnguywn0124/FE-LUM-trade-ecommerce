@@ -1,5 +1,5 @@
 import React from 'react';
-import ChangePasswordForm from '@/components/auth/ChangePasswordForm';
+import ChangePasswordForm from '@/components/features/auth/ChangePasswordForm';
 import Breadcrumb from '@/components/shared/Breadcrumb';
 
 export const metadata = {

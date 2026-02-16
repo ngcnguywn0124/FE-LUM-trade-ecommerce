@@ -1,5 +1,5 @@
 import React from 'react';
-import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
+import ResetPasswordForm from '@/components/features/auth/ResetPasswordForm';
 
 export const metadata = {
   title: 'Đặt lại mật khẩu',

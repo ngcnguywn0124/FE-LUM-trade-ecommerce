@@ -11,7 +11,7 @@ import {
 import LocationSelector from "../shared/LocationSelector";
 import CategorySelector from "../shared/CategorySelector";
 import CategoryMegaMenu from "../shared/CategoryMegaMenu";
-import AuthModal from "../auth/AuthModal";
+import AuthModal from "../features/auth/AuthModal";
 
 const Header = () => {
   const pathname = usePathname();

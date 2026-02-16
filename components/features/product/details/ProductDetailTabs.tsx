@@ -11,25 +11,25 @@ const ProductDetailTabs = ({ description, specs }: ProductDetailTabsProps) => {
   const [activeTab, setActiveTab] = useState<"description" | "specs">("description");
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 shadow-sm">
+    <section className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6">
       <div className="mb-5 flex items-center gap-2 border-b border-gray-100 pb-3">
         <button
           onClick={() => setActiveTab("description")}
-          className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors cursor-pointer ${
             activeTab === "description"
               ? "bg-emerald-600 text-white"
               : "text-gray-600 hover:bg-gray-100"
           }`}
         >
-          Mô tả
+          Mô tả chi tiết
         </button>
         <button
           onClick={() => setActiveTab("specs")}
-          className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors cursor-pointer ${
             activeTab === "specs" ? "bg-emerald-600 text-white" : "text-gray-600 hover:bg-gray-100"
           }`}
         >
-          Thông tin thêm
+          Thông tin chi tiết
         </button>
       </div>
 
