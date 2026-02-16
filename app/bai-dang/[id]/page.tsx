@@ -10,10 +10,11 @@ import ProductSummary from "@/components/features/product/details/ProductSummary
 import ProductDetailTabs from "@/components/features/product/details/ProductDetailTabs";
 import ProductComments from "@/components/features/product/details/ProductComments";
 import RelatedProducts from "@/components/features/product/details/RelatedProducts";
+import SimilarProducts from "@/components/features/product/details/SimilarProducts";
 import { generateMockProducts } from "@/lib/mockData";
 import { Product } from "@/types";
 
-const PRODUCT_DATA: Product[] = generateMockProducts(120);
+const PRODUCT_DATA: Product[] = generateMockProducts(300);
 
 const conditionLabels: Record<string, string> = {
   new: "Mới 100%",
@@ -180,6 +181,12 @@ Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt t�
         <RelatedProducts 
           products={relatedProducts} 
           sellerName={product.seller?.name} 
+        />
+
+        <SimilarProducts 
+          products={PRODUCT_DATA} 
+          currentProductId={product.id} 
+          category={product.category}
         />
       </div>
     </div>

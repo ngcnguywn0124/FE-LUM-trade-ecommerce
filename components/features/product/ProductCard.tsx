@@ -36,7 +36,7 @@ const ProductCard = ({ product }: ProductProps) => {
             e.preventDefault();
             setIsLiked(!isLiked);
           }}
-          className="absolute top-3 right-3 z-10 p-1.5 rounded-full hover:bg-black/10 transition-colors"
+          className="absolute top-3 right-3 z-10 p-1.5 rounded-full hover:bg-black/10 transition-colors cursor-pointer"
         >
           <Heart 
             size={20} 
