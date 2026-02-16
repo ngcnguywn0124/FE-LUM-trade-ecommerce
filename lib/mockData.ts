@@ -68,7 +68,7 @@ export const generateMockProducts = (count: number = 50) => {
       school: school.name,
       campus: campus,
       //image: `/product/${category.name.toLowerCase().replace(/\s+/g, '%20')}.jpg`,
-      image: i % 3 === 0 ? "/cate/dien-tu-v1.jpg" : i % 3 === 1 ? "/cate/do-dung-v1.jpg" : "/product/giao-trinh-nnptudm.jpg",
+      image: i % 3 === 0 ? "/template.png" : i % 3 === 1 ? "/template.png" : "/template.png",
       tag: seededRandom.random() > 0.8 ? 'Nổi bật' : undefined,
       time: getRandomTime(seededRandom),
       imageCount: Math.floor(seededRandom.random() * 10) + 1,
