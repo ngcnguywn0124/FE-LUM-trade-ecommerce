@@ -150,10 +150,11 @@ const ProductSummary = ({
 
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-gray-900">{seller.name}</p>
-              <div className="mt-1 flex items-center gap-1 text-xs text-amber-500">
-                <Star size={13} className="fill-amber-500" />
-                <span className="font-bold">{sellerRating}</span>
-                <span className="text-gray-500">đánh giá cộng đồng</span>
+              <div className="mt-1 flex items-center gap-1 text-xs">
+                <span className={`h-2 w-2 rounded-full ${sellerActivityStatus === "Đang hoạt động" ? "bg-emerald-500 animate-pulse" : "bg-gray-400"}`}></span>
+                <span className={`font-medium ${sellerActivityStatus === "Đang hoạt động" ? "text-emerald-600" : "text-gray-500"}`}>
+                  {sellerActivityStatus}
+                </span>
               </div>
             </div>
           </div>
@@ -165,12 +166,16 @@ const ProductSummary = ({
 
         <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
           <div className="rounded-lg border border-gray-200 px-3 py-2">
-            <p className="text-gray-500">Trạng thái hoạt động</p>
-            <p className="mt-0.5 font-semibold text-gray-800">{sellerActivityStatus}</p>
+            <p className="text-gray-500">Đánh giá</p>
+            <div className="mt-0.5 flex items-center gap-1 text-amber-500">
+              <Star size={13} className="fill-amber-500" />
+              <span className="font-bold">{sellerRating}</span>
+              <span className="text-gray-400 font-medium">/ 5.0</span>
+            </div>
           </div>
           <div className="rounded-lg border border-gray-200 px-3 py-2">
             <p className="text-gray-500">Đã bán</p>
-            <p className="mt-0.5 font-semibold text-gray-800">{sellerSoldCount} sản phẩm</p>
+            <p className="mt-0.5 font-bold text-gray-800">{sellerSoldCount} sản phẩm</p>
           </div>
         </div>
       </div>
