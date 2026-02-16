@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Heart, Image as ImageIcon, MapPin } from "lucide-react";
 
 interface ProductProps {
@@ -20,7 +21,7 @@ const ProductCard = ({ product }: ProductProps) => {
   const [isLiked, setIsLiked] = useState(false);
 
   return (
-    <div className="group cursor-pointer">
+    <Link href={`/bai-dang/${product.id}`} className="block group cursor-pointer">
       {/* Image Container */}
       <div className="relative aspect-5/6 bg-gray-100 rounded-xl overflow-hidden shadow-sm transition-all duration-300">
         <Image
@@ -34,6 +35,7 @@ const ProductCard = ({ product }: ProductProps) => {
         <button 
           onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             setIsLiked(!isLiked);
           }}
           className="absolute top-3 right-3 z-10 p-1.5 rounded-full hover:bg-black/10 transition-colors cursor-pointer"
@@ -63,7 +65,7 @@ const ProductCard = ({ product }: ProductProps) => {
           {product.name}
         </h3>
         <p className="text-emerald-600 font-bold mt-0.5">{product.price}</p>
-                <div className="mt-2 flex items-center gap-2 overflow-hidden text-[11px]">
+        <div className="mt-2 flex items-center gap-2 overflow-hidden text-[11px]">
           <div className="flex items-center gap-1 text-emerald-600/70 font-bold shrink-0">
             <MapPin size={10} />
             {product.school}
@@ -76,7 +78,7 @@ const ProductCard = ({ product }: ProductProps) => {
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
