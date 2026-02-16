@@ -58,6 +58,9 @@ export const generateMockProducts = (count: number = 50) => {
     // Create product name with subcategory
     const productName = `${subcategory} ${i} - ${condition === 'new' ? 'Mới 100%' : condition === 'like-new' ? 'Như mới' : 'Đã qua sử dụng'}`;
 
+    // Tạo sellerId cố định theo nhóm 15 sản phẩm để đảm bảo có tin rao cùng người bán
+    const groupSellerId = Math.floor((i - 1) / 15) + 1;
+
     products.push({
       id: i,
       name: productName,
@@ -72,8 +75,8 @@ export const generateMockProducts = (count: number = 50) => {
       condition: condition,
       category: category.name,
       seller: {
-        id: Math.floor(seededRandom.random() * 1000),
-        name: `Người bán ${Math.floor(seededRandom.random() * 1000)}`,
+        id: groupSellerId,
+        name: `Người bán ${groupSellerId}`,
         rating: 3 + seededRandom.random() * 2,
       }
     });

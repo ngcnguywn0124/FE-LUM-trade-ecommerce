@@ -33,9 +33,10 @@ const ProductDetailPage = () => {
 
   const relatedProducts = useMemo(() => {
     if (!product) return [];
+    // Lọc các sản phẩm của cùng người bán
     return PRODUCT_DATA.filter(
-      (item) => item.id !== product.id && item.category === product.category
-    ).slice(0, 4);
+      (item) => item.id !== product.id && item.seller?.id === product.seller?.id
+    ).slice(0, 20);
   }, [product]);
 
   if (!product) {
@@ -176,7 +177,10 @@ Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt t�
           </div>
         </div>
 
-        <RelatedProducts products={relatedProducts} />
+        <RelatedProducts 
+          products={relatedProducts} 
+          sellerName={product.seller?.name} 
+        />
       </div>
     </div>
   );
