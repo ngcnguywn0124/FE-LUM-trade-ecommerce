@@ -74,11 +74,43 @@ const ProductDetailPage = () => {
     return Array.from({ length: Math.max(product.imageCount || 1, 4) }, () => mainImage);
   }, [product]);
   const productCondition = conditionLabels[product.condition || "used"] || "Đã qua sử dụng";
-  const productDescription = `Sản phẩm ${product.name} còn hoạt động tốt, phù hợp cho sinh viên cần tiết kiệm chi phí.
+  const productDescription = `Mình cần nhượng lại ${product.name} này. Sản phẩm vẫn còn sử dụng rất tốt, ngoại hình còn khá mới và chưa qua sửa chữa.
 
-Mình ưu tiên giao dịch trực tiếp tại ${product.school}${product.campus ? ` - ${product.campus}` : ""} để cả hai bên kiểm tra sản phẩm kỹ trước khi chốt.
+Thông tin chi tiết:
+- Tình trạng: ${productCondition}
+- Lý do bán: Mình mới nâng cấp lên dòng cao hơn nên không còn nhu cầu sử dụng.
+- Ưu điểm: Máy chạy ổn định, pin còn tốt, đầy đủ phụ kiện đi kèm.
 
-Liên hệ qua chat để nhận thêm hình ảnh, video và thương lượng giá.`;
+Mình ưu tiên giao dịch trực tiếp tại khu vực ${product.school}${product.campus ? ` (${product.campus})` : ""} để các bạn có thể kiểm tra sản phẩm kỹ lưỡng trước khi mua.
+
+Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt tình. Vui lòng nhắn tin qua hệ thống chat để hẹn lịch xem máy hoặc hỏi thêm thông tin nhé. Cảm ơn mọi người đã quan tâm!Mình cần nhượng lại ${product.name} này. Sản phẩm vẫn còn sử dụng rất tốt, ngoại hình còn khá mới và chưa qua sửa chữa.
+
+Thông tin chi tiết:
+- Tình trạng: ${productCondition}
+- Lý do bán: Mình mới nâng cấp lên dòng cao hơn nên không còn nhu cầu sử dụng.
+- Ưu điểm: Máy chạy ổn định, pin còn tốt, đầy đủ phụ kiện đi kèm.
+
+Mình ưu tiên giao dịch trực tiếp tại khu vực ${product.school}${product.campus ? ` (${product.campus})` : ""} để các bạn có thể kiểm tra sản phẩm kỹ lưỡng trước khi mua.
+
+Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt tình. Vui lòng nhắn tin qua hệ thống chat để hẹn lịch xem máy hoặc hỏi thêm thông tin nhé. Cảm ơn mọi người đã quan tâm!Mình cần nhượng lại ${product.name} này. Sản phẩm vẫn còn sử dụng rất tốt, ngoại hình còn khá mới và chưa qua sửa chữa.
+
+Thông tin chi tiết:
+- Tình trạng: ${productCondition}
+- Lý do bán: Mình mới nâng cấp lên dòng cao hơn nên không còn nhu cầu sử dụng.
+- Ưu điểm: Máy chạy ổn định, pin còn tốt, đầy đủ phụ kiện đi kèm.
+
+Mình ưu tiên giao dịch trực tiếp tại khu vực ${product.school}${product.campus ? ` (${product.campus})` : ""} để các bạn có thể kiểm tra sản phẩm kỹ lưỡng trước khi mua.
+
+Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt tình. Vui lòng nhắn tin qua hệ thống chat để hẹn lịch xem máy hoặc hỏi thêm thông tin nhé. Cảm ơn mọi người đã quan tâm!Mình cần nhượng lại ${product.name} này. Sản phẩm vẫn còn sử dụng rất tốt, ngoại hình còn khá mới và chưa qua sửa chữa.
+
+Thông tin chi tiết:
+- Tình trạng: ${productCondition}
+- Lý do bán: Mình mới nâng cấp lên dòng cao hơn nên không còn nhu cầu sử dụng.
+- Ưu điểm: Máy chạy ổn định, pin còn tốt, đầy đủ phụ kiện đi kèm.
+
+Mình ưu tiên giao dịch trực tiếp tại khu vực ${product.school}${product.campus ? ` (${product.campus})` : ""} để các bạn có thể kiểm tra sản phẩm kỹ lưỡng trước khi mua.
+
+Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt tình. Vui lòng nhắn tin qua hệ thống chat để hẹn lịch xem máy hoặc hỏi thêm thông tin nhé. Cảm ơn mọi người đã quan tâm!`;
 
   const specs = [
     { label: "Danh mục", value: product.category || "Đang cập nhật" },
@@ -130,11 +162,11 @@ Liên hệ qua chat để nhận thêm hình ảnh, video và thương lượng 
           </div>
         </section>
 
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12 items-start">
           <div className="lg:col-span-8">
             <ProductDetailTabs description={productDescription} specs={specs} />
           </div>
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-4 lg:sticky lg:top-24">
             <ProductComments />
           </div>
         </div>
