@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Eye, X } from 'lucide-react';
 import Breadcrumb from '@/components/shared/Breadcrumb';
 import PostItemBasicInfo from './PostItemBasicInfo';
 import PostItemImagePicker from './PostItemImagePicker';
@@ -16,12 +16,20 @@ const initialFormData: PostItemFormData = {
   subcategoryId: '',
   condition: 'like-new',
   price: '',
+  isFree: false,
   negotiable: false,
+  tags: [],
   description: '',
+  technicalSpecs: [],
   schoolId: '',
   campusId: '',
+  meetingPoint: '',
+  transactionType: 'meetup',
   contactName: '',
   contactPhone: '',
+  contactMethod: 'phone',
+  zaloLink: '',
+  facebookLink: '',
   imagePreviews: [],
 };
 
@@ -30,6 +38,7 @@ const PostItemPage = () => {
   const [errors, setErrors] = useState<PostItemErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const previewUrlsRef = useRef<string[]>([]);
 
   useEffect(() => {
@@ -42,17 +51,44 @@ const PostItemPage = () => {
     };
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = isPreviewOpen ? 'hidden' : 'unset';
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isPreviewOpen]);
+
+  useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsPreviewOpen(false);
+      }
+    };
+
+    if (isPreviewOpen) {
+      window.addEventListener('keydown', handleEsc);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [isPreviewOpen]);
+
   const completionPercent = useMemo(() => {
     const checks = [
       formData.title.trim().length >= 10,
       !!formData.categoryId,
       !!formData.subcategoryId,
-      Number(formData.price) > 0,
+      formData.isFree || Number(formData.price) > 0,
       formData.description.trim().length >= 30,
       !!formData.schoolId,
       !!formData.campusId,
+      formData.meetingPoint.trim().length >= 5,
+      !!formData.transactionType,
       formData.contactName.trim().length > 0,
       /^\d{10,11}$/.test(formData.contactPhone),
+      !!formData.contactMethod,
       formData.imagePreviews.length > 0,
     ];
 
@@ -109,8 +145,12 @@ const PostItemPage = () => {
     if (!formData.subcategoryId) nextErrors.subcategoryId = 'Vui lòng chọn danh mục con.';
 
     const priceValue = Number(formData.price);
-    if (!formData.price || Number.isNaN(priceValue) || priceValue <= 0) {
+    if (!formData.isFree && (!formData.price || Number.isNaN(priceValue) || priceValue <= 0)) {
       nextErrors.price = 'Giá bán phải lớn hơn 0.';
+    }
+
+    if (!formData.transactionType) {
+      nextErrors.transactionType = 'Vui lòng chọn hình thức giao dịch.';
     }
 
     if (formData.description.trim().length < 30) {
@@ -119,9 +159,24 @@ const PostItemPage = () => {
 
     if (!formData.schoolId) nextErrors.schoolId = 'Vui lòng chọn trường học.';
     if (!formData.campusId) nextErrors.campusId = 'Vui lòng chọn cơ sở.';
+    if (formData.meetingPoint.trim().length < 5) {
+      nextErrors.meetingPoint = 'Vui lòng nhập điểm hẹn cụ thể (ít nhất 5 ký tự).';
+    }
     if (!formData.contactName.trim()) nextErrors.contactName = 'Vui lòng nhập tên liên hệ.';
     if (!/^\d{10,11}$/.test(formData.contactPhone)) {
       nextErrors.contactPhone = 'Số điện thoại phải gồm 10-11 chữ số.';
+    }
+
+    if (formData.zaloLink && !/^https?:\/\/.+/.test(formData.zaloLink.trim())) {
+      nextErrors.zaloLink = 'Link Zalo phải bắt đầu bằng http:// hoặc https://';
+    }
+
+    if (formData.facebookLink && !/^https?:\/\/.+/.test(formData.facebookLink.trim())) {
+      nextErrors.facebookLink = 'Link Facebook phải bắt đầu bằng http:// hoặc https://';
+    }
+
+    if (!formData.contactMethod) {
+      nextErrors.contactMethod = 'Vui lòng chọn phương thức liên hệ.';
     }
 
     if (formData.imagePreviews.length === 0) {
@@ -171,8 +226,7 @@ const PostItemPage = () => {
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="space-y-6 lg:col-span-2">
+        <form onSubmit={onSubmit} className="mx-auto max-w-4xl space-y-6">
             <PostItemImagePicker
               imagePreviews={formData.imagePreviews}
               error={errors.imagePreviews}
@@ -194,6 +248,14 @@ const PostItemPage = () => {
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
                 <button
                   type="button"
+                  onClick={() => setIsPreviewOpen(true)}
+                  className="px-5 py-3 rounded-xl border border-emerald-300 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer inline-flex items-center justify-center gap-2"
+                >
+                  <Eye size={16} />
+                  Xem trước tin đăng
+                </button>
+                <button
+                  type="button"
                   className="px-5 py-3 rounded-xl border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
                   onClick={() => {
                     formData.imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
@@ -213,13 +275,25 @@ const PostItemPage = () => {
                 </button>
               </div>
             </div>
-          </div>
-
-          <div>
-            <PostItemPreview formData={formData} />
-          </div>
         </form>
       </div>
+
+      {isPreviewOpen ? (
+        <div className="fixed inset-0 z-999 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setIsPreviewOpen(false)} />
+          <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => setIsPreviewOpen(false)}
+              className="absolute right-3 top-3 z-10 rounded-full bg-white p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 cursor-pointer"
+              aria-label="Đóng xem trước"
+            >
+              <X size={18} />
+            </button>
+            <PostItemPreview formData={formData} inModal />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

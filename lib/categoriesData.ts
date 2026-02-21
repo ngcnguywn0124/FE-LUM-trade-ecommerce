@@ -1,4 +1,5 @@
 import { Category, School } from "@/types";
+import { TechnicalSpecField } from '@/types/post';
 
 // Categories với Subcategories
 export const mockCategories: Category[] = [
@@ -165,4 +166,41 @@ export const getSchoolById = (schoolId: string) => {
 // Helper function to get category by id
 export const getCategoryById = (categoryId: string) => {
   return mockCategories.find(c => c.id === categoryId);
+};
+
+const technicalSpecsByCategory: Record<string, TechnicalSpecField[]> = {
+  laptop: [
+    { key: 'cpu', label: 'CPU', placeholder: 'Ví dụ: Intel Core i5-1135G7' },
+    { key: 'ram', label: 'RAM', placeholder: 'Ví dụ: 8GB DDR4' },
+    { key: 'storage', label: 'Ổ cứng', placeholder: 'Ví dụ: SSD 512GB' },
+    { key: 'screen', label: 'Màn hình', placeholder: 'Ví dụ: 15.6 inch FHD' },
+  ],
+  'dien-thoai': [
+    { key: 'model', label: 'Model', placeholder: 'Ví dụ: iPhone 13 128GB' },
+    { key: 'storage', label: 'Bộ nhớ', placeholder: 'Ví dụ: 128GB' },
+    { key: 'battery', label: 'Pin', placeholder: 'Ví dụ: 87% hoặc 4500mAh' },
+    { key: 'color', label: 'Màu sắc', placeholder: 'Ví dụ: Midnight' },
+  ],
+  'xe-co': [
+    { key: 'brand', label: 'Hãng', placeholder: 'Ví dụ: Yamaha / Giant' },
+    { key: 'year', label: 'Năm sản xuất', placeholder: 'Ví dụ: 2022' },
+    { key: 'odo', label: 'Số km đã đi', placeholder: 'Ví dụ: 12.000km' },
+    { key: 'docs', label: 'Giấy tờ', placeholder: 'Ví dụ: Chính chủ, đầy đủ giấy tờ' },
+  ],
+  'thoi-trang': [
+    { key: 'size', label: 'Size', placeholder: 'Ví dụ: M / 42' },
+    { key: 'material', label: 'Chất liệu', placeholder: 'Ví dụ: Cotton 100%' },
+    { key: 'brand', label: 'Thương hiệu', placeholder: 'Ví dụ: MLB / Local Brand' },
+    { key: 'color', label: 'Màu sắc', placeholder: 'Ví dụ: Đen' },
+  ],
+  sach: [
+    { key: 'author', label: 'Tác giả', placeholder: 'Ví dụ: Robert Kiyosaki' },
+    { key: 'publisher', label: 'NXB', placeholder: 'Ví dụ: NXB Trẻ' },
+    { key: 'year', label: 'Năm xuất bản', placeholder: 'Ví dụ: 2023' },
+    { key: 'language', label: 'Ngôn ngữ', placeholder: 'Ví dụ: Tiếng Việt' },
+  ],
+};
+
+export const getTechnicalSpecsByCategory = (categoryId: string) => {
+  return technicalSpecsByCategory[categoryId] || [];
 };

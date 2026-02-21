@@ -1,4 +1,6 @@
-import { mockCategories, getSubcategoriesByCategory } from '@/lib/categoriesData';
+import { KeyboardEvent, useState } from 'react';
+import { Plus, X, Info } from 'lucide-react';
+import { mockCategories, getSubcategoriesByCategory, getTechnicalSpecsByCategory } from '@/lib/categoriesData';
 import PostItemSection from './PostItemSection';
 import { PostItemErrors, PostItemFormData } from '../../../types/post';
 
@@ -15,8 +17,58 @@ const conditionOptions = [
 ] as const;
 
 const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInfoProps) => {
+  const [tagInput, setTagInput] = useState('');
   const selectedCategory = mockCategories.find((category) => category.id === formData.categoryId);
   const subcategories = selectedCategory ? getSubcategoriesByCategory(selectedCategory.id) : [];
+  const technicalSpecs = getTechnicalSpecsByCategory(formData.categoryId);
+
+  const addSpec = () => {
+    onFieldChange('technicalSpecs', [
+      ...formData.technicalSpecs,
+      { key: '', value: '' },
+    ]);
+  };
+
+  const updateSpec = (index: number, field: 'key' | 'value', value: string) => {
+    const nextSpecs = [...formData.technicalSpecs];
+    nextSpecs[index] = { ...nextSpecs[index], [field]: value };
+    onFieldChange('technicalSpecs', nextSpecs);
+  };
+
+  const removeSpec = (index: number) => {
+    onFieldChange(
+      'technicalSpecs',
+      formData.technicalSpecs.filter((_, i) => i !== index)
+    );
+  };
+
+  const pushTag = (rawValue: string) => {
+    const nextTag = rawValue.trim().replace(/\s+/g, ' ');
+    if (!nextTag) return;
+    if (formData.tags.some((tag) => tag.toLowerCase() === nextTag.toLowerCase())) {
+      setTagInput('');
+      return;
+    }
+    onFieldChange('tags', [...formData.tags, nextTag]);
+    setTagInput('');
+  };
+
+  const handleTagKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter' && event.key !== ',') return;
+    event.preventDefault();
+    pushTag(tagInput);
+  };
+
+  const onTagBlur = () => {
+    pushTag(tagInput);
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    onFieldChange(
+      'tags',
+      formData.tags.filter((tag) => tag !== tagToRemove)
+    );
+  };
 
   return (
     <PostItemSection
@@ -53,6 +105,7 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
               onChange={(event) => {
                 onFieldChange('categoryId', event.target.value);
                 onFieldChange('subcategoryId', '');
+                onFieldChange('technicalSpecs', []);
               }}
               className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
             >
@@ -110,6 +163,110 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
             })}
           </div>
         </div>
+
+        <div>
+          <label htmlFor="post-tags" className="block text-sm font-medium text-gray-700 mb-2">
+            Tags nổi bật
+          </label>
+          <div className="rounded-xl border border-gray-300 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500">
+            <div className="flex flex-wrap gap-2">
+              {formData.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700"
+                >
+                  #{tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(tag)}
+                    className="text-emerald-700 hover:text-emerald-900 cursor-pointer"
+                    aria-label={`Xóa tag ${tag}`}
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+              <input
+                id="post-tags"
+                value={tagInput}
+                onChange={(event) => setTagInput(event.target.value)}
+                onKeyDown={handleTagKeyDown}
+                onBlur={onTagBlur}
+                placeholder="Ví dụ: kèm phụ kiện, còn hộp..."
+                className="min-w-45 flex-1 border-none bg-transparent py-1 text-sm text-gray-900 outline-none"
+                maxLength={30}
+              />
+            </div>
+          </div>
+          <p className="mt-1 text-xs text-gray-500">Nhấn Enter hoặc dấu phẩy để thêm tag.</p>
+        </div>
+
+        {technicalSpecs.length > 0 ? (
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-700">Thông số kỹ thuật</p>
+                <p className="text-xs text-gray-400">Chọn và nhập thông số để người mua tin tưởng hơn</p>
+              </div>
+              {formData.technicalSpecs.length < technicalSpecs.length ? (
+                <button
+                  type="button"
+                  onClick={addSpec}
+                  className="flex items-center gap-1 rounded-lg border border-emerald-500 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-600 transition-all hover:bg-emerald-50 cursor-pointer"
+                >
+                  <Plus size={14} />
+                  Thêm
+                </button>
+              ) : null}
+            </div>
+
+            <div className="space-y-4">
+              {formData.technicalSpecs.map((item, index) => {
+                const usedKeys = formData.technicalSpecs
+                  .map((s, i) => (i === index ? "" : s.key))
+                  .filter(Boolean);
+                const availableSpecs = technicalSpecs.filter((s) => !usedKeys.includes(s.key));
+                const currentField = technicalSpecs.find((f) => f.key === item.key);
+
+                return (
+                  <div key={index} className="flex flex-col sm:flex-row gap-3 items-start animate-in fade-in slide-in-from-top-2">
+                    <div className="w-full sm:w-1/3">
+                      <select
+                        value={item.key}
+                        onChange={(e) => updateSpec(index, "key", e.target.value)}
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer bg-gray-50 font-medium"
+                      >
+                        <option value="">Chọn thông số</option>
+                        {availableSpecs.map((field) => (
+                          <option key={field.key} value={field.key}>
+                            {field.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="relative w-full sm:flex-1">
+                      <input
+                        value={item.value}
+                        onChange={(e) => updateSpec(index, "value", e.target.value)}
+                        placeholder={currentField?.placeholder || "Nhập giá trị..."}
+                        disabled={!item.key}
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-gray-100 disabled:opacity-50"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeSpec(index)}
+                      className="mt-2 sm:mt-0 p-3 rounded-xl border border-gray-200 text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all cursor-pointer"
+                      aria-label="Xóa"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
 
         <div>
           <label htmlFor="post-description" className="block text-sm font-medium text-gray-700 mb-2">

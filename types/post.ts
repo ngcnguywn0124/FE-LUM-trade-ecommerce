@@ -1,4 +1,12 @@
 export type ItemCondition = 'new' | 'like-new' | 'used';
+export type ContactMethod = 'phone' | 'zalo' | 'chat';
+export type TransactionType = 'meetup' | 'delivery' | 'both';
+
+export interface TechnicalSpecField {
+  key: string;
+  label: string;
+  placeholder: string;
+}
 
 export interface PostItemFormData {
   title: string;
@@ -6,12 +14,20 @@ export interface PostItemFormData {
   subcategoryId: string;
   condition: ItemCondition;
   price: string;
+  isFree: boolean;
   negotiable: boolean;
+  tags: string[];
   description: string;
+  technicalSpecs: { key: string; value: string }[];
   schoolId: string;
   campusId: string;
+  meetingPoint: string;
+  transactionType: TransactionType;
   contactName: string;
   contactPhone: string;
+  contactMethod: ContactMethod;
+  zaloLink: string;
+  facebookLink: string;
   imagePreviews: string[];
 }
 
@@ -23,7 +39,12 @@ export interface PostItemErrors {
   description?: string;
   schoolId?: string;
   campusId?: string;
+  meetingPoint?: string;
+  transactionType?: string;
   contactName?: string;
   contactPhone?: string;
+  contactMethod?: string;
+  zaloLink?: string;
+  facebookLink?: string;
   imagePreviews?: string;
 }
