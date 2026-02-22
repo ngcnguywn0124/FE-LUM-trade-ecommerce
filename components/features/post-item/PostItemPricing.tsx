@@ -30,7 +30,7 @@ const PostItemPricing = ({ formData, errors, onFieldChange }: PostItemPricingPro
             <button
               type="button"
               onClick={() => onToggleFree(false)}
-              className={`flex items-center justify-center gap-2.5 rounded-lg border py-3.5 text-sm font-medium transition-all ${
+              className={`flex items-center justify-center gap-2.5 rounded-lg border py-3.5 text-sm font-medium transition-all cursor-pointer ${
                 !formData.isFree
                   ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500'
                   : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
@@ -42,7 +42,7 @@ const PostItemPricing = ({ formData, errors, onFieldChange }: PostItemPricingPro
             <button
               type="button"
               onClick={() => onToggleFree(true)}
-              className={`flex items-center justify-center gap-2.5 rounded-lg border py-3.5 text-sm font-medium transition-all ${
+              className={`flex items-center justify-center gap-2.5 rounded-lg border py-3.5 text-sm font-medium transition-all cursor-pointer ${
                 formData.isFree
                   ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500'
                   : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
