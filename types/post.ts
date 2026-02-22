@@ -1,5 +1,4 @@
 export type ItemCondition = 'new' | 'like-new' | 'used' | 'old' | 'broken';
-export type ContactMethod = 'phone' | 'zalo' | 'chat';
 export type TransactionType = 'meetup' | 'delivery' | 'both';
 
 export interface TechnicalSpecField {
@@ -25,7 +24,6 @@ export interface PostItemFormData {
   transactionType: TransactionType;
   contactName: string;
   contactPhone: string;
-  contactMethod: ContactMethod;
   zaloLink: string;
   facebookLink: string;
   imagePreviews: string[];
@@ -44,7 +42,6 @@ export interface PostItemErrors {
   transactionType?: string;
   contactName?: string;
   contactPhone?: string;
-  contactMethod?: string;
   zaloLink?: string;
   facebookLink?: string;
   imagePreviews?: string;

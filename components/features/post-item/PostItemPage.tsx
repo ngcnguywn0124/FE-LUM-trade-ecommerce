@@ -27,7 +27,6 @@ const initialFormData: PostItemFormData = {
   transactionType: 'meetup',
   contactName: '',
   contactPhone: '',
-  contactMethod: 'phone',
   zaloLink: '',
   facebookLink: '',
   imagePreviews: [],
@@ -88,7 +87,6 @@ const PostItemPage = () => {
       !!formData.transactionType,
       formData.contactName.trim().length > 0,
       /^\d{10,11}$/.test(formData.contactPhone),
-      !!formData.contactMethod,
       formData.imagePreviews.length > 0,
     ];
 
@@ -173,10 +171,6 @@ const PostItemPage = () => {
 
     if (formData.facebookLink && !/^https?:\/\/.+/.test(formData.facebookLink.trim())) {
       nextErrors.facebookLink = 'Link Facebook phải bắt đầu bằng http:// hoặc https://';
-    }
-
-    if (!formData.contactMethod) {
-      nextErrors.contactMethod = 'Vui lòng chọn phương thức liên hệ.';
     }
 
     if (formData.imagePreviews.length === 0) {

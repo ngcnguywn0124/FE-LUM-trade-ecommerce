@@ -33,11 +33,6 @@ const PostItemPreview = ({ formData, inModal = false }: PostItemPreviewProps) =>
     broken: 'Hỏng / Lấy linh kiện',
   }[formData.condition] || 'Chưa chọn';
 
-  const contactMethodLabel = {
-    phone: 'Gọi điện thoại',
-    zalo: 'Zalo',
-    chat: 'Chat trong app',
-  }[formData.contactMethod];
   const transactionTypeLabel = {
     meetup: 'Gặp mặt trực tiếp',
     delivery: 'Giao hàng',
@@ -91,8 +86,7 @@ const PostItemPreview = ({ formData, inModal = false }: PostItemPreviewProps) =>
         <p className="text-sm text-gray-500">Tình trạng: <span className="font-medium text-gray-700">{conditionLabel}</span></p>
         <p className="text-sm text-gray-500">Điểm hẹn: {formData.meetingPoint || 'Chưa cập nhật'}</p>
         <p className="text-sm text-gray-500">Hình thức giao dịch: {transactionTypeLabel || 'Chưa cập nhật'}</p>
-        <p className="text-sm text-gray-500">Liên hệ: {formData.contactName || 'Chưa cập nhật'}</p>
-        <p className="text-sm text-gray-500">Ưu tiên: {contactMethodLabel || 'Chưa cập nhật'}</p>
+        <p className="text-sm text-gray-500">Người đăng: <span className="font-medium text-gray-700">{formData.contactName || 'Chưa cập nhật'}</span></p>
         {formData.tags.length > 0 ? (
           <div className="flex flex-wrap gap-1.5 pt-1">
             {formData.tags.map((tag) => (

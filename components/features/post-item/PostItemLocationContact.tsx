@@ -1,6 +1,6 @@
 import { getCampusesBySchool, mockSchools } from '@/lib/categoriesData';
 import PostItemSection from './PostItemSection';
-import { ContactMethod, PostItemErrors, PostItemFormData, TransactionType } from '../../../types/post';
+import { PostItemErrors, PostItemFormData, TransactionType } from '../../../types/post';
 
 interface PostItemLocationContactProps {
   formData: PostItemFormData;
@@ -11,11 +11,6 @@ interface PostItemLocationContactProps {
 const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLocationContactProps) => {
   const selectedSchool = mockSchools.find((school) => school.id === formData.schoolId);
   const campuses = selectedSchool ? getCampusesBySchool(selectedSchool.id) : [];
-  const contactMethodOptions: { value: ContactMethod; label: string }[] = [
-    { value: 'phone', label: 'Gọi điện thoại' },
-    { value: 'zalo', label: 'Zalo' },
-    { value: 'chat', label: 'Chat trong app' },
-  ];
   const transactionTypeOptions: { value: TransactionType; label: string }[] = [
     { value: 'meetup', label: 'Gặp mặt trực tiếp' },
     { value: 'delivery', label: 'Giao hàng' },
@@ -111,24 +106,36 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="post-contact-method" className="block text-sm font-medium text-gray-700 mb-2">
-              Phương thức liên hệ ưu tiên <span className="text-red-500">*</span>
+            <label htmlFor="post-contact-name" className="block text-sm font-medium text-gray-700 mb-2">
+              Tên liên hệ <span className="text-red-500">*</span>
             </label>
-            <select
-              id="post-contact-method"
-              value={formData.contactMethod}
-              onChange={(event) => onFieldChange('contactMethod', event.target.value as ContactMethod)}
-              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer bg-white"
-            >
-              {contactMethodOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {errors.contactMethod && <p className="mt-1 text-xs text-red-500 font-medium">{errors.contactMethod}</p>}
+            <input
+              id="post-contact-name"
+              value={formData.contactName}
+              onChange={(event) => onFieldChange('contactName', event.target.value)}
+              placeholder="Ví dụ: Nguyễn Văn A"
+              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            />
+            {errors.contactName && <p className="mt-1 text-xs text-red-500 font-medium">{errors.contactName}</p>}
           </div>
 
+          <div>
+            <label htmlFor="post-contact-phone" className="block text-sm font-medium text-gray-700 mb-2">
+              Số điện thoại <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="post-contact-phone"
+              value={formData.contactPhone}
+              onChange={(event) => onFieldChange('contactPhone', event.target.value.replace(/[^\d]/g, ''))}
+              placeholder="Ví dụ: 0912345678"
+              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              inputMode="numeric"
+            />
+            {errors.contactPhone && <p className="mt-1 text-xs text-red-500 font-medium">{errors.contactPhone}</p>}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="post-zalo-link" className="block text-sm font-medium text-gray-700 mb-2">
               Link Zalo (tùy chọn)
@@ -142,37 +149,6 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
             />
             {errors.zaloLink && <p className="mt-1 text-xs text-red-500 font-medium">{errors.zaloLink}</p>}
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="post-contact-name" className="block text-sm font-medium text-gray-700 mb-2">
-              Tên liên hệ <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="post-contact-name"
-              value={formData.contactName}
-              onChange={(event) => onFieldChange('contactName', event.target.value)}
-              placeholder="Ví dụ: Nguyễn Văn A"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-            <p className="mt-1 text-xs text-red-500">{errors.contactName}</p>
-          </div>
-
-          <div>
-            <label htmlFor="post-contact-phone" className="block text-sm font-medium text-gray-700 mb-2">
-              Số điện thoại <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="post-contact-phone"
-              value={formData.contactPhone}
-              onChange={(event) => onFieldChange('contactPhone', event.target.value.replace(/[^\d]/g, ''))}
-              placeholder="Ví dụ: 0912345678"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              inputMode="numeric"
-            />
-            <p className="mt-1 text-xs text-red-500">{errors.contactPhone}</p>
-          </div>
 
           <div>
             <label htmlFor="post-facebook-link" className="block text-sm font-medium text-gray-700 mb-2">
@@ -183,9 +159,9 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
               value={formData.facebookLink}
               onChange={(event) => onFieldChange('facebookLink', event.target.value)}
               placeholder="Ví dụ: https://facebook.com/username"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             />
-            <p className="mt-1 text-xs text-red-500">{errors.facebookLink}</p>
+            {errors.facebookLink && <p className="mt-1 text-xs text-red-500 font-medium">{errors.facebookLink}</p>}
           </div>
         </div>
       </div>
