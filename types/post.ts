@@ -1,4 +1,4 @@
-export type ItemCondition = 'new' | 'like-new' | 'used';
+export type ItemCondition = 'new' | 'like-new' | 'used' | 'old' | 'broken';
 export type ContactMethod = 'phone' | 'zalo' | 'chat';
 export type TransactionType = 'meetup' | 'delivery' | 'both';
 
@@ -35,6 +35,7 @@ export interface PostItemErrors {
   title?: string;
   categoryId?: string;
   subcategoryId?: string;
+  condition?: string;
   price?: string;
   description?: string;
   schoolId?: string;

@@ -249,14 +249,14 @@ const PostItemPage = () => {
                 <button
                   type="button"
                   onClick={() => setIsPreviewOpen(true)}
-                  className="px-5 py-3 rounded-xl border border-emerald-300 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer inline-flex items-center justify-center gap-2"
+                  className="px-6 py-3.5 rounded-lg border border-emerald-500 text-sm font-bold text-emerald-700 hover:bg-emerald-50 transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-sm active:scale-95"
                 >
-                  <Eye size={16} />
+                  <Eye size={18} />
                   Xem trước tin đăng
                 </button>
                 <button
                   type="button"
-                  className="px-5 py-3 rounded-xl border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="px-6 py-3.5 rounded-lg border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer shadow-sm active:scale-95"
                   onClick={() => {
                     formData.imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
                     setFormData(initialFormData);
@@ -264,14 +264,14 @@ const PostItemPage = () => {
                     setIsSubmitted(false);
                   }}
                 >
-                  Đặt lại form
+                  Xóa hết làm lại
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-3 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 transition-colors cursor-pointer"
+                  className="px-10 py-3.5 rounded-lg text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 transition-all cursor-pointer shadow-md shadow-emerald-200 active:scale-95"
                 >
-                  {isSubmitting ? 'Đang xử lý...' : 'Đăng tin ngay'}
+                  {isSubmitting ? 'Đang xử lý...' : 'ĐĂNG TIN NGAY'}
                 </button>
               </div>
             </div>

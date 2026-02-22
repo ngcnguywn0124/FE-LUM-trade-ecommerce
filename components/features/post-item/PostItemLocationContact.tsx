@@ -40,7 +40,7 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
                 onFieldChange('schoolId', event.target.value);
                 onFieldChange('campusId', '');
               }}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer bg-white"
             >
               <option value="">Chọn trường học</option>
               {mockSchools.map((school) => (
@@ -49,7 +49,7 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-red-500">{errors.schoolId}</p>
+            {errors.schoolId && <p className="mt-1 text-xs text-red-500 font-medium">{errors.schoolId}</p>}
           </div>
 
           <div>
@@ -61,7 +61,7 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
               value={formData.campusId}
               onChange={(event) => onFieldChange('campusId', event.target.value)}
               disabled={!formData.schoolId}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 disabled:bg-gray-100 disabled:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 disabled:bg-gray-50 disabled:text-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer bg-white"
             >
               <option value="">{formData.schoolId ? 'Chọn cơ sở' : 'Chọn trường trước'}</option>
               {campuses.map((campus) => (
@@ -70,7 +70,7 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-red-500">{errors.campusId}</p>
+            {errors.campusId && <p className="mt-1 text-xs text-red-500 font-medium">{errors.campusId}</p>}
           </div>
         </div>
 
@@ -84,9 +84,9 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
               value={formData.meetingPoint}
               onChange={(event) => onFieldChange('meetingPoint', event.target.value)}
               placeholder="Ví dụ: Cổng B thư viện, CS Ung Văn Khiêm"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             />
-            <p className="mt-1 text-xs text-red-500">{errors.meetingPoint}</p>
+            {errors.meetingPoint && <p className="mt-1 text-xs text-red-500 font-medium">{errors.meetingPoint}</p>}
           </div>
 
           <div>
@@ -97,7 +97,7 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
               id="post-transaction-type"
               value={formData.transactionType}
               onChange={(event) => onFieldChange('transactionType', event.target.value as TransactionType)}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer bg-white"
             >
               {transactionTypeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -105,7 +105,7 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-red-500">{errors.transactionType}</p>
+            {errors.transactionType && <p className="mt-1 text-xs text-red-500 font-medium">{errors.transactionType}</p>}
           </div>
         </div>
 
@@ -118,7 +118,7 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
               id="post-contact-method"
               value={formData.contactMethod}
               onChange={(event) => onFieldChange('contactMethod', event.target.value as ContactMethod)}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer bg-white"
             >
               {contactMethodOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -126,7 +126,7 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-red-500">{errors.contactMethod}</p>
+            {errors.contactMethod && <p className="mt-1 text-xs text-red-500 font-medium">{errors.contactMethod}</p>}
           </div>
 
           <div>
@@ -138,9 +138,9 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
               value={formData.zaloLink}
               onChange={(event) => onFieldChange('zaloLink', event.target.value)}
               placeholder="Ví dụ: https://zalo.me/0909xxxxxx"
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             />
-            <p className="mt-1 text-xs text-red-500">{errors.zaloLink}</p>
+            {errors.zaloLink && <p className="mt-1 text-xs text-red-500 font-medium">{errors.zaloLink}</p>}
           </div>
         </div>
 

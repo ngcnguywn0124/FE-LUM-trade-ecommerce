@@ -1,6 +1,5 @@
-import { KeyboardEvent, useState } from 'react';
-import { Plus, X, Info } from 'lucide-react';
-import { mockCategories, getSubcategoriesByCategory, getTechnicalSpecsByCategory } from '@/lib/categoriesData';
+import { Plus, X, Info, BadgeCheck, Check } from 'lucide-react';
+import { mockCategories, getSubcategoriesByCategory, getTechnicalSpecsByCategory, getBadgeInfoByCategory } from '@/lib/categoriesData';
 import PostItemSection from './PostItemSection';
 import { PostItemErrors, PostItemFormData } from '../../../types/post';
 
@@ -11,16 +10,18 @@ interface PostItemBasicInfoProps {
 }
 
 const conditionOptions = [
-  { value: 'new', label: 'Mới 100%' },
-  { value: 'like-new', label: 'Như mới' },
-  { value: 'used', label: 'Đã qua sử dụng' },
+  { value: 'new', label: 'Mới 100%', sub: 'Chưa bóc hộp' },
+  { value: 'like-new', label: 'Như mới 99%', sub: 'Cực đẹp' },
+  { value: 'used', label: 'Đã qua sử dụng', sub: 'Bình thường' },
+  { value: 'old', label: 'Cũ/vẫn dùng tốt', sub: 'Có trầy xước' },
+  { value: 'broken', label: 'Hỏng / Lấy linh kiện', sub: 'Chỉ lấy xác' },
 ] as const;
 
 const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInfoProps) => {
-  const [tagInput, setTagInput] = useState('');
   const selectedCategory = mockCategories.find((category) => category.id === formData.categoryId);
   const subcategories = selectedCategory ? getSubcategoriesByCategory(selectedCategory.id) : [];
   const technicalSpecs = getTechnicalSpecsByCategory(formData.categoryId);
+  const badgeInfo = getBadgeInfoByCategory(formData.categoryId);
 
   const addSpec = () => {
     onFieldChange('technicalSpecs', [
@@ -42,32 +43,13 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
     );
   };
 
-  const pushTag = (rawValue: string) => {
-    const nextTag = rawValue.trim().replace(/\s+/g, ' ');
-    if (!nextTag) return;
-    if (formData.tags.some((tag) => tag.toLowerCase() === nextTag.toLowerCase())) {
-      setTagInput('');
-      return;
+  const toggleBadgeInfo = (info: string) => {
+    const isSelected = formData.tags.includes(info);
+    if (isSelected) {
+      onFieldChange('tags', formData.tags.filter(t => t !== info));
+    } else if (formData.tags.length < 3) {
+      onFieldChange('tags', [...formData.tags, info]);
     }
-    onFieldChange('tags', [...formData.tags, nextTag]);
-    setTagInput('');
-  };
-
-  const handleTagKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== 'Enter' && event.key !== ',') return;
-    event.preventDefault();
-    pushTag(tagInput);
-  };
-
-  const onTagBlur = () => {
-    pushTag(tagInput);
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    onFieldChange(
-      'tags',
-      formData.tags.filter((tag) => tag !== tagToRemove)
-    );
   };
 
   return (
@@ -85,11 +67,11 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
             value={formData.title}
             onChange={(event) => onFieldChange('title', event.target.value)}
             placeholder="Ví dụ: Laptop Dell Inspiron i5, RAM 8GB, còn bảo hành"
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             maxLength={120}
           />
           <div className="mt-1 flex items-center justify-between text-xs">
-            <span className="text-red-500">{errors.title}</span>
+            <span className="text-red-500 font-medium">{errors.title}</span>
             <span className="text-gray-400">{formData.title.length}/120</span>
           </div>
         </div>
@@ -107,7 +89,7 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
                 onFieldChange('subcategoryId', '');
                 onFieldChange('technicalSpecs', []);
               }}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer bg-white"
             >
               <option value="">Chọn danh mục</option>
               {mockCategories.map((category) => (
@@ -116,7 +98,7 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-red-500">{errors.categoryId}</p>
+            {errors.categoryId && <p className="mt-1 text-xs text-red-500 font-medium">{errors.categoryId}</p>}
           </div>
 
           <div>
@@ -128,7 +110,7 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
               value={formData.subcategoryId}
               onChange={(event) => onFieldChange('subcategoryId', event.target.value)}
               disabled={!formData.categoryId}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 disabled:bg-gray-100 disabled:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 disabled:bg-gray-50 disabled:text-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer bg-white"
             >
               <option value="">{formData.categoryId ? 'Chọn danh mục con' : 'Chọn danh mục trước'}</option>
               {subcategories.map((subcategory) => (
@@ -137,13 +119,15 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-red-500">{errors.subcategoryId}</p>
+            {errors.subcategoryId && <p className="mt-1 text-xs text-red-500 font-medium">{errors.subcategoryId}</p>}
           </div>
         </div>
 
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Tình trạng sản phẩm</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <label className="block text-sm font-medium text-gray-700 mb-3 tracking-wider">
+            Tình trạng sản phẩm <span className="text-red-500">*</span>
+          </label>
+          <div className="grid grid-cols-3 lg:grid-cols-5 gap-2.5">
             {conditionOptions.map((option) => {
               const isActive = formData.condition === option.value;
               return (
@@ -151,68 +135,74 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
                   key={option.value}
                   type="button"
                   onClick={() => onFieldChange('condition', option.value)}
-                  className={`rounded-xl border px-4 py-3 text-sm font-medium transition-colors cursor-pointer ${
+                  className={`relative flex flex-col items-center justify-center rounded-lg border py-3.5 px-2 transition-all cursor-pointer group ${
                     isActive
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                      : 'border-gray-300 text-gray-700 hover:border-emerald-400'
+                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500'
+                      : 'border-gray-200 bg-white text-gray-500 hover:border-emerald-300 hover:bg-gray-50'
                   }`}
                 >
-                  {option.label}
+                  <span className={`text-[13px] font-bold tracking-tight ${isActive ? 'text-emerald-700' : 'text-gray-700 group-hover:text-emerald-600'}`}>
+                    {option.label}
+                  </span>
+                  <span className={`mt-1 text-[10px] font-semibold opacity-60 ${isActive ? 'text-emerald-600' : 'text-gray-400 group-hover:text-emerald-500'}`}>
+                    {option.sub}
+                  </span>
                 </button>
               );
             })}
           </div>
+          {errors.condition && <p className="mt-2 text-[12px] font-semibold text-red-500 flex items-center gap-1">
+            <Info size={14} />
+            {errors.condition}
+          </p>}
         </div>
 
         <div>
-          <label htmlFor="post-tags" className="block text-sm font-medium text-gray-700 mb-2">
-            Tags nổi bật
+          <label className="text-sm font-medium text-gray-700 flex items-center justify-between mb-3">
+            <span className="tracking-wider font-medium">Thông tin highlight</span>
+            <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Tối đa 3</span>
           </label>
-          <div className="rounded-xl border border-gray-300 px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-500">
-            <div className="flex flex-wrap gap-2">
-              {formData.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700"
+          <div className="flex flex-wrap gap-2">
+            {badgeInfo.map((info) => {
+              const isSelected = formData.tags.includes(info);
+              const isMax = formData.tags.length >= 3;
+              return (
+                <button
+                  key={info}
+                  type="button"
+                  onClick={() => toggleBadgeInfo(info)}
+                  disabled={!isSelected && isMax}
+                  className={`inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                    isSelected
+                      ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/30"
+                  } disabled:opacity-40 disabled:cursor-not-allowed`}
                 >
-                  #{tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="text-emerald-700 hover:text-emerald-900 cursor-pointer"
-                    aria-label={`Xóa tag ${tag}`}
-                  >
-                    <X size={12} />
-                  </button>
-                </span>
-              ))}
-              <input
-                id="post-tags"
-                value={tagInput}
-                onChange={(event) => setTagInput(event.target.value)}
-                onKeyDown={handleTagKeyDown}
-                onBlur={onTagBlur}
-                placeholder="Ví dụ: kèm phụ kiện, còn hộp..."
-                className="min-w-45 flex-1 border-none bg-transparent py-1 text-sm text-gray-900 outline-none"
-                maxLength={30}
-              />
-            </div>
+                  {isSelected && <Check size={14} className="mr-1.5" />}
+                  {info}
+                </button>
+              );
+            })}
           </div>
-          <p className="mt-1 text-xs text-gray-500">Nhấn Enter hoặc dấu phẩy để thêm tag.</p>
+          {formData.tags.length >= 3 && (
+            <p className="mt-2 text-[11px] text-amber-600 font-medium flex items-center gap-1">
+              <Info size={12} /> Đã chọn tối đa thông tin đính kèm
+            </p>
+          )}
         </div>
 
         {technicalSpecs.length > 0 ? (
-          <div>
-            <div className="mb-3 flex items-center justify-between">
+          <div className="pt-2">
+            <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-2">
               <div>
-                <p className="text-sm font-medium text-gray-700">Thông số kỹ thuật</p>
-                <p className="text-xs text-gray-400">Chọn và nhập thông số để người mua tin tưởng hơn</p>
+                <p className="text-sm font-bold text-gray-800 uppercase tracking-tight">Thông số kỹ thuật</p>
+                <p className="text-[11px] text-gray-500 mt-0.5 font-medium">Chọn các thông số quan trọng của sản phẩm</p>
               </div>
               {formData.technicalSpecs.length < technicalSpecs.length ? (
                 <button
                   type="button"
                   onClick={addSpec}
-                  className="flex items-center gap-1 rounded-lg border border-emerald-500 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-600 transition-all hover:bg-emerald-50 cursor-pointer"
+                  className="flex items-center gap-1.5 rounded-lg bg-gray-900 px-3.5 py-2 text-xs text-[#FFBA00] hover:bg-emerald-600 cursor-pointer"
                 >
                   <Plus size={14} />
                   Thêm
@@ -229,14 +219,14 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
                 const currentField = technicalSpecs.find((f) => f.key === item.key);
 
                 return (
-                  <div key={index} className="flex flex-col sm:flex-row gap-3 items-start animate-in fade-in slide-in-from-top-2">
-                    <div className="w-full sm:w-1/3">
+                  <div key={index} className="flex items-center gap-2 p-2 sm:p-3 bg-gray-50/50 rounded-lg border border-gray-100 animate-in fade-in slide-in-from-top-2">
+                    <div className="w-[120px] sm:w-1/3 shrink-0">
                       <select
                         value={item.key}
                         onChange={(e) => updateSpec(index, "key", e.target.value)}
-                        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer bg-gray-50 font-medium"
+                        className="w-full rounded-lg border border-gray-200 px-2.5 sm:px-4 py-2.5 text-[13px] sm:text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all cursor-pointer"
                       >
-                        <option value="">Chọn thông số</option>
+                        <option value="">Thông số</option>
                         {availableSpecs.map((field) => (
                           <option key={field.key} value={field.key}>
                             {field.label}
@@ -244,19 +234,19 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
                         ))}
                       </select>
                     </div>
-                    <div className="relative w-full sm:flex-1">
+                    <div className="flex-1 min-w-0">
                       <input
                         value={item.value}
                         onChange={(e) => updateSpec(index, "value", e.target.value)}
                         placeholder={currentField?.placeholder || "Nhập giá trị..."}
                         disabled={!item.key}
-                        className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-gray-100 disabled:opacity-50"
+                        className="w-full rounded-lg border border-gray-200 px-2.5 sm:px-4 py-2.5 text-[13px] sm:text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-gray-100 disabled:text-gray-400 transition-all"
                       />
                     </div>
                     <button
                       type="button"
                       onClick={() => removeSpec(index)}
-                      className="mt-2 sm:mt-0 p-3 rounded-xl border border-gray-200 text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all cursor-pointer"
+                      className="p-1.5 sm:p-2.5 text-red-500 hover:text-red-700 cursor-pointer transition-colors shrink-0"
                       aria-label="Xóa"
                     >
                       <X size={18} />
@@ -279,11 +269,13 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
             placeholder="Mô tả rõ tình trạng, thông số, phụ kiện đi kèm, lý do bán..."
             rows={5}
             maxLength={1200}
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           />
-          <div className="mt-1 flex items-center justify-between text-xs">
+          <div className="mt-1 flex items-center justify-between text-[11px] font-medium">
             <span className="text-red-500">{errors.description}</span>
-            <span className="text-gray-400">{formData.description.length}/1200</span>
+            <span className={`px-2 py-0.5 rounded-full ${formData.description.length > 1000 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-400'}`}>
+              {formData.description.length}/1200
+            </span>
           </div>
         </div>
       </div>

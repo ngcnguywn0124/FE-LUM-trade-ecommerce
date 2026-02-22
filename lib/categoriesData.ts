@@ -204,3 +204,17 @@ const technicalSpecsByCategory: Record<string, TechnicalSpecField[]> = {
 export const getTechnicalSpecsByCategory = (categoryId: string) => {
   return technicalSpecsByCategory[categoryId] || [];
 };
+
+const badgeInfoByCategory: Record<string, string[]> = {
+  laptop: ['Kèm sạc', 'FullBox', 'Còn bảo hành', 'Pin tốt', 'Mới 99%', 'Sv dùng kĩ'],
+  'dien-thoai': ['Full phụ kiện', 'Có ốp', 'Dán cường lực', 'Pin 9x%', 'Quốc tế', 'Vân tay nhạy'],
+  'xe-co': ['Chính chủ', 'Biển số SG', 'Chưa qua sửa chữa', 'Tiết kiệm xăng', 'Có khóa chống trộm'],
+  'thoi-trang': ['Nguyên Tag', 'Mặc 1 lần', 'Form đẹp', 'Vải tăm', 'Local Brand', 'Dễ phối đồ'],
+  sach: ['Sách gốc', 'Không ghi chép', 'Còn mới', 'NXB Trẻ', 'Có chữ ký', 'Giá rẻ'],
+  'do-dung-hoc-tap': ['Mới 100%', 'Tặng kèm', 'Dễ sử dụng', 'Chính hãng', 'Hoạt động tốt'],
+  'phu-kien': ['FullBox', 'Mới', 'Chính hãng', 'Siêu rẻ', 'Đáng mua'],
+};
+
+export const getBadgeInfoByCategory = (categoryId: string) => {
+  return badgeInfoByCategory[categoryId] || ['Giá rẻ', 'Mới', 'Giao dịch trực tiếp', 'Uy tín', 'Thương lượng'];
+};

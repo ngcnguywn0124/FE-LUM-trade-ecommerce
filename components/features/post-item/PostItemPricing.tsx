@@ -1,4 +1,4 @@
-import { CircleDollarSign, Gift, Info } from 'lucide-react';
+import { CircleDollarSign, Gift, Info, Check } from 'lucide-react';
 import PostItemSection from './PostItemSection';
 import { PostItemErrors, PostItemFormData } from '../../../types/post';
 
@@ -9,10 +9,10 @@ interface PostItemPricingProps {
 }
 
 const PostItemPricing = ({ formData, errors, onFieldChange }: PostItemPricingProps) => {
-  const onToggleFree = (checked: boolean) => {
-    onFieldChange('isFree', checked);
-    onFieldChange('price', checked ? '0' : '');
-    if (checked) onFieldChange('negotiable', false);
+  const onToggleFree = (free: boolean) => {
+    onFieldChange('isFree', free);
+    onFieldChange('price', free ? '0' : '');
+    if (free) onFieldChange('negotiable', false);
   };
 
   return (
@@ -21,75 +21,107 @@ const PostItemPricing = ({ formData, errors, onFieldChange }: PostItemPricingPro
       description="Đặt giá hợp lý giúp tin đăng nhận được nhiều quan tâm hơn"
     >
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            type="button"
-            onClick={() => onToggleFree(false)}
-            className={`flex-1 flex items-center justify-center gap-3 rounded-xl border-2 px-6 py-3.5 transition-all text-sm font-bold cursor-pointer ${
-              !formData.isFree
-                ? "border-emerald-600 bg-emerald-50 text-emerald-700 shadow-sm"
-                : "border-gray-100 bg-white text-gray-400 hover:border-emerald-200 hover:bg-emerald-50/30"
-            }`}
-          >
-            <CircleDollarSign size={20} className={!formData.isFree ? "text-emerald-600" : "text-gray-300"} />
-            Đăng bán
-          </button>
-          <button
-            type="button"
-            onClick={() => onToggleFree(true)}
-            className={`flex-1 flex items-center justify-center gap-3 rounded-xl border-2 px-6 py-3.5 transition-all text-sm font-bold cursor-pointer ${
-              formData.isFree
-                ? "border-emerald-600 bg-emerald-50 text-emerald-700 shadow-sm"
-                : "border-gray-100 bg-white text-gray-400 hover:border-emerald-200 hover:bg-emerald-50/30"
-            }`}
-          >
-            <Gift size={20} className={formData.isFree ? "text-emerald-600" : "text-gray-300"} />
-            Cho tặng / Miễn phí
-          </button>
+        {/* Hình thức đăng tin */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3 tracking-wider">
+            Hình thức <span className="text-red-500">*</span>
+          </label>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              type="button"
+              onClick={() => onToggleFree(false)}
+              className={`flex items-center justify-center gap-2.5 rounded-lg border py-3.5 text-sm font-medium transition-all ${
+                !formData.isFree
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <CircleDollarSign size={18} className={!formData.isFree ? 'text-emerald-600' : 'text-gray-400'} />
+              Đăng bán
+            </button>
+            <button
+              type="button"
+              onClick={() => onToggleFree(true)}
+              className={`flex items-center justify-center gap-2.5 rounded-lg border py-3.5 text-sm font-medium transition-all ${
+                formData.isFree
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <Gift size={18} className={formData.isFree ? 'text-emerald-600' : 'text-gray-400'} />
+              Tặng miễn phí
+            </button>
+          </div>
         </div>
 
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-all ${formData.isFree ? "opacity-50 grayscale pointer-events-none" : ""}`}>
-          <div className="space-y-2">
-            <label htmlFor="post-price" className="text-sm font-semibold text-gray-700">
-              Giá bán <span className="text-red-500">*</span>
-            </label>
-            <div className="relative group">
-              <input
-                id="post-price"
-                value={formData.isFree ? "0" : formData.price}
-                onChange={(event) => {
-                  const value = event.target.value.replace(/[^\d]/g, "");
-                  onFieldChange("price", value);
-                }}
-                placeholder="Ví dụ: 2500000"
-                className="w-full rounded-xl border border-gray-300 bg-white px-5 py-4 pr-16 text-lg font-bold text-gray-900 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 group-hover:border-emerald-400"
-                inputMode="numeric"
-              />
-              <span className="absolute right-5 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400 select-none">VNĐ</span>
-            </div>
-            {errors.price && <p className="text-xs font-medium text-red-500 pl-1">{errors.price}</p>}
-          </div>
-
-          <div className="flex items-center pt-2 sm:pt-8">
-            <label className="relative flex cursor-pointer select-none items-center gap-3 rounded-xl border border-gray-200 bg-white px-5 py-4 transition-all hover:bg-gray-50 hover:border-emerald-200">
-              <div className="relative h-5 w-5 rounded-md border border-gray-300 transition-colors flex items-center justify-center">
-                <input
-                  type="checkbox"
-                  checked={formData.negotiable}
-                  onChange={(event) => onFieldChange("negotiable", event.target.checked)}
-                  className="peer absolute inset-0 opacity-0 cursor-pointer"
-                />
-                <div className="h-3 w-3 rounded-xs bg-emerald-600 opacity-0 peer-checked:opacity-100 transition-opacity" />
+        {!formData.isFree ? (
+          <div className="space-y-4 pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="post-price" className="block text-sm font-medium text-gray-700 mb-2 tracking-wider">
+                  Giá muốn bán <span className="text-red-500">*</span>
+                </label>
+                <div className="relative group">
+                  <input
+                    id="post-price"
+                    value={formData.price}
+                    onChange={(event) => {
+                      const value = event.target.value.replace(/[^\d]/g, "");
+                      onFieldChange("price", value);
+                    }}
+                    placeholder="Ví dụ: 50.000"
+                    className={`w-full rounded-lg border bg-white px-4 py-3.5 text-base font-medium text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500/20 ${
+                      errors.price ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-emerald-500'
+                    }`}
+                    inputMode="numeric"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                    <span className="h-4 w-px bg-gray-200" />
+                    <span className="text-sm font-bold text-gray-400 group-focus-within:text-emerald-600">VNĐ</span>
+                  </div>
+                </div>
+                
+                {errors.price && (
+                  <p className="mt-2 text-[12px] text-red-500 font-bold flex items-center gap-1 px-0.5 animate-in fade-in">
+                    <Info size={14} />
+                    {errors.price}
+                  </p>
+                )}
               </div>
-              <span className="text-sm font-medium text-gray-700">Có thể thương lượng thêm</span>
-            </label>
-          </div>
-        </div>
 
-        {formData.isFree && (
-          <div className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/50 px-4 py-3 text-xs text-emerald-700 animate-in fade-in slide-in-from-top-2">
-            <Info size={16} />
-            Hệ thống sẽ mặc định giá bài đăng là "Cho tặng".
+              <div className="flex flex-col justify-end">
+                <label className={`flex h-[54px] items-center gap-3 rounded-lg border px-4 cursor-pointer transition-all ${
+                  formData.negotiable 
+                    ? 'border-emerald-500 bg-emerald-50/50' 
+                    : 'border-gray-200 bg-white hover:bg-gray-50'
+                }`}>
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.negotiable}
+                      onChange={(event) => onFieldChange("negotiable", event.target.checked)}
+                      className="peer h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer appearance-none checked:bg-emerald-600 checked:border-emerald-600 border-2"
+                    />
+                    <Check size={14} className="absolute left-0.75 top-0.75 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+                  </div>
+                  <span className={`text-sm font-semibold ${formData.negotiable ? 'text-emerald-700' : 'text-gray-600'}`}>
+                    Có thương lượng (giá thương lượng)
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-start gap-3 rounded-lg border border-emerald-100 bg-emerald-50/50 p-4 animate-in fade-in slide-in-from-top-1">
+            <div className="mt-0.5 rounded-full bg-emerald-100 p-1 text-emerald-600">
+              <Info size={16} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-emerald-800">Chế độ Tặng miễn phí</p>
+              <p className="text-xs text-emerald-600/80 mt-1 leading-relaxed">
+                Hệ thống sẽ tự động đặt giá là <span className="font-bold">0đ</span> và hiển thị nhãn <span className="font-bold">"Cho tặng"</span> trên tin đăng của bạn.
+              </p>
+            </div>
           </div>
         )}
       </div>

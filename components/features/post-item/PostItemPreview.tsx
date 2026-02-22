@@ -24,6 +24,15 @@ const PostItemPreview = ({ formData, inModal = false }: PostItemPreviewProps) =>
   const subcategory = getSubcategoriesByCategory(formData.categoryId).find((item) => item.id === formData.subcategoryId);
   const school = getSchoolById(formData.schoolId);
   const campus = getCampusesBySchool(formData.schoolId).find((item) => item.id === formData.campusId);
+
+  const conditionLabel = {
+    new: 'Mới 100%',
+    'like-new': 'Như mới 99%',
+    used: 'Đã qua sử dụng',
+    old: 'Cũ - vẫn dùng tốt',
+    broken: 'Hỏng / Lấy linh kiện',
+  }[formData.condition] || 'Chưa chọn';
+
   const contactMethodLabel = {
     phone: 'Gọi điện thoại',
     zalo: 'Zalo',
@@ -79,15 +88,16 @@ const PostItemPreview = ({ formData, inModal = false }: PostItemPreviewProps) =>
           {school?.name || 'Trường học'}
           {campus ? ` • ${campus.name}` : ''}
         </p>
+        <p className="text-sm text-gray-500">Tình trạng: <span className="font-medium text-gray-700">{conditionLabel}</span></p>
         <p className="text-sm text-gray-500">Điểm hẹn: {formData.meetingPoint || 'Chưa cập nhật'}</p>
         <p className="text-sm text-gray-500">Hình thức giao dịch: {transactionTypeLabel || 'Chưa cập nhật'}</p>
         <p className="text-sm text-gray-500">Liên hệ: {formData.contactName || 'Chưa cập nhật'}</p>
         <p className="text-sm text-gray-500">Ưu tiên: {contactMethodLabel || 'Chưa cập nhật'}</p>
         {formData.tags.length > 0 ? (
-          <div className="flex flex-wrap gap-2 pt-1">
+          <div className="flex flex-wrap gap-1.5 pt-1">
             {formData.tags.map((tag) => (
-              <span key={tag} className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
-                #{tag}
+              <span key={tag} className="inline-flex items-center rounded-lg bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-100 uppercase tracking-tight">
+                {tag}
               </span>
             ))}
           </div>
