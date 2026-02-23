@@ -146,10 +146,13 @@ const Header = () => {
                  <span>Tài khoản</span>
               </button>
 
-              <button className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 bg-gray-900 text-[#FFBA00] rounded-lg font-bold hover:bg-gray-800 hover:scale-105 transition-all shadow-lg active:scale-95 cursor-pointer">
+              <Link 
+                href="/dang-tin"
+                className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 bg-gray-900 text-[#FFBA00] rounded-lg font-bold hover:bg-gray-800 hover:scale-105 transition-all shadow-lg active:scale-95 cursor-pointer"
+              >
                  <PlusCircle size={18} />
                  <span className="text-[10px] sm:text-sm whitespace-nowrap">ĐĂNG TIN</span>
-              </button>
+              </Link>
             </div>
       
       <AuthModal 

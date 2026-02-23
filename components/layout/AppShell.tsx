@@ -2,6 +2,7 @@
 
 import { ReactNode, useMemo, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import Header from './Header';
 import Footer from './Footer';
 import BackToTop from '@/components/common/BackToTop';
@@ -69,9 +70,12 @@ const AppShell = ({ children }: AppShellProps) => {
             Bạn có đồ <span className="text-emerald-600">không dùng?</span>
           </h2>
           <p className="mb-8 text-brand-dark/80 text-lg">Đăng bán ngay để dọn phòng đón đồ mới!</p>
-          <button className="bg-white text-emerald-700 font-heading font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+          <Link 
+            href="/dang-tin"
+            className="bg-white text-emerald-700 font-heading font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+          >
             Đăng tin ngay
-          </button>
+          </Link>
         </div>
       </section>
       <Footer />
