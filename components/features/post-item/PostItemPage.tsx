@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2, Eye, X } from 'lucide-react';
+import { CheckCircle2, Eye, RotateCcw, Send, X } from 'lucide-react';
 import Breadcrumb from '@/components/shared/Breadcrumb';
 import PostItemBasicInfo from './PostItemBasicInfo';
 import PostItemImagePicker from './PostItemImagePicker';
@@ -244,33 +244,37 @@ const PostItemPage = () => {
                 </div>
               ) : null}
 
-              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+              <div className="grid grid-cols-3 gap-2 sm:flex sm:justify-end sm:gap-4">
                 <button
                   type="button"
-                  onClick={() => setIsPreviewOpen(true)}
-                  className="px-6 py-3.5 rounded-lg border border-emerald-500 text-sm font-bold text-emerald-700 hover:bg-emerald-50 transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-sm active:scale-95"
-                >
-                  <Eye size={18} />
-                  Xem trước
-                </button>
-                <button
-                  type="button"
-                  className="px-6 py-3.5 rounded-lg border border-red-200 text-sm font-bold text-gray-600 hover:bg-red-50 hover:border-red-300 transition-all cursor-pointer shadow-sm active:scale-95"
                   onClick={() => {
                     formData.imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
                     setFormData(initialFormData);
                     setErrors({});
                     setIsSubmitted(false);
                   }}
+                  className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border border-gray-200 bg-white text-gray-500 sm:flex-row sm:px-6 sm:py-3.5 cursor-pointer"
                 >
-                  Đặt lại
+                  <RotateCcw size={16} />
+                  <span className="text-[10px] font-bold sm:text-sm">Đặt lại</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPreviewOpen(true)}
+                  className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 sm:flex-row sm:px-6 sm:py-3.5 cursor-pointer"
+                >
+                  <Eye size={16} />
+                  <span className="text-[10px] font-bold sm:text-sm">Xem trước</span>
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-10 py-3.5 rounded-lg text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 transition-all cursor-pointer shadow-md shadow-emerald-200 active:scale-95"
+                  className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-emerald-600 text-white disabled:bg-emerald-300 sm:flex-row sm:px-10 sm:py-3.5 cursor-pointer"
                 >
-                  {isSubmitting ? 'Đang xử lý...' : 'ĐĂNG TIN NGAY'}
+                  <Send size={16} />
+                  <span className="text-[10px] font-bold sm:text-sm">
+                    {isSubmitting ? 'Đang gửi' : 'Đăng tin'}
+                  </span>
                 </button>
               </div>
             </div>
