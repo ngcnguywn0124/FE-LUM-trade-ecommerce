@@ -203,9 +203,9 @@ const PostItemPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Breadcrumb items={[{ label: 'Đăng tin' }]} />
+          <Breadcrumb items={[{ label: 'Đăng tin' }]} />
 
-        <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-5 sm:p-6">
+        <div className="mx-auto max-w-4xl mb-6 rounded-2xl border border-gray-200 bg-white p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Đăng tin bán đồ</h1>
