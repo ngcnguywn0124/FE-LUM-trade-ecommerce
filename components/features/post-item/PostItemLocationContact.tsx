@@ -71,27 +71,19 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="post-meeting-point" className="block text-sm font-medium text-gray-700 mb-2">
-              Điểm hẹn giao dịch <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="post-meeting-point"
-              value={formData.meetingPoint}
-              onChange={(event) => onFieldChange('meetingPoint', event.target.value)}
-              placeholder="Ví dụ: Cổng B thư viện, CS Ung Văn Khiêm"
-              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            />
-            {errors.meetingPoint && <p className="mt-1 text-xs text-red-500 font-medium">{errors.meetingPoint}</p>}
-          </div>
-
-          <div>
             <label htmlFor="post-transaction-type" className="block text-sm font-medium text-gray-700 mb-2">
               Hình thức giao dịch <span className="text-red-500">*</span>
             </label>
             <select
               id="post-transaction-type"
               value={formData.transactionType}
-              onChange={(event) => onFieldChange('transactionType', event.target.value as TransactionType)}
+              onChange={(event) => {
+                const value = event.target.value as TransactionType;
+                onFieldChange('transactionType', value);
+                if (value === 'delivery') {
+                  onFieldChange('meetingPoint', '');
+                }
+              }}
               className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer bg-white"
             >
               {transactionTypeOptions.map((option) => (
@@ -101,6 +93,23 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
               ))}
             </select>
             {errors.transactionType && <p className="mt-1 text-xs text-red-500 font-medium">{errors.transactionType}</p>}
+          </div>
+
+          <div className={formData.transactionType === 'delivery' ? 'opacity-50 pointer-events-none' : ''}>
+            <label htmlFor="post-meeting-point" className="block text-sm font-medium text-gray-700 mb-2">
+              Điểm hẹn giao dịch <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="post-meeting-point"
+              value={formData.meetingPoint}
+              onChange={(event) => onFieldChange('meetingPoint', event.target.value)}
+              disabled={formData.transactionType === 'delivery'}
+              placeholder={formData.transactionType === 'delivery' ? "Không cần điểm hẹn khi giao hàng" : "Ví dụ: Cổng B thư viện, CS Ung Văn Khiêm"}
+              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-gray-50"
+            />
+            {errors.meetingPoint && formData.transactionType !== 'delivery' && (
+              <p className="mt-1 text-xs text-red-500 font-medium">{errors.meetingPoint}</p>
+            )}
           </div>
         </div>
 

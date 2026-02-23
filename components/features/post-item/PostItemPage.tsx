@@ -157,9 +157,14 @@ const PostItemPage = () => {
 
     if (!formData.schoolId) nextErrors.schoolId = 'Vui lòng chọn trường học.';
     if (!formData.campusId) nextErrors.campusId = 'Vui lòng chọn cơ sở.';
-    if (formData.meetingPoint.trim().length < 5) {
-      nextErrors.meetingPoint = 'Vui lòng nhập điểm hẹn cụ thể (ít nhất 5 ký tự).';
+
+    // Only validate meeting point if it's not strictly 'delivery'
+    if (formData.transactionType !== 'delivery') {
+      if (formData.meetingPoint.trim().length < 5) {
+        nextErrors.meetingPoint = 'Vui lòng nhập điểm hẹn cụ thể (ít nhất 5 ký tự).';
+      }
     }
+
     if (!formData.contactName.trim()) nextErrors.contactName = 'Vui lòng nhập tên liên hệ.';
     if (!/^\d{10,11}$/.test(formData.contactPhone)) {
       nextErrors.contactPhone = 'Số điện thoại phải gồm 10-11 chữ số.';
@@ -250,7 +255,7 @@ const PostItemPage = () => {
                 </button>
                 <button
                   type="button"
-                  className="px-6 py-3.5 rounded-lg border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer shadow-sm active:scale-95"
+                  className="px-6 py-3.5 rounded-lg border border-red-200 text-sm font-bold text-gray-600 hover:bg-red-50 hover:border-red-300 transition-all cursor-pointer shadow-sm active:scale-95"
                   onClick={() => {
                     formData.imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
                     setFormData(initialFormData);
