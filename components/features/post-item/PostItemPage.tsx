@@ -246,7 +246,7 @@ const PostItemPage = () => {
                   className="px-6 py-3.5 rounded-lg border border-emerald-500 text-sm font-bold text-emerald-700 hover:bg-emerald-50 transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-sm active:scale-95"
                 >
                   <Eye size={18} />
-                  Xem trước tin đăng
+                  Xem trước
                 </button>
                 <button
                   type="button"
@@ -258,7 +258,7 @@ const PostItemPage = () => {
                     setIsSubmitted(false);
                   }}
                 >
-                  Xóa hết làm lại
+                  Đặt lại
                 </button>
                 <button
                   type="submit"
@@ -273,18 +273,23 @@ const PostItemPage = () => {
       </div>
 
       {isPreviewOpen ? (
-        <div className="fixed inset-0 z-999 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setIsPreviewOpen(false)} />
-          <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <button
-              type="button"
-              onClick={() => setIsPreviewOpen(false)}
-              className="absolute right-3 top-3 z-10 rounded-full bg-white p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 cursor-pointer"
-              aria-label="Đóng xem trước"
-            >
-              <X size={18} />
-            </button>
-            <PostItemPreview formData={formData} inModal />
+        <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center sm:p-4">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setIsPreviewOpen(false)} />
+          <div className="relative w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl bg-white border border-gray-200 flex flex-col max-h-[92vh] sm:max-h-[90vh]">
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4 shrink-0">
+              <h2 className="text-base font-bold text-gray-900">Xem trước tin đăng</h2>
+              <button
+                type="button"
+                onClick={() => setIsPreviewOpen(false)}
+                className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 cursor-pointer transition-colors"
+                aria-label="Đóng"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1">
+              <PostItemPreview formData={formData} inModal />
+            </div>
           </div>
         </div>
       ) : null}
