@@ -30,7 +30,7 @@ const PostStatusTabs: React.FC<PostStatusTabsProps> = ({ active, onChange, aggre
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
       <div className="overflow-x-auto">
         <div className="flex min-w-max">
           {tabs.map((tab) => {

@@ -19,7 +19,7 @@ const StatCard = ({
   value: number | string;
   color: string;
 }) => (
-  <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 shadow-sm border border-gray-100 flex-1 min-w-0">
+  <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3.5 border border-gray-100 flex-1 min-w-0">
     <div className={`p-2 rounded-lg ${color} shrink-0`}>
       <Icon size={18} className="text-white" />
     </div>

@@ -40,7 +40,7 @@ const EmptyPostState: React.FC<EmptyPostStateProps> = ({ activeFilter }) => {
   const { title, desc } = MESSAGES[activeFilter];
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-6 bg-white rounded-2xl border border-gray-100 shadow-sm text-center">
+    <div className="flex flex-col items-center justify-center py-16 px-6 bg-white rounded-2xl border border-gray-100 text-center">
       <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
         <FileX size={30} className="text-gray-400" />
       </div>

@@ -272,7 +272,7 @@ const ManagePostsPage: React.FC = () => {
         {/* Search + Sort + View Mode Toolbar */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Search */}
-          <form onSubmit={handleSearchSubmit} className="flex-1 min-w-45 flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 h-10 shadow-sm focus-within:border-emerald-400 focus-within:shadow-emerald-100 transition-all">
+          <form onSubmit={handleSearchSubmit} className="flex-1 min-w-45 flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 h-10 focus-within:border-emerald-400 focus-within:shadow-emerald-100 transition-all">
             <Search size={15} className="text-gray-400 shrink-0" />
             <input
               type="text"
@@ -292,7 +292,7 @@ const ManagePostsPage: React.FC = () => {
           <div className="relative">
             <button
               onClick={() => setIsSortOpen((v) => !v)}
-              className="flex items-center gap-1.5 h-10 px-3.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-gray-300 shadow-sm transition-all cursor-pointer whitespace-nowrap"
+              className="flex items-center gap-1.5 h-10 px-3.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-gray-300 transition-all cursor-pointer whitespace-nowrap"
             >
               <SlidersHorizontal size={14} className="text-gray-400" />
               {currentSortLabel}
@@ -321,7 +321,7 @@ const ManagePostsPage: React.FC = () => {
           </div>
 
           {/* View mode toggle */}
-          <div className="flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+          <div className="flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden">
             <button
               onClick={() => setViewMode('list')}
               className={`p-2.5 cursor-pointer transition-colors ${viewMode === 'list' ? 'bg-gray-100 text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}
