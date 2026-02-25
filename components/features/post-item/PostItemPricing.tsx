@@ -124,6 +124,35 @@ const PostItemPricing = ({ formData, errors, onFieldChange }: PostItemPricingPro
             </div>
           </div>
         )}
+
+        {/* Thời hạn bài đăng */}
+        <div className="pt-4 border-t border-gray-100">
+          <label className="block text-sm font-medium text-gray-700 mb-3 tracking-wider">
+            Thời hạn tin đăng <span className="text-red-500">*</span>
+          </label>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+            {[7, 15, 30, 60, 90].map((days) => (
+              <button
+                key={days}
+                type="button"
+                onClick={() => onFieldChange('expiryDays', days)}
+                className={`flex flex-col items-center justify-center gap-1 rounded-xl border py-3 transition-all cursor-pointer ${
+                  formData.expiryDays === days
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                <span className="text-sm font-bold">{days} ngày</span>
+                <span className="text-[10px] opacity-70">
+                  {days === 7 ? 'Nhanh' : days === 15 ? 'Hợp lý' : days === 30 ? 'Mặc định' : 'Dài hạn'}
+                </span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-[11px] text-gray-400 leading-relaxed italic">
+            * Tin của bạn sẽ tự động ẩn sau khi hết thời hạn để giữ thông tin luôn mới nhất. Bạn có thể gia hạn bất cứ lúc nào sau đó.
+          </p>
+        </div>
       </div>
     </PostItemSection>
   );

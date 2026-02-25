@@ -27,6 +27,7 @@ export interface PostItemFormData {
   zaloLink: string;
   facebookLink: string;
   imagePreviews: string[];
+  expiryDays: number;
 }
 
 export interface PostItemErrors {

@@ -100,6 +100,7 @@ const PostItemPreview = ({ formData, inModal = false }: PostItemPreviewProps) =>
             <InfoItem label="Cơ sở" value={campus?.name} />
             <InfoItem label="Tình trạng" value={conditionLabel} />
             <InfoItem label="Giao dịch" value={transactionTypeLabel} />
+            <InfoItem label="Thời hạn tin" value={`${formData.expiryDays} ngày`} />
           </div>
         </div>
 

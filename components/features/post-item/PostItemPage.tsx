@@ -30,6 +30,7 @@ const initialFormData: PostItemFormData = {
   zaloLink: '',
   facebookLink: '',
   imagePreviews: [],
+  expiryDays: 30,
 };
 
 const PostItemPage = () => {
