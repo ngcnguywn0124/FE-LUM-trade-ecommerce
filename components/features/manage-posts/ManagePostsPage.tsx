@@ -14,12 +14,16 @@ import PostManageCard from './PostManageCard';
 import BulkActionBar from './BulkActionBar';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import EmptyPostState from './EmptyPostState';
+import Pagination from '@/components/shared/Pagination';
 
 import { ManagedPost, ManagePostsFilters, PostSortOption, PostStatus } from '@/types/manage-posts';
 import { generateMockManagedPosts, computeAggregate } from '@/lib/mockManagePosts';
 
 // ─── Mock data (replace with API call) ────────────────────────────────────────
-const INITIAL_POSTS: ManagedPost[] = generateMockManagedPosts(15);
+const INITIAL_POSTS: ManagedPost[] = generateMockManagedPosts(45);
+
+// ─── Constants ──────────────────────────────────────────────────────────────
+const POSTS_PER_PAGE = 15;
 
 // ─── Sort options ─────────────────────────────────────────────────────────────
 const SORT_OPTIONS: { value: PostSortOption; label: string }[] = [
@@ -45,6 +49,7 @@ const ManagePostsPage: React.FC = () => {
   const [searchInput, setSearchInput] = useState('');
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
+  const [currentPage, setCurrentPage] = useState(1);
 
   // ── Selection State ─────────────────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -114,15 +119,28 @@ const ManagePostsPage: React.FC = () => {
     return result;
   }, [posts, filters]);
 
+  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+
+  const paginatedPosts = useMemo(() => {
+    const start = (currentPage - 1) * POSTS_PER_PAGE;
+    return filteredPosts.slice(start, start + POSTS_PER_PAGE);
+  }, [filteredPosts, currentPage]);
+
   const isAllSelected =
-    filteredPosts.length > 0 &&
-    filteredPosts.every((p) => selectedIds.has(p.id));
+    paginatedPosts.length > 0 &&
+    paginatedPosts.every((p) => selectedIds.has(p.id));
 
   // ── Handlers ──────────────────────────────────────────────────────────────────
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSearchSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
       setFilters((prev) => ({ ...prev, search: searchInput }));
+      setCurrentPage(1);
     },
     [searchInput]
   );
@@ -130,6 +148,7 @@ const ManagePostsPage: React.FC = () => {
   const handleClearSearch = useCallback(() => {
     setSearchInput('');
     setFilters((prev) => ({ ...prev, search: '' }));
+    setCurrentPage(1);
   }, []);
 
   const handleSelectPost = useCallback((id: number, checked: boolean) => {
@@ -272,6 +291,7 @@ const ManagePostsPage: React.FC = () => {
           onChange={(status) => {
             setFilters((prev) => ({ ...prev, status }));
             setSelectedIds(new Set());
+            setCurrentPage(1);
           }}
           aggregate={aggregate}
         />
@@ -366,30 +386,39 @@ const ManagePostsPage: React.FC = () => {
         {filteredPosts.length === 0 ? (
           <EmptyPostState activeFilter={filters.status} />
         ) : (
-          <div
-            className={
-              viewMode === 'grid'
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'
-                : 'flex flex-col gap-3'
-            }
-          >
-            {filteredPosts.map((post) => (
-              <PostManageCard
-                key={post.id}
-                post={post}
-                isSelected={selectedIds.has(post.id)}
-                onSelect={handleSelectPost}
-                openMenuId={openMenuId}
-                onToggleMenu={handleToggleMenu}
-                onCloseMenu={handleCloseMenu}
-                onEdit={handleEdit}
-                onToggleVisibility={handleToggleVisibility}
-                onRenew={handleRenew}
-                onDeleteRequest={handleDeleteRequest}
-                onView={handleView}
+          <>
+            <div
+              className={
+                viewMode === 'grid'
+                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'
+                  : 'flex flex-col gap-3'
+              }
+            >
+              {paginatedPosts.map((post) => (
+                <PostManageCard
+                  key={post.id}
+                  post={post}
+                  isSelected={selectedIds.has(post.id)}
+                  onSelect={handleSelectPost}
+                  openMenuId={openMenuId}
+                  onToggleMenu={handleToggleMenu}
+                  onCloseMenu={handleCloseMenu}
+                  onEdit={handleEdit}
+                  onToggleVisibility={handleToggleVisibility}
+                  onRenew={handleRenew}
+                  onDeleteRequest={handleDeleteRequest}
+                  onView={handleView}
+                />
+              ))}
+            </div>
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
               />
-            ))}
-          </div>
+
+          </>
         )}
       </div>
 
