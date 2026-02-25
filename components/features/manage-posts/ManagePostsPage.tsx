@@ -44,13 +44,21 @@ const ManagePostsPage: React.FC = () => {
   });
   const [searchInput, setSearchInput] = useState('');
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
   // ── Selection State ─────────────────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   // ── Menu State ──────────────────────────────────────────────────────────────
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+
+  // ── Responsive effect ───────────────────────────────────────────────────────
+  React.useEffect(() => {
+    // Default to list on small screens
+    if (window.innerWidth < 640) {
+      setViewMode('list');
+    }
+  }, []);
 
   // ── Modal State ─────────────────────────────────────────────────────────────
   const [deleteModal, setDeleteModal] = useState<{
@@ -321,8 +329,8 @@ const ManagePostsPage: React.FC = () => {
             )}
           </div>
 
-          {/* View mode toggle */}
-          <div className="flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden h-10">
+          {/* View mode toggle - Hidden on mobile, shown from sm up */}
+          <div className="hidden sm:flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden h-10">
             <button
               onClick={() => setViewMode('list')}
               className={`px-3.5 h-full cursor-pointer transition-colors border-r border-gray-100 last:border-0 ${viewMode === 'list' ? 'bg-gray-50 text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}
@@ -361,7 +369,7 @@ const ManagePostsPage: React.FC = () => {
           <div
             className={
               viewMode === 'grid'
-                ? 'grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'
                 : 'flex flex-col gap-3'
             }
           >
