@@ -30,7 +30,7 @@ const PostStatusTabs: React.FC<PostStatusTabsProps> = ({ active, onChange, aggre
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
       <div className="overflow-x-auto">
         <div className="flex min-w-max">
           {tabs.map((tab) => {
@@ -40,10 +40,10 @@ const PostStatusTabs: React.FC<PostStatusTabsProps> = ({ active, onChange, aggre
                 key={tab.key}
                 onClick={() => onChange(tab.key)}
                 className={`
-                  relative flex items-center gap-2 px-5 py-3.5 text-sm font-semibold whitespace-nowrap
-                  transition-all duration-200 cursor-pointer
+                  relative flex items-center justify-center gap-2 px-4 sm:px-6 py-3.5 text-sm font-semibold whitespace-nowrap
+                  transition-all duration-200 cursor-pointer flex-1
                   ${isActive
-                    ? `${tab.color} border-b-2 border-current bg-gray-50`
+                    ? `${tab.color} border-b-2 border-emerald-500 bg-emerald-50/30`
                     : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50 border-b-2 border-transparent'
                   }
                 `}

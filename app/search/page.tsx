@@ -7,7 +7,7 @@ import FilterSidebar from "@/components/features/search/FilterSidebar";
 import SearchHeader from "@/components/features/search/SearchHeader";
 import ActiveFilters from "@/components/features/search/ActiveFilters";
 import SearchResultsGrid from "@/components/features/search/SearchResultsGrid";
-import Pagination from "@/components/features/search/Pagination";
+import Pagination from "@/components/shared/Pagination";
 import SuggestedCategories from "@/components/features/search/SuggestedCategories";
 import Breadcrumb from "@/components/shared/Breadcrumb";
 import { Product, SearchFilters, SortOption } from "@/types";
