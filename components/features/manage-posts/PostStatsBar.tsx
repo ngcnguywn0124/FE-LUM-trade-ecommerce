@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Eye, Heart, MessageCircle, FileText } from 'lucide-react';
+import { Eye, Heart, MessageCircle, FileText, Star } from 'lucide-react';
 import { PostsAggregate } from '@/types/manage-posts';
 
 interface PostStatsBarProps {
@@ -64,6 +64,12 @@ const PostStatsBar: React.FC<PostStatsBarProps> = ({ aggregate }) => {
           label="Tin nhắn"
           value={aggregate.totalMessages}
           color="bg-violet-500"
+        />
+        <StatCard
+          icon={Star}
+          label="Đánh giá"
+          value={`${aggregate.rating} (${aggregate.ratingCount})`}
+          color="bg-amber-500"
         />
       </div>
     </div>

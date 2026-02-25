@@ -104,5 +104,7 @@ export function computeAggregate(posts: ManagedPost[]): PostsAggregate {
     totalViews: posts.reduce((acc, p) => acc + p.stats.views, 0),
     totalFavorites: posts.reduce((acc, p) => acc + p.stats.favorites, 0),
     totalMessages: posts.reduce((acc, p) => acc + p.stats.messages, 0),
+    rating: 4.8,
+    ratingCount: 12,
   };
 }

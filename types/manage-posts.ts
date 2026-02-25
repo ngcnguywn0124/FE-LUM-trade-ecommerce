@@ -43,4 +43,6 @@ export interface PostsAggregate {
   totalViews: number;
   totalFavorites: number;
   totalMessages: number;
+  rating: number;
+  ratingCount: number;
 }
