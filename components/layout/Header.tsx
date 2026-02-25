@@ -146,6 +146,14 @@ const Header = () => {
                  <span>Tài khoản</span>
               </button>
 
+              <Link
+                href="/quan-ly-tin-dang"
+                className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-gray-900 rounded-lg text-sm font-bold transition-all cursor-pointer"
+              >
+                <BookOpen size={18} />
+                <span>Tin của tôi</span>
+              </Link>
+
               <Link 
                 href="/dang-tin"
                 className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 bg-gray-900 text-[#FFBA00] rounded-lg font-bold hover:bg-gray-800 hover:scale-105 transition-all shadow-lg active:scale-95 cursor-pointer"
