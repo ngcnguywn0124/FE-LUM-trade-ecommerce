@@ -233,7 +233,6 @@ const ManagePostsPage: React.FC = () => {
 
   const currentSortLabel = SORT_OPTIONS.find((o) => o.value === filters.sortBy)?.label ?? 'Sắp xếp';
 
-  // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-50 pt-24">
       {/* ── Toast ── */}
@@ -272,17 +271,17 @@ const ManagePostsPage: React.FC = () => {
         {/* Search + Sort + View Mode Toolbar */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Search */}
-          <form onSubmit={handleSearchSubmit} className="flex-1 min-w-45 flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 h-10 focus-within:border-emerald-400 focus-within:shadow-emerald-100 transition-all">
+          <form onSubmit={handleSearchSubmit} className="flex-1 min-w-45 flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 h-10 focus-within:border-emerald-400 focus-within:shadow-emerald-100 transition-all">
             <Search size={15} className="text-gray-400 shrink-0" />
             <input
               type="text"
-              placeholder="Tìm kiếm tin đăng của bạn..."
+              placeholder="Tìm kiếm..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="flex-1 text-sm outline-none bg-transparent placeholder-gray-400"
             />
             {searchInput && (
-              <button type="button" onClick={handleClearSearch} className="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors">
+              <button type="button" onClick={handleClearSearch} className="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors p-1">
                 <X size={14} />
               </button>
             )}
@@ -292,14 +291,16 @@ const ManagePostsPage: React.FC = () => {
           <div className="relative">
             <button
               onClick={() => setIsSortOpen((v) => !v)}
-              className="flex items-center gap-1.5 h-10 px-3.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-gray-300 transition-all cursor-pointer whitespace-nowrap"
+              className="flex items-center justify-between gap-2 h-10 w-48 px-3.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-gray-300 transition-all cursor-pointer overflow-hidden"
             >
-              <SlidersHorizontal size={14} className="text-gray-400" />
-              {currentSortLabel}
-              <ChevronDown size={14} className={`text-gray-400 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
+              <div className="flex items-center gap-2 min-w-0">
+                <SlidersHorizontal size={14} className="text-gray-400 shrink-0" />
+                <span className="truncate">{currentSortLabel}</span>
+              </div>
+              <ChevronDown size={14} className={`text-gray-400 shrink-0 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
             </button>
             {isSortOpen && (
-              <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl border border-gray-100 shadow-lg z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl border border-gray-100 shadow-lg z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
                 {SORT_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
@@ -321,17 +322,17 @@ const ManagePostsPage: React.FC = () => {
           </div>
 
           {/* View mode toggle */}
-          <div className="flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden h-10">
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2.5 cursor-pointer transition-colors ${viewMode === 'list' ? 'bg-gray-100 text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`px-3.5 h-full cursor-pointer transition-colors border-r border-gray-100 last:border-0 ${viewMode === 'list' ? 'bg-gray-50 text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}
               title="Xem danh sách"
             >
               <List size={16} />
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2.5 cursor-pointer transition-colors ${viewMode === 'grid' ? 'bg-gray-100 text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`px-3.5 h-full cursor-pointer transition-colors ${viewMode === 'grid' ? 'bg-gray-50 text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}
               title="Xem lưới"
             >
               <LayoutGrid size={16} />
@@ -360,7 +361,7 @@ const ManagePostsPage: React.FC = () => {
           <div
             className={
               viewMode === 'grid'
-                ? 'grid grid-cols-1 sm:grid-cols-2 gap-4'
+                ? 'grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4'
                 : 'flex flex-col gap-3'
             }
           >
