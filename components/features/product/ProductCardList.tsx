@@ -74,7 +74,7 @@ const ProductCardList = ({ product }: ProductProps) => {
                   e.preventDefault();
                   setIsLiked(!isLiked);
                 }}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors shrink-0"
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors shrink-0 cursor-pointer"
               >
                 <Heart 
                   size={20} 
