@@ -1,6 +1,7 @@
 import { getCampusesBySchool, mockSchools } from '@/lib/categoriesData';
 import PostItemSection from './PostItemSection';
 import { PostItemErrors, PostItemFormData, TransactionType } from '../../../types/post';
+import CustomSelect from '@/components/shared/CustomSelect';
 
 interface PostItemLocationContactProps {
   formData: PostItemFormData;
@@ -11,10 +12,10 @@ interface PostItemLocationContactProps {
 const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLocationContactProps) => {
   const selectedSchool = mockSchools.find((school) => school.id === formData.schoolId);
   const campuses = selectedSchool ? getCampusesBySchool(selectedSchool.id) : [];
-  const transactionTypeOptions: { value: TransactionType; label: string }[] = [
-    { value: 'meetup', label: 'Gặp mặt trực tiếp' },
-    { value: 'delivery', label: 'Giao hàng' },
-    { value: 'both', label: 'Cả hai hình thức' },
+  const transactionTypeOptions = [
+    { id: 'meetup', name: 'Gặp mặt trực tiếp' },
+    { id: 'delivery', name: 'Giao hàng' },
+    { id: 'both', name: 'Cả hai hình thức' },
   ];
 
   return (
@@ -25,73 +26,56 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
       <div className="space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="post-school" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Trường học <span className="text-red-500">*</span>
             </label>
-            <select
-              id="post-school"
+            <CustomSelect
               value={formData.schoolId}
-              onChange={(event) => {
-                onFieldChange('schoolId', event.target.value);
+              options={mockSchools.map(s => ({ id: s.id, name: s.name }))}
+              onChange={(value) => {
+                onFieldChange('schoolId', value);
                 onFieldChange('campusId', '');
               }}
-              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer bg-white"
-            >
-              <option value="">Chọn trường học</option>
-              {mockSchools.map((school) => (
-                <option key={school.id} value={school.id}>
-                  {school.name}
-                </option>
-              ))}
-            </select>
+              placeholder="Chọn trường học"
+              error={errors.schoolId}
+            />
             {errors.schoolId && <p className="mt-1 text-xs text-red-500 font-medium">{errors.schoolId}</p>}
           </div>
 
           <div>
-            <label htmlFor="post-campus" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Cơ sở <span className="text-red-500">*</span>
             </label>
-            <select
-              id="post-campus"
+            <CustomSelect
               value={formData.campusId}
-              onChange={(event) => onFieldChange('campusId', event.target.value)}
+              options={campuses.map(c => ({ id: c.id, name: c.name }))}
+              onChange={(value) => onFieldChange('campusId', value)}
               disabled={!formData.schoolId}
-              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 disabled:bg-gray-50 disabled:text-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer bg-white"
-            >
-              <option value="">{formData.schoolId ? 'Chọn cơ sở' : 'Chọn trường trước'}</option>
-              {campuses.map((campus) => (
-                <option key={campus.id} value={campus.id}>
-                  {campus.name}
-                </option>
-              ))}
-            </select>
+              placeholder="Chọn cơ sở"
+              disabledPlaceholder="Chọn trường trước"
+              error={errors.campusId}
+            />
             {errors.campusId && <p className="mt-1 text-xs text-red-500 font-medium">{errors.campusId}</p>}
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="post-transaction-type" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Hình thức giao dịch <span className="text-red-500">*</span>
             </label>
-            <select
-              id="post-transaction-type"
+            <CustomSelect
               value={formData.transactionType}
-              onChange={(event) => {
-                const value = event.target.value as TransactionType;
-                onFieldChange('transactionType', value);
+              options={transactionTypeOptions}
+              onChange={(value) => {
+                onFieldChange('transactionType', value as TransactionType);
                 if (value === 'delivery') {
                   onFieldChange('meetingPoint', '');
                 }
               }}
-              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer bg-white"
-            >
-              {transactionTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              placeholder="Chọn hình thức"
+              error={errors.transactionType}
+            />
             {errors.transactionType && <p className="mt-1 text-xs text-red-500 font-medium">{errors.transactionType}</p>}
           </div>
 

@@ -203,7 +203,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
           <div className="flex items-center gap-3">
             <button
               onClick={clearFilters}
-              className="text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+              className="text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors cursor-pointer"
             >
               Xóa lọc
             </button>
@@ -416,7 +416,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
             </div>
             <button
               onClick={handleApplyCustomPrice}
-              className="w-full py-2 bg-gray-100 hover:bg-emerald-600 hover:text-white text-gray-700 text-sm font-medium rounded-lg transition-all"
+              className="w-full py-2 bg-gray-100 hover:bg-emerald-600 hover:text-white text-gray-700 text-sm font-medium rounded-lg transition-all cursor-pointer"
             >
               Áp dụng
             </button>

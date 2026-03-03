@@ -55,7 +55,7 @@ const SearchHeader = ({
         <div className="hidden lg:flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
           <button
             onClick={() => onViewModeChange('grid-4')}
-            className={`p-2 rounded transition-colors ${
+            className={`p-2 rounded transition-colors cursor-pointer ${
               viewMode === 'grid-4'
                 ? 'bg-white text-emerald-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
@@ -66,7 +66,7 @@ const SearchHeader = ({
           </button>
           <button
             onClick={() => onViewModeChange('list')}
-            className={`p-2 rounded transition-colors ${
+            className={`p-2 rounded transition-colors cursor-pointer ${
               viewMode === 'list'
                 ? 'bg-white text-emerald-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
@@ -89,7 +89,7 @@ const SearchHeader = ({
             <button
               key={option.value}
               onClick={() => onSortChange(option.value)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all cursor-pointer ${
                 sortBy === option.value
                   ? 'bg-emerald-600 text-white shadow-sm'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'

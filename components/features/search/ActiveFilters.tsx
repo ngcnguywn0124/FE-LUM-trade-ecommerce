@@ -86,7 +86,7 @@ const ActiveFilters = ({ filters, onRemoveFilter }: ActiveFiltersProps) => {
           <button
             key={filter.key}
             onClick={() => onRemoveFilter(filter.key)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-emerald-300 rounded-full text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors group"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-emerald-300 rounded-full text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors group cursor-pointer"
           >
             <span>{filter.label}</span>
             <X size={14} className="group-hover:text-emerald-900" />
