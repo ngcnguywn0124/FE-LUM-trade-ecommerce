@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CalendarDays, Clock3, MapPin, Flag, Share2, SquarePen, Star, User, UserPlus } from "lucide-react";
+import { CalendarDays, Clock3, MapPin, Flag, Share2, SquarePen, Star, UserPlus } from "lucide-react";
 import { UserProfile } from "@/lib/mockUserProfile";
 
 interface UserProfileHeaderProps {

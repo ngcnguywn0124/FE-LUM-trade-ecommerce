@@ -41,7 +41,7 @@ const CategoryGrid = () => {
               <span className="w-2 h-10 bg-brand-mint rounded-full"></span>
               Khám phá danh mục
             </h3>
-            <p className="text-gray-500 font-medium text-lg">Hàng ngàn món đồ "cũ người mới ta" đang chờ bạn</p>
+            <p className="text-gray-500 font-medium text-lg">Hàng ngàn món đồ &quot;cũ người mới ta&quot; đang chờ bạn</p>
           </div>
           
           <div className="flex items-center gap-5">
