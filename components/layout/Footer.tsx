@@ -41,7 +41,7 @@ const Footer = () => {
           <div className="col-span-2 lg:col-span-4 space-y-6">
             <h4 className="text-lg font-bold text-[#FFBA00] uppercase tracking-wider">Về chúng tôi</h4>
             <p className="text-gray-400 leading-relaxed pr-4 text-sm md:text-base">
-              Lụm.vn là nền tảng kết nối cộng đồng sinh viên, giúp việc mua bán đồ cũ trở nên an toàn, nhanh chóng và tiết kiệm. "Cũ người mới ta" - Lan tỏa giá trị xanh trong môi trường đại học.
+              Lụm.vn là nền tảng kết nối cộng đồng sinh viên, giúp việc mua bán đồ cũ trở nên an toàn, nhanh chóng và tiết kiệm. &quot;Cũ người mới ta&quot; - Lan tỏa giá trị xanh trong môi trường đại học.
             </p>
             <div className="flex gap-4">
                {/* Các chỉ số uy tín */}

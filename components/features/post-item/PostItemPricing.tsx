@@ -119,7 +119,7 @@ const PostItemPricing = ({ formData, errors, onFieldChange }: PostItemPricingPro
             <div>
               <p className="text-sm font-semibold text-emerald-800">Chế độ Tặng miễn phí</p>
               <p className="text-xs text-emerald-600/80 mt-1 leading-relaxed">
-                Hệ thống sẽ tự động đặt giá là <span className="font-bold">0đ</span> và hiển thị nhãn <span className="font-bold">"Cho tặng"</span> trên tin đăng của bạn.
+                Hệ thống sẽ tự động đặt giá là <span className="font-bold">0đ</span> và hiển thị nhãn &quot;Cho tặng&quot; trên tin đăng của bạn.
               </p>
             </div>
           </div>

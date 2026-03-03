@@ -39,17 +39,24 @@ const SearchPage = () => {
   useEffect(() => {
     const categoryParam = searchParams.get("category") || undefined;
     
+    // Sử dụng current state trực tiếp thay vì functional state if (filters.category === categoryParam)
+    // Functional style: setFilters(prev => { ... })
     setFilters(prev => {
-      // Chỉ update nếu thực sự có sự thay đổi để tránh vòng lặp vô tận
       if (prev.category === categoryParam) return prev;
       
       return {
         ...prev,
         category: categoryParam,
-        subcategory: undefined, // Reset subcategory khi đổi category
+        subcategory: undefined, 
       };
     });
-    setCurrentPage(1);
+    // Tránh reset page nếu không đổi category thực sự
+    setFilters(prev => {
+        if (prev.category !== categoryParam) {
+            setCurrentPage(1);
+        }
+        return prev;
+    });
   }, [searchParams]);
 
   // Filter and sort products
