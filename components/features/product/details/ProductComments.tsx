@@ -60,15 +60,14 @@ const ProductComments = () => {
 
       <div className="flex-1 space-y-6 overflow-y-auto pr-1 max-h-96 scrollbar-thin">
         {comments.map((comment) => (
-          <div key={comment.id} className="flex gap-3">
-            <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-gray-100 bg-gray-50 text-emerald-600 cursor-pointer">
-              {comment.user.avatar ? (
-                <Image src={comment.user.avatar} alt={comment.user.name} fill className="object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <User size={18} />
-                </div>
-              )}
+          <div key={comment.id} className="flex gap-4">
+            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-gray-100 bg-gray-50 shadow-xs cursor-pointer active:scale-95 transition-all">
+              <Image 
+                src={comment.user.avatar || "/user/avatar-user-profile-default.png"} 
+                alt={comment.user.name} 
+                fill 
+                className="object-cover" 
+              />
             </div>
             <div className="flex-1">
               <div className="rounded-2xl bg-gray-50 p-3">

@@ -160,6 +160,7 @@ Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt t�
                 postedTime={product.time || "Vừa xong"}
                 infoTags={infoTags}
                 seller={{
+                  id: product.seller?.id,
                   name: product.seller?.name || "Người bán ẩn danh",
                   avatar: product.seller?.avatar,
                   rating: product.seller?.rating,

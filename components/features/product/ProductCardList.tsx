@@ -97,28 +97,22 @@ const ProductCardList = ({ product }: ProductProps) => {
 
             {/* Seller Info */}
             {product.seller && (
-              <div className="flex items-center gap-2 mb-3 py-2 border-t border-gray-50">
-                <div className="relative w-6 h-6 rounded-full bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
-                  {product.seller.avatar ? (
-                    <Image
-                      src={product.seller.avatar}
-                      alt={product.seller.name}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-emerald-50 text-emerald-600">
-                      <User size={14} />
-                    </div>
-                  )}
+              <div className="flex items-center gap-2 mb-3 py-2 border-t border-gray-100">
+                <div className="relative w-6 h-6 rounded-full bg-gray-50 overflow-hidden shrink-0 border border-gray-100 shadow-xs">
+                  <Image
+                    src={product.seller.avatar || "/user/avatar-user-profile-default.png"}
+                    alt={product.seller.name}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <span className="text-xs font-semibold text-gray-700 truncate">
+                  <span className="text-[11px] font-bold text-gray-900 truncate tracking-tight">
                     {product.seller.name}
                   </span>
                   {product.seller.rating && (
-                    <div className="flex items-center gap-0.5 text-xs text-amber-500 font-bold shrink-0">
-                      <Star size={12} className="fill-amber-500" />
+                    <div className="flex items-center gap-0.5 text-[10px] text-amber-500 font-bold shrink-0">
+                      <Star size={10} className="fill-amber-500" />
                       <span>{product.seller.rating.toFixed(1)}</span>
                     </div>
                   )}
