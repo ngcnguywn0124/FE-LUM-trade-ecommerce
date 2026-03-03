@@ -23,7 +23,7 @@ const EmptyState = ({ type = "no-results", keyword, onClearFilters }: EmptyState
         
         <h3 className="text-2xl font-bold text-gray-900 mb-3">
           {keyword ? (
-            <>Không tìm thấy "{keyword}"</>
+            <>Không tìm thấy &quot;{keyword}&quot;</>
           ) : (
             <>Không tìm thấy sản phẩm</>
           )}

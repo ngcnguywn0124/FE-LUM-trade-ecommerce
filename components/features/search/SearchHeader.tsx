@@ -38,7 +38,7 @@ const SearchHeader = ({
           <h1 className="text-2xl font-bold text-gray-900 mb-1">
             {keyword ? (
               <>
-                Kết quả cho "<span className="text-emerald-600">{keyword}</span>"
+                Kết quả cho &quot;<span className="text-emerald-600">{keyword}</span>&quot;
               </>
             ) : category ? (
               category

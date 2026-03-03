@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Clock3,
   Flag,
@@ -22,6 +23,7 @@ interface ProductSummaryProps {
   postedTime: string;
   infoTags: string[];
   seller: {
+    id?: number;
     name: string;
     avatar?: string;
     rating?: number;
@@ -43,6 +45,7 @@ const ProductSummary = ({
   const sellerRating = (seller.rating || 4.5).toFixed(1);
   const sellerActivityStatus = seller.activityStatus || "Đang hoạt động";
   const sellerSoldCount = seller.soldCount ?? 0;
+  const sellerProfileHref = seller.id ? `/tai-khoan/${seller.id}` : undefined;
   const [offerPrice, setOfferPrice] = useState(
     parsedPrice ? Math.round(parsedPrice * 0.9) : 100000
   );
@@ -134,24 +137,23 @@ const ProductSummary = ({
       </div>
 
       <div className="mt-5 border-t border-gray-200 pt-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Thông tin người bán</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Người đăng tin</p>
 
         <div className="mt-3 flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="relative h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-white">
-              {seller.avatar ? (
-                <Image src={seller.avatar} alt={seller.name} fill className="object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-emerald-600">
-                  <User size={18} />
-                </div>
-              )}
+            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-gray-100 bg-gray-50 shadow-xs">
+              <Image 
+                src={seller.avatar || "/user/avatar-user-profile-default.png"} 
+                alt={seller.name} 
+                fill 
+                className="object-cover" 
+              />
             </div>
 
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-gray-900">{seller.name}</p>
+            <div className="min-w-0 pb-0.5">
+              <p className="truncate text-sm font-bold text-gray-900 leading-tight">{seller.name}</p>
               <div className="mt-1 flex items-center gap-1 text-xs">
-                <span className={`h-2 w-2 rounded-full ${sellerActivityStatus === "Đang hoạt động" ? "bg-emerald-500 animate-pulse" : "bg-gray-400"}`}></span>
+                <span className={`h-1.5 w-1.5 rounded-full ${sellerActivityStatus === "Đang hoạt động" ? "bg-emerald-500 animate-pulse outline-2 outline-emerald-100" : "bg-gray-400"}`}></span>
                 <span className={`font-medium ${sellerActivityStatus === "Đang hoạt động" ? "text-emerald-600" : "text-gray-500"}`}>
                   {sellerActivityStatus}
                 </span>
@@ -159,9 +161,18 @@ const ProductSummary = ({
             </div>
           </div>
 
-          <button className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-            Xem trang
-          </button>
+          {sellerProfileHref ? (
+            <Link
+              href={sellerProfileHref}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              Xem trang
+            </Link>
+          ) : (
+            <button className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+              Xem trang
+            </button>
+          )}
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2 text-xs">

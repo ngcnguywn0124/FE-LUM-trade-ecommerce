@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, SearchX } from "lucide-react";
+import { SearchX } from "lucide-react";
 import Breadcrumb from "@/components/shared/Breadcrumb";
 import ProductImageGallery from "@/components/features/product/details/ProductImageGallery";
 import ProductSummary from "@/components/features/product/details/ProductSummary";
@@ -41,6 +41,13 @@ const ProductDetailPage = () => {
     ).slice(0, 20);
   }, [product]);
 
+  const imageList = useMemo(() => {
+    if (!product) return [];
+    // Ưu tiên ảnh chính, nếu không có thì dùng fallback
+    const mainImage = product.image || "/cate/khac-v2.png";
+    return Array.from({ length: Math.max(product.imageCount || 1, 4) }, () => mainImage);
+  }, [product]);
+
   if (!product) {
     return (
       <div className="min-h-screen bg-gray-50 pt-24 pb-12">
@@ -71,11 +78,6 @@ const ProductDetailPage = () => {
     );
   }
 
-  const imageList = useMemo(() => {
-    // Ưu tiên ảnh chính, nếu không có thì dùng fallback
-    const mainImage = product.image || "/cate/khac-v2.png";
-    return Array.from({ length: Math.max(product.imageCount || 1, 4) }, () => mainImage);
-  }, [product]);
   const productCondition = conditionLabels[product.condition || "used"] || "Đã qua sử dụng";
   const productDescription = `Mình cần nhượng lại ${product.name} này. Sản phẩm vẫn còn sử dụng rất tốt, ngoại hình còn khá mới và chưa qua sửa chữa.
 
@@ -160,6 +162,7 @@ Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt t�
                 postedTime={product.time || "Vừa xong"}
                 infoTags={infoTags}
                 seller={{
+                  id: product.seller?.id,
                   name: product.seller?.name || "Người bán ẩn danh",
                   avatar: product.seller?.avatar,
                   rating: product.seller?.rating,
