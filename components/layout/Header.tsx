@@ -132,10 +132,10 @@ const Header = () => {
                     <Bell size={20} strokeWidth={2.5} />
                     <span className="absolute top-2 right-2 sm:right-3 w-2 h-2 bg-red-600 rounded-full border border-[#FFBA00]"></span>
                  </button>
-                 <button className="hidden sm:flex items-center gap-2 px-4 py-2 hover:bg-black/10 rounded-lg font-bold text-sm transition-colors text-gray-800 cursor-pointer">
+                  <Link href="/tin-nhan" className="hidden sm:flex items-center gap-2 px-4 py-2 hover:bg-black/10 rounded-lg font-bold text-sm transition-colors text-gray-800 cursor-pointer">
                     <MessageCircle size={20} strokeWidth={2.5} />
                     <span className="hidden xl:inline">Chat</span>
-                 </button>
+                  </Link>
               </div>
 
               <button 
