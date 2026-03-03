@@ -79,8 +79,8 @@ const UserProfileHeader = ({ profile, isOwnProfile = false }: UserProfileHeaderP
 
         <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl border border-gray-100 bg-gray-50/50 p-4 text-sm sm:grid-cols-4 sm:p-3">
           <div className="flex flex-col sm:block">
-            <p className="text-[11px] font-medium text-gray-500 uppercase tracking-widest sm:text-xs">Tin đang đăng</p>
-            <p className="mt-0.5 text-base font-bold text-gray-900 sm:text-sm">{profile.totalListings}</p>
+            <p className="text-[11px] font-medium text-gray-500 uppercase tracking-widest sm:text-xs">Tổng tin đăng</p>
+            <p className="mt-0.5 text-base font-bold text-gray-900 sm:text-sm">{profile.totalListings + profile.totalSold}</p>
           </div>
           <div className="flex flex-col sm:block">
             <p className="text-[11px] font-medium text-gray-500 uppercase tracking-widest sm:text-xs">Đã giao dịch</p>
