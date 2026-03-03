@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProductCard from "@/components/features/product/ProductCard";
 import { Product } from "@/types";
-import { ChevronDown } from "lucide-react";
 
 interface UserListingsSectionProps {
   listings: Product[];
@@ -12,8 +11,17 @@ interface UserListingsSectionProps {
 const UserListingsSection = ({ listings }: UserListingsSectionProps) => {
   const [visibleCount, setVisibleCount] = useState(5);
 
+  useEffect(() => {
+    // Nếu là mobile (screen < 640px), mặc định hiển thị 6 tin
+    if (window.innerWidth < 640) {
+      setVisibleCount(6);
+    }
+  }, []);
+
   const handleLoadMore = () => {
-    setVisibleCount((prev) => prev + 5);
+    // Nếu là mobile, load thêm 6, ngược lại load thêm 5
+    const increment = window.innerWidth < 640 ? 6 : 5;
+    setVisibleCount((prev) => prev + increment);
   };
 
   const visibleListings = listings.slice(0, visibleCount);
