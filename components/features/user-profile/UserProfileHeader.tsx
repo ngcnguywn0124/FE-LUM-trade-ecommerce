@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CalendarDays, Clock3, MapPin, MessageCircle, SquarePen, Star, User, UserPlus } from "lucide-react";
+import { CalendarDays, Clock3, MapPin, Flag, Share2, SquarePen, Star, User, UserPlus } from "lucide-react";
 import { UserProfile } from "@/lib/mockUserProfile";
 
 interface UserProfileHeaderProps {
@@ -19,6 +19,15 @@ const UserProfileHeader = ({ profile, isOwnProfile = false }: UserProfileHeaderP
           priority
         />
         <div className="absolute inset-0 bg-black/5" />
+        
+        {!isOwnProfile && (
+          <button 
+            className="absolute top-4 right-4 z-10 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all cursor-pointer group"
+            title="Báo cáo người dùng"
+          >
+            <Flag size={18} className="group-hover:scale-110 transition-transform" />
+          </button>
+        )}
       </div>
 
       <div className="px-4 pb-5 sm:px-6">
@@ -50,22 +59,20 @@ const UserProfileHeader = ({ profile, isOwnProfile = false }: UserProfileHeaderP
           </div>
 
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+            <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 sm:flex-none cursor-pointer">
+              <Share2 size={16} />
+              Chia sẻ
+            </button>
             {isOwnProfile ? (
-              <button className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 sm:w-auto">
+              <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-[#FFBA00] transition-colors hover:bg-gray-800 sm:flex-none cursor-pointer">
                 <SquarePen size={16} />
                 Chỉnh sửa hồ sơ
               </button>
             ) : (
-              <>
-                <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 sm:flex-none">
-                  <MessageCircle size={16} />
-                  Nhắn tin
-                </button>
-                <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 sm:flex-none">
-                  <UserPlus size={16} />
-                  Theo dõi
-                </button>
-              </>
+              <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 sm:flex-none cursor-pointer">
+                <UserPlus size={16} />
+                Theo dõi
+              </button>
             )}
           </div>
         </div>
