@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import { Pin } from 'lucide-react';
 import { Conversation } from '@/types/messages';
 import { formatMessageTime, getConversationLastMessage } from '@/lib/mockMessages';
 
@@ -43,7 +42,6 @@ const ConversationListItem = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="text-sm font-semibold text-gray-900 truncate">{conversation.participant.name}</p>
-            {conversation.isPinned && <Pin size={13} className="text-amber-500" />}
             <span className="ml-auto text-xs text-gray-400 shrink-0">
               {formatMessageTime(lastMessage.sentAt)}
             </span>

@@ -6,6 +6,7 @@ export interface MessageUser {
   avatar: string;
   isOnline: boolean;
   lastSeen?: string;
+  phone?: string;
 }
 
 export interface ChatMessage {
