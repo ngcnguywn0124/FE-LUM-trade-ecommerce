@@ -26,14 +26,14 @@ const ConversationList = ({
       <div className="p-4 border-b border-gray-100">
         <h1 className="text-lg font-bold text-gray-900">Tin nhắn</h1>
 
-        <div className="mt-3 h-10 px-3 rounded-xl border border-gray-200 flex items-center gap-2 focus-within:border-emerald-400 focus-within:shadow-sm transition-all">
-          <Search size={16} className="text-gray-400" />
+        <div className="mt-3 h-11 px-4 rounded-xl border border-gray-200 bg-white flex items-center gap-2.5 focus-within:border-emerald-500">
+          <Search size={18} className="text-gray-400 group-focus-within:text-emerald-500 transition-colors" />
           <input
             type="text"
             value={searchValue}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Tìm theo tên..."
-            className="w-full text-sm bg-transparent outline-none placeholder-gray-400"
+            placeholder="Tìm kiếm cuộc trò chuyện..."
+            className="w-full text-sm bg-transparent outline-none placeholder:text-gray-400 text-gray-900 font-medium"
           />
         </div>
 

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Conversation } from '@/types/messages';
 import { formatMessageTime, getConversationLastMessage } from '@/lib/mockMessages';
@@ -13,8 +14,13 @@ const ConversationListItem = ({
   isActive,
   onClick,
 }: ConversationListItemProps) => {
+  const [mounted, setMounted] = useState(false);
   const lastMessage = getConversationLastMessage(conversation);
   const isOwnMessage = lastMessage.senderId === 1;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <button
@@ -43,7 +49,7 @@ const ConversationListItem = ({
           <div className="flex items-center gap-2">
             <p className="text-sm font-semibold text-gray-900 truncate">{conversation.participant.name}</p>
             <span className="ml-auto text-xs text-gray-400 shrink-0">
-              {formatMessageTime(lastMessage.sentAt)}
+              {mounted ? formatMessageTime(lastMessage.sentAt) : ''}
             </span>
           </div>
 

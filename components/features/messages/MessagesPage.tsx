@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { MessageCircleWarning } from 'lucide-react';
 import Breadcrumb from '@/components/shared/Breadcrumb';
 import {
@@ -26,6 +26,34 @@ const MessagesPage = () => {
   );
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
   const [draftMessage, setDraftMessage] = useState('');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const activeConversation = useMemo(
+    () => conversations.find((conversation) => conversation.id === activeConversationId) ?? null,
+    [conversations, activeConversationId]
+  );
+
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior,
+      });
+    }
+  };
+
+  useEffect(() => {
+    // Khi đổi cuộc hội thoại, cuộn TỨC THÌ (auto) xuống cuối để thấy tin nhắn mới nhất ngay lập tức
+    scrollToBottom('auto');
+  }, [activeConversationId]);
+
+  useEffect(() => {
+    // Khi có tin nhắn mới hoặc gửi ảnh, cuộn mượt (smooth) xuống cuối
+    const timer = setTimeout(() => {
+      scrollToBottom('smooth');
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeConversation?.messages?.length]);
 
   const filteredConversations = useMemo(() => {
     const normalizedSearch = search.toLowerCase().trim();
@@ -49,11 +77,6 @@ const MessagesPage = () => {
       return new Date(secondLastMessage.sentAt).getTime() - new Date(firstLastMessage.sentAt).getTime();
     });
   }, [conversations, search, filter]);
-
-  const activeConversation = useMemo(
-    () => conversations.find((conversation) => conversation.id === activeConversationId) ?? null,
-    [conversations, activeConversationId]
-  );
 
   const handleSelectConversation = (conversationId: number) => {
     setActiveConversationId(conversationId);
@@ -133,7 +156,7 @@ const MessagesPage = () => {
   };
 
   return (
-    <div className="fixed inset-0 pt-[72px] bg-gray-50 flex flex-col overflow-hidden">
+    <div className="fixed inset-0 pt-18 bg-gray-50 flex flex-col overflow-hidden">
       <div className="flex-1 w-full max-w-7xl mx-auto flex overflow-hidden lg:p-4">
         <div className="flex w-full overflow-hidden bg-white lg:rounded-2xl border border-gray-100">
           <div className={`${isMobileChatOpen ? 'hidden lg:block' : 'block'} border-r border-gray-100 w-full lg:w-80 xl:w-96 shrink-0`}>
@@ -176,7 +199,10 @@ const MessagesPage = () => {
                     style={{ backgroundImage: 'url("/user/avatar-user-profile-default.png")' }}
                   />
                   
-                  <div className="absolute inset-0 px-3 md:px-5 py-4 overflow-y-auto space-y-3">
+                  <div 
+                    ref={scrollContainerRef}
+                    className="absolute inset-0 px-3 md:px-5 py-4 overflow-y-auto space-y-3"
+                  >
                     {activeConversation.messages.length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-gray-500 text-sm">
                         <MessageCircleWarning size={20} className="mb-2" />

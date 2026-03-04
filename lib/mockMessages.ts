@@ -411,6 +411,27 @@ export const formatMessageTime = (isoDate: string): string => {
   return `${timeStr} ${day}/${month}/${date.getFullYear()}`;
 };
 
+export const formatRelativeTime = (isoDate: string): string => {
+  const date = new Date(isoDate);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return 'Vừa xong';
+  
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+  
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} giờ trước`;
+  
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) return `${diffInDays} ngày trước`;
+
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  return `${day}/${month}/${date.getFullYear()}`;
+};
+
 export const getConversationLastMessage = (conversation: Conversation) => {
   return conversation.messages[conversation.messages.length - 1];
 };

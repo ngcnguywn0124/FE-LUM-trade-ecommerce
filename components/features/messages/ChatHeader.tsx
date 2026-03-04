@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Circle, Info, Phone } from 'lucide-react';
 import { Conversation } from '@/types/messages';
-import { formatMessageTime } from '@/lib/mockMessages';
+import { formatRelativeTime } from '@/lib/mockMessages';
 
 interface ChatHeaderProps {
   conversation: Conversation;
@@ -13,9 +13,15 @@ interface ChatHeaderProps {
 
 const ChatHeader = ({ conversation, isMobile, onBack }: ChatHeaderProps) => {
   const [showPhone, setShowPhone] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const participantStatus = conversation.participant.isOnline
     ? 'Đang hoạt động'
-    : `Hoạt động ${conversation.participant.lastSeen ? formatMessageTime(conversation.participant.lastSeen) : 'gần đây'}`;
+    : `Hoạt động ${conversation.participant.lastSeen && mounted ? formatRelativeTime(conversation.participant.lastSeen) : 'gần đây'}`;
 
   return (
     <div className="p-3 border-b border-gray-100 bg-white">

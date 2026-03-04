@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, CheckCheck } from 'lucide-react';
 import Image from 'next/image';
 import { ChatMessage } from '@/types/messages';
@@ -14,6 +14,11 @@ interface MessageBubbleProps {
 const MessageBubble = ({ message, isOwnMessage, displayTime, senderAvatar }: MessageBubbleProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [initialIndex, setInitialIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleImageClick = (idx: number) => {
     setInitialIndex(idx);
@@ -35,7 +40,7 @@ const MessageBubble = ({ message, isOwnMessage, displayTime, senderAvatar }: Mes
   return (
     <div className={`flex items-end gap-2 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
       {!isOwnMessage && (
-        <div className="shrink-0 mb-1 w-[28px] h-[28px]">
+        <div className="shrink-0 mb-1 w-7 h-7">
           {senderAvatar && (
             <Image
               src={senderAvatar}
@@ -84,7 +89,7 @@ const MessageBubble = ({ message, isOwnMessage, displayTime, senderAvatar }: Mes
             <div className={`flex items-center gap-1.5 px-1 text-[11px] text-gray-400 font-medium ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
               <span className="text-emerald-600 font-bold">{message.images.length} ảnh</span>
               <span className="w-0.5 h-0.5 bg-gray-300 rounded-full" />
-              <span>{displayTime}</span>
+              <span>{mounted ? displayTime : ''}</span>
               {isOwnMessage && statusIcon()}
             </div>
 
@@ -110,7 +115,7 @@ const MessageBubble = ({ message, isOwnMessage, displayTime, senderAvatar }: Mes
             </p>
 
             <div className={`mt-1.5 flex items-center gap-1 text-[11px] ${isOwnMessage ? 'justify-end text-emerald-100' : 'text-gray-400'}`}>
-              <span>{displayTime}</span>
+              <span>{mounted ? displayTime : ''}</span>
               {isOwnMessage && statusIcon()}
             </div>
           </div>
