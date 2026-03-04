@@ -166,10 +166,10 @@ const Header = () => {
               {!isScrolled ? (
                 /* CENTER: Danh mục nhanh (Khi ở Top) */
                 <div className="hidden xl:flex items-center space-x-10 text-sm font-heading font-bold text-gray-800">
-                  <a href="#" className="hover:text-white transition-colors">Lụm</a>
-                  <a href="#" className="hover:text-white transition-colors">Về chúng tôi</a>
-                  <a href="#" className="hover:text-white transition-colors">Xếp hạng</a>
-                  <a href="#" className="hover:text-white transition-colors">Blog</a>
+                  <Link href="/" className="hover:text-white transition-colors">Lụm</Link>
+                  <Link href="/ve-chung-toi" className="hover:text-white transition-colors">Về chúng tôi</Link>
+                  <Link href="/xep-hang" className="hover:text-white transition-colors">Xếp hạng</Link>
+                  <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
                 </div>
               ) : (
                 /* CENTER: THANH SEARCH (Khi cuộn xuống) */
@@ -353,9 +353,9 @@ const Header = () => {
 
             {/* Other Links */}
             <div className="pt-4 border-t border-gray-100 space-y-2">
-              <a href="#" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Về chúng tôi</a>
+              <Link href="/ve-chung-toi" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Về chúng tôi</Link>
               <a href="#" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Quy định đăng tin</a>
-              <a href="#" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Blog sinh viên</a>
+              <Link href="/blog" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Blog sinh viên</Link>
             </div>
           </div>
         </div>
