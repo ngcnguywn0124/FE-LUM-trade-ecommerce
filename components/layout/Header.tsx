@@ -1,24 +1,34 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { 
-  Menu, Search, MapPin, Bell, MessageCircle, 
-  Heart, User, ChevronDown, PlusCircle, Laptop, BookOpen, Home, X, ArrowLeft
+  Menu, Search, Bell, MessageCircle,
+  Heart, User, PlusCircle, BookOpen, X
 } from "lucide-react";
 import LocationSelector from "../shared/LocationSelector";
 import CategorySelector from "../shared/CategorySelector";
 import CategoryMegaMenu from "../shared/CategoryMegaMenu";
 import AuthModal from "../features/auth/AuthModal";
+import NotificationsDropdown from "../features/notifications/NotificationsDropdown";
+import { mockNotifications } from "@/lib/mockNotifications";
+import { NotificationItemData } from "@/types/notifications";
 
 const Header = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItemData[]>(mockNotifications);
+  const notificationsRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   
   // State cho Trường và Cơ sở
   const [selectedSchool, setSelectedSchool] = useState("HUTECH");
@@ -26,6 +36,19 @@ const Header = () => {
 
   // Kiểm tra xem có đang ở trang chủ không
   const isHomePage = pathname === "/";
+
+  const unreadCount = useMemo(
+    () => notifications.filter((item) => !item.isRead).length,
+    [notifications]
+  );
+
+  const previewNotifications = useMemo(
+    () =>
+      [...notifications]
+        .sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime())
+        .slice(0, 5),
+    [notifications]
+  );
 
   // Xử lý sticky header khi cuộn
   useEffect(() => {
@@ -43,6 +66,66 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHomePage]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Đóng notifications dropdown
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setIsNotificationsOpen(false);
+      }
+      
+      // Đóng mobile menu
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsNotificationsOpen(false);
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  useEffect(() => {
+    setIsNotificationsOpen(false);
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
+  const handleMarkRead = (id: number) => {
+    setNotifications((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              isRead: true,
+            }
+          : item
+      )
+    );
+  };
+
+  const handleMarkAllRead = () => {
+    setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
+  };
+
+  const handleBellClick = () => {
+    if (window.innerWidth < 1024) {
+      // lg breakpoint in Tailwind is 1024px
+      router.push("/thong-bao");
+    } else {
+      setIsNotificationsOpen((prev) => !prev);
+    }
+  };
+
   return (
     <div className="flex flex-col w-full font-sans">
       <nav 
@@ -55,7 +138,10 @@ const Header = () => {
             
             {/* --- LEFT: Logo & Hamburger --- */}
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 z-10">
-              <button className="p-1.5 sm:p-2 bg-white/20 rounded-full hover:bg-white/30 text-gray-900 transition-colors lg:hidden">
+              <button 
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="p-1.5 sm:p-2 bg-white/20 rounded-full hover:bg-white/30 text-gray-900 transition-colors lg:hidden cursor-pointer"
+              >
                 <Menu size={20} />
               </button>
               
@@ -131,23 +217,36 @@ const Header = () => {
                  >
                     <Heart size={20} strokeWidth={2.5} />
                  </Link>
-                 <button className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer">
-                    <Bell size={20} strokeWidth={2.5} />
-                    <span className="absolute top-2 right-2 sm:right-3 w-2 h-2 bg-red-600 rounded-full border border-[#FFBA00]"></span>
-                 </button>
+                 <div className="relative" ref={notificationsRef}>
+                   <button
+                     type="button"
+                     onClick={handleBellClick}
+                     className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer"
+                   >
+                      <Bell size={20} strokeWidth={2.5} />
+                      {unreadCount > 0 && (
+                        <span className="absolute top-1.5 right-1.5 sm:right-2 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                   </button>
+
+                   {isNotificationsOpen && (
+                     <NotificationsDropdown
+                       notifications={previewNotifications}
+                       onMarkRead={handleMarkRead}
+                       onMarkAllRead={handleMarkAllRead}
+                       onClose={() => setIsNotificationsOpen(false)}
+                     />
+                   )}
+                 </div>
                   <Link href="/tin-nhan" className="hidden sm:flex items-center gap-2 px-4 py-2 hover:bg-black/10 rounded-lg font-bold text-sm transition-colors text-gray-800 cursor-pointer">
                     <MessageCircle size={20} strokeWidth={2.5} />
                     <span className="hidden xl:inline">Chat</span>
                   </Link>
               </div>
 
-              <button 
-                onClick={() => setIsAuthModalOpen(true)}
-                className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-sm font-bold shadow-sm hover:shadow-md transition-all cursor-pointer"
-              >
-                 <User size={18} />
-                 <span>Tài khoản</span>
-              </button>
+
 
               <Link
                 href="/quan-ly-tin-dang"
@@ -161,15 +260,106 @@ const Header = () => {
                 href="/dang-tin"
                 className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 bg-gray-900 text-[#FFBA00] rounded-lg font-bold hover:bg-gray-800 hover:scale-105 transition-all shadow-lg active:scale-95 cursor-pointer"
               >
-                 <PlusCircle size={18} />
-                 <span className="text-[10px] sm:text-sm whitespace-nowrap">ĐĂNG TIN</span>
+                <PlusCircle size={18} />
+                <span className="text-[10px] sm:text-sm whitespace-nowrap">ĐĂNG TIN</span>
               </Link>
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-sm font-bold shadow-sm hover:shadow-md transition-all cursor-pointer"
+              >
+                <User size={18} />
+                <span>Tài khoản</span>
+              </button>
             </div>
       
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
       />
+
+      {/* --- MOBILE SIDEBAR MENU --- */}
+      <div 
+        className={`fixed inset-0 z-[60] lg:hidden transition-all duration-300 ${
+          isMobileMenuOpen ? "visible opacity-100" : "invisible opacity-0"
+        }`}
+      >
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+        
+        {/* Sidebar Content */}
+        <div 
+          ref={mobileMenuRef}
+          className={`absolute top-0 left-0 bottom-0 w-[280px] bg-white transition-transform duration-300 ease-out shadow-2xl flex flex-col ${
+            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          {/* Header Sidebar */}
+          <div className="p-5 flex items-center justify-between border-b border-gray-100 bg-[#8cceae]">
+            <Image src="/logo/lum-logo.png" alt="Logo" width={80} height={32} />
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-1.5 bg-white/20 rounded-full text-gray-900 hover:bg-white/30"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            {/* Quick Links */}
+            <div className="space-y-1">
+              <Link href="/dang-tin" className="flex items-center gap-3 p-3 rounded-xl bg-gray-900 text-[#FFBA00] font-bold">
+                <PlusCircle size={20} />
+                <span>ĐĂNG TIN NGAY</span>
+              </Link>
+            </div>
+
+            {/* Main Navigation */}
+            <div className="space-y-4">
+               <div>
+                 <h3 className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Cá nhân</h3>
+                 <div className="space-y-1">
+                    <Link href="/quan-ly-tin-dang" className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors">
+                      <BookOpen size={20} className="text-gray-400" />
+                      <span>Tin của tôi</span>
+                    </Link>
+                    <Link href="/tin-nhan" className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors">
+                      <MessageCircle size={20} className="text-gray-400" />
+                      <span>Tin nhắn</span>
+                    </Link>
+                    <Link href="/tin-da-luu" className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors">
+                      <Heart size={20} className="text-gray-400" />
+                      <span>Tin đã lưu</span>
+                    </Link>
+                 </div>
+               </div>
+
+               <div>
+                 <h3 className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Hệ thống</h3>
+                 <div className="space-y-1">
+                    <Link href="/thong-bao" className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors">
+                      <Bell size={20} className="text-gray-400" />
+                      <span>Thông báo</span>
+                    </Link>
+                    <button 
+                      onClick={() => { setIsMobileMenuOpen(false); setIsAuthModalOpen(true); }}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors text-left"
+                    >
+                      <User size={20} className="text-gray-400" />
+                      <span>Tài khoản</span>
+                    </button>
+                 </div>
+               </div>
+            </div>
+
+            {/* Other Links */}
+            <div className="pt-4 border-t border-gray-100 space-y-2">
+              <a href="#" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Về chúng tôi</a>
+              <a href="#" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Quy định đăng tin</a>
+              <a href="#" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Blog sinh viên</a>
+            </div>
+          </div>
+        </div>
+      </div>
           </div>
         </div>
       </nav>
