@@ -113,7 +113,7 @@ const ImageModal = ({ images, initialIndex, isOpen, onClose }: ImageModalProps) 
             <button 
                onClick={handleZoomOut}
                disabled={zoomScale <= 1}
-               className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-30"
+               className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-30 cursor-pointer"
                title="Thu nhỏ"
             >
               <ZoomOut size={20} />
@@ -121,7 +121,7 @@ const ImageModal = ({ images, initialIndex, isOpen, onClose }: ImageModalProps) 
             <button 
                onClick={handleZoomIn}
                disabled={zoomScale >= 4}
-               className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-30"
+               className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-30 cursor-pointer"
                title="Phóng to"
             >
               <ZoomIn size={20} />
@@ -135,14 +135,14 @@ const ImageModal = ({ images, initialIndex, isOpen, onClose }: ImageModalProps) 
                  link.download = `image-${currentIndex + 1}.jpg`;
                  link.click();
                }}
-               className="p-2 hover:bg-white/10 rounded-full transition-colors"
+               className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
                title="Tải xuống"
             >
               <Download size={20} />
             </button>
             <button 
               onClick={(e) => { e.stopPropagation(); onClose(); }}
-              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
               title="Đóng"
             >
               <X size={24} />
@@ -155,13 +155,13 @@ const ImageModal = ({ images, initialIndex, isOpen, onClose }: ImageModalProps) 
           {zoomScale === 1 && (
             <>
               <button
-                className="absolute left-4 z-10 p-3 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all border border-white/10"
+                className="absolute left-4 z-10 p-3 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all border border-white/10 cursor-pointer"
                 onClick={(e) => { e.stopPropagation(); handlePrev(); }}
               >
                 <ChevronLeft size={32} />
               </button>
               <button
-                className="absolute right-4 z-10 p-3 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all border border-white/10"
+                className="absolute right-4 z-10 p-3 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all border border-white/10 cursor-pointer"
                 onClick={(e) => { e.stopPropagation(); handleNext(); }}
               >
                 <ChevronRight size={32} />
@@ -208,7 +208,7 @@ const ImageModal = ({ images, initialIndex, isOpen, onClose }: ImageModalProps) 
             <button
               key={idx}
               onClick={() => { resetZoom(); setCurrentIndex(idx); }}
-              className={`relative shrink-0 w-12 h-12 md:w-16 md:h-16 rounded-md overflow-hidden transition-all ${
+              className={`relative shrink-0 w-12 h-12 md:w-16 md:h-16 rounded-md overflow-hidden transition-all cursor-pointer ${
                 idx === currentIndex ? 'ring-2 ring-emerald-500 scale-110 opacity-100' : 'opacity-40 hover:opacity-100'
               }`}
             >
