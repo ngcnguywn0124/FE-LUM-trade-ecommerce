@@ -49,6 +49,8 @@ const AppShell = ({ children }: AppShellProps) => {
     return pathname.startsWith('/admin') || authPaths.includes(pathname) || specialPages.includes(pathname);
   }, [pathname]);
 
+  const isMessagesPage = pathname === '/tin-nhan';
+
   if (hideGlobalChrome) {
     return <>{children}</>;
   }
@@ -60,25 +62,27 @@ const AppShell = ({ children }: AppShellProps) => {
         {children}
       </main>
       {/* Banner phụ: Kêu gọi tải App hoặc tham gia cộng đồng */}
-      <section className="bg-brand-mint py-16 text-center relative overflow-hidden">
-        {/* Hiệu ứng nền trang trí */}
-        <div className="absolute top-0 left-10 w-32 h-32 bg-white opacity-40 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-10 w-48 h-48 bg-emerald-300 opacity-30 rounded-full blur-3xl"></div>
-        
-        <div className="relative z-10">
-          <h2 className="text-3xl font-bold text-brand-dark mb-2">
-            Bạn có đồ <span className="text-emerald-600">không dùng?</span>
-          </h2>
-          <p className="mb-8 text-brand-dark/80 text-lg">Đăng bán ngay để dọn phòng đón đồ mới!</p>
-          <Link 
-            href="/dang-tin"
-            className="bg-white text-emerald-700 font-heading font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-          >
-            Đăng tin ngay
-          </Link>
-        </div>
-      </section>
-      <Footer />
+      {!isMessagesPage && (
+        <section className="bg-brand-mint py-16 text-center relative overflow-hidden">
+          {/* Hiệu ứng nền trang trí */}
+          <div className="absolute top-0 left-10 w-32 h-32 bg-white opacity-40 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-0 right-10 w-48 h-48 bg-emerald-300 opacity-30 rounded-full blur-3xl"></div>
+          
+          <div className="relative z-10">
+            <h2 className="text-3xl font-bold text-brand-dark mb-2">
+              Bạn có đồ <span className="text-emerald-600">không dùng?</span>
+            </h2>
+            <p className="mb-8 text-brand-dark/80 text-lg">Đăng bán ngay để dọn phòng đón đồ mới!</p>
+            <Link 
+              href="/dang-tin"
+              className="bg-white text-emerald-700 font-heading font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+            >
+              Đăng tin ngay
+            </Link>
+          </div>
+        </section>
+      )}
+      {!isMessagesPage && <Footer />}
       <BackToTop />
     </div>
   );
