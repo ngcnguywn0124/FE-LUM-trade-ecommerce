@@ -15,10 +15,11 @@ interface ProductProps {
     time?: string;
     imageCount?: number;
   };
+  isWishlist?: boolean;
 }
 
-const ProductCard = ({ product }: ProductProps) => {
-  const [isLiked, setIsLiked] = useState(false);
+const ProductCard = ({ product, isWishlist = false }: ProductProps) => {
+  const [isLiked, setIsLiked] = useState(isWishlist);
 
   return (
     <Link href={`/bai-dang/${product.id}`} className="block group cursor-pointer">
@@ -36,13 +37,15 @@ const ProductCard = ({ product }: ProductProps) => {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            setIsLiked(!isLiked);
+            if (!isWishlist) {
+              setIsLiked(!isLiked);
+            }
           }}
           className="absolute top-3 right-3 z-10 p-1.5 rounded-full hover:bg-black/10 transition-colors cursor-pointer"
         >
           <Heart 
             size={20} 
-            className={`transition-colors ${isLiked ? "fill-red-500 text-red-500" : "text-white drop-shadow-md"}`} 
+            className={`transition-colors ${(isLiked || isWishlist) ? "fill-red-500 text-red-500" : "text-white drop-shadow-md"}`} 
           />
         </button>
 
