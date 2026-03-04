@@ -388,18 +388,27 @@ export const mockConversations: Conversation[] = [
 
 export const formatMessageTime = (isoDate: string): string => {
   const date = new Date(isoDate);
-  const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+  const now = new Date();
+  
+  const isToday = date.toDateString() === now.toDateString();
+  
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const timeStr = `${hours}:${minutes}`;
 
-  if (diffMinutes < 1) return 'Vừa xong';
-  if (diffMinutes < 60) return `${diffMinutes} phút`;
+  if (isToday) {
+    return timeStr;
+  }
 
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours} giờ`;
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  
+  // Nếu là năm hiện tại thì không hiện năm, ngược lại hiện thêm năm
+  if (date.getFullYear() === now.getFullYear()) {
+    return `${timeStr} ${day}/${month}`;
+  }
 
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays} ngày`;
-
-  return date.toLocaleDateString('vi-VN');
+  return `${timeStr} ${day}/${month}/${date.getFullYear()}`;
 };
 
 export const getConversationLastMessage = (conversation: Conversation) => {

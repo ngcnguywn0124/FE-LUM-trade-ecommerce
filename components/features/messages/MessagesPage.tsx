@@ -15,6 +15,7 @@ import ConversationList from './ConversationList';
 import MessageBubble from './MessageBubble';
 import MessageComposer from './MessageComposer';
 import EmptyConversationState from './EmptyConversationState';
+import ProductSnippet from './ProductSnippet';
 
 const MessagesPage = () => {
   const [conversations, setConversations] = useState<Conversation[]>(mockConversations);
@@ -70,10 +71,10 @@ const MessagesPage = () => {
     );
   };
 
-  const handleSendMessage = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSendMessage = (event?: React.FormEvent<HTMLFormElement>, contentOverride?: string) => {
+    event?.preventDefault();
 
-    const content = draftMessage.trim();
+    const content = contentOverride ?? draftMessage.trim();
     if (!content || !activeConversationId) {
       return;
     }
@@ -98,7 +99,37 @@ const MessagesPage = () => {
       )
     );
 
-    setDraftMessage('');
+    if (!contentOverride) {
+      setDraftMessage('');
+    }
+  };
+
+  const handleImagesSelect = (files: File[]) => {
+    if (!activeConversationId) return;
+
+    // Giả lập tạo URL cho nhiều ảnh
+    const imageUrls = files.map(file => URL.createObjectURL(file));
+    
+    const newMessage: ChatMessage = {
+      id: Date.now(),
+      conversationId: activeConversationId,
+      senderId: CURRENT_USER_ID,
+      content: files.length === 1 ? 'Đã gửi một ảnh' : `Đã gửi ${files.length} ảnh`,
+      images: imageUrls,
+      sentAt: new Date().toISOString(),
+      status: 'sent',
+    };
+
+    setConversations((prev) =>
+      prev.map((conversation) =>
+        conversation.id === activeConversationId
+          ? {
+              ...conversation,
+              messages: [...conversation.messages, newMessage],
+            }
+          : conversation
+      )
+    );
   };
 
   return (
@@ -133,6 +164,11 @@ const MessagesPage = () => {
                   onBack={() => setIsMobileChatOpen(false)}
                 />
 
+                <ProductSnippet 
+                  product={activeConversation.relatedPost} 
+                  isSeller={activeConversation.id % 2 === 0} // Giả lập role: Seller nếu ID chẵn
+                />
+
                 <div className="relative flex-1 overflow-hidden">
                   {/* Background Image with Opacity */}
                   <div 
@@ -148,22 +184,41 @@ const MessagesPage = () => {
                       </div>
                     ) : (
                       activeConversation.messages.map((message, index) => {
+                        const prevMessage = activeConversation.messages[index - 1];
                         const nextMessage = activeConversation.messages[index + 1];
+                        
+                        // Check if we should show a date separator
+                        const showDateSeparator = !prevMessage || 
+                          new Date(prevMessage.sentAt).toDateString() !== new Date(message.sentAt).toDateString();
+                        
                         const isLastInGroup = !nextMessage || nextMessage.senderId !== message.senderId;
                         const isOwn = message.senderId === CURRENT_USER_ID;
 
                         return (
-                          <MessageBubble
-                            key={message.id}
-                            message={message}
-                            isOwnMessage={isOwn}
-                            displayTime={formatMessageTime(message.sentAt)}
-                            senderAvatar={
-                              !isOwn && isLastInGroup
-                                ? activeConversation.participant.avatar
-                                : undefined
-                            }
-                          />
+                          <div key={message.id} className="space-y-3">
+                            {showDateSeparator && (
+                              <div className="flex justify-center my-4">
+                                <span className="px-3 py-1 rounded-full bg-gray-100/80 text-[10px] text-gray-500 font-medium backdrop-blur-sm">
+                                  {new Date(message.sentAt).toLocaleDateString('vi-VN', {
+                                    weekday: 'long',
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric'
+                                  })}
+                                </span>
+                              </div>
+                            )}
+                            <MessageBubble
+                              message={message}
+                              isOwnMessage={isOwn}
+                              displayTime={formatMessageTime(message.sentAt)}
+                              senderAvatar={
+                                !isOwn && isLastInGroup
+                                  ? activeConversation.participant.avatar
+                                  : undefined
+                              }
+                            />
+                          </div>
                         );
                       })
                     )}
@@ -174,6 +229,8 @@ const MessagesPage = () => {
                   value={draftMessage}
                   onChange={setDraftMessage}
                   onSubmit={handleSendMessage}
+                  onQuickAction={(text) => handleSendMessage(undefined, text)}
+                  onImagesSelect={handleImagesSelect}
                 />
               </>
             )}

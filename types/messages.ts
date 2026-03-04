@@ -16,6 +16,7 @@ export interface ChatMessage {
   content: string;
   sentAt: string;
   status: MessageDeliveryStatus;
+  images?: string[]; // Array of image URLs
 }
 
 export interface MessageRelatedPost {
