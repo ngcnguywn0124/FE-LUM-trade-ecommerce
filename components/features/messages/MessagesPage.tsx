@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useRef, useEffect } from 'react';
+import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { MessageCircleWarning } from 'lucide-react';
 import Breadcrumb from '@/components/shared/Breadcrumb';
 import {
@@ -9,13 +9,15 @@ import {
   getConversationLastMessage,
   mockConversations,
 } from '@/lib/mockMessages';
-import { ChatMessage, Conversation } from '@/types/messages';
+import { ChatMessage, Conversation, ConversationTransaction, TransactionPaymentMethod } from '@/types/messages';
 import ChatHeader from './ChatHeader';
 import ConversationList from './ConversationList';
 import MessageBubble from './MessageBubble';
 import MessageComposer from './MessageComposer';
 import EmptyConversationState from './EmptyConversationState';
 import ProductSnippet from './ProductSnippet';
+import TransactionSystemMessage from './transaction/TransactionSystemMessage';
+import TransactionActionCard from './transaction/TransactionActionCard';
 
 const MessagesPage = () => {
   const [conversations, setConversations] = useState<Conversation[]>(mockConversations);
@@ -32,6 +34,139 @@ const MessagesPage = () => {
     () => conversations.find((conversation) => conversation.id === activeConversationId) ?? null,
     [conversations, activeConversationId]
   );
+
+  // ─── Role determination (mock: even id = current user is seller) ───────────
+  const isSeller = useMemo(
+    () => (activeConversation ? activeConversation.id % 2 === 0 : false),
+    [activeConversation]
+  );
+
+  // ─── Transaction state helpers ────────────────────────────────────────────
+
+  /** Tạo system message sự kiện giao dịch vào cuối danh sách tin nhắn */
+  const addTransactionSystemMessage = useCallback(
+    (convId: number, eventType: ChatMessage['transactionEvent'], content: string) => {
+      const systemMsg: ChatMessage = {
+        id: Date.now(),
+        conversationId: convId,
+        senderId: CURRENT_USER_ID,
+        content,
+        sentAt: new Date().toISOString(),
+        status: 'seen',
+        transactionEvent: eventType,
+      };
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === convId ? { ...c, messages: [...c.messages, systemMsg] } : c
+        )
+      );
+    },
+    []
+  );
+
+  /** Cập nhật dữ liệu giao dịch cho cuộc hội thoại */
+  const updateTransaction = useCallback(
+    (convId: number, patch: Partial<ConversationTransaction>) => {
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id !== convId) return c;
+          const existing = c.transaction ?? {
+            id: Date.now(),
+            status: 'idle' as const,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          return {
+            ...c,
+            transaction: { ...existing, ...patch, updatedAt: new Date().toISOString() },
+          };
+        })
+      );
+    },
+    []
+  );
+
+  // ─── Transaction handlers ─────────────────────────────────────────────────
+
+  const handleBuyerRequest = useCallback(() => {
+    if (!activeConversationId) return;
+    updateTransaction(activeConversationId, {
+      status: 'buyer_requested',
+      agreedPrice: activeConversation?.relatedPost.price,
+    });
+    addTransactionSystemMessage(activeConversationId, 'buyer_requested', 'Bạn đã gửi yêu cầu mua');
+  }, [activeConversationId, activeConversation, updateTransaction, addTransactionSystemMessage]);
+
+  const handleBuyerCancelRequest = useCallback(() => {
+    if (!activeConversationId) return;
+    updateTransaction(activeConversationId, { status: 'cancelled' });
+    addTransactionSystemMessage(activeConversationId, 'cancelled', 'Bạn đã huỷ yêu cầu mua');
+  }, [activeConversationId, updateTransaction, addTransactionSystemMessage]);
+
+  const handleSellerConfirm = useCallback(() => {
+    if (!activeConversationId) return;
+    updateTransaction(activeConversationId, { status: 'seller_confirmed' });
+    addTransactionSystemMessage(activeConversationId, 'seller_confirmed', 'Giao dịch đã được xác nhận!');
+  }, [activeConversationId, updateTransaction, addTransactionSystemMessage]);
+
+  const handleSellerReject = useCallback(() => {
+    if (!activeConversationId) return;
+    updateTransaction(activeConversationId, { status: 'cancelled' });
+    addTransactionSystemMessage(activeConversationId, 'cancelled', 'Người bán đã từ chối yêu cầu');
+  }, [activeConversationId, updateTransaction, addTransactionSystemMessage]);
+
+  const handleSellerSetMeetup = useCallback(
+    (location: string, time: string) => {
+      if (!activeConversationId) return;
+      updateTransaction(activeConversationId, { meetupLocation: location, meetupTime: time });
+    },
+    [activeConversationId, updateTransaction]
+  );
+
+  const handleBuyerConfirmMeetup = useCallback(
+    (paymentMethod: TransactionPaymentMethod) => {
+      if (!activeConversationId) return;
+      updateTransaction(activeConversationId, {
+        status: 'meetup_confirmed',
+        buyerConfirmedMeetup: true,
+        paymentMethod,
+      });
+      addTransactionSystemMessage(activeConversationId, 'meetup_confirmed', 'Hai bên đã xác nhận thông tin gặp mặt');
+    },
+    [activeConversationId, updateTransaction, addTransactionSystemMessage]
+  );
+
+  const handleBuyerConfirmPayment = useCallback(() => {
+    if (!activeConversationId) return;
+    const tx = activeConversation?.transaction;
+    const sellerAlsoConfirmed = tx?.sellerConfirmedPayment;
+    updateTransaction(activeConversationId, {
+      buyerConfirmedPayment: true,
+      status: sellerAlsoConfirmed ? 'completed' : 'payment_pending',
+    });
+    if (sellerAlsoConfirmed) {
+      addTransactionSystemMessage(activeConversationId, 'completed', 'Giao dịch hoàn tất!');
+    }
+  }, [activeConversationId, activeConversation, updateTransaction, addTransactionSystemMessage]);
+
+  const handleSellerConfirmPayment = useCallback(() => {
+    if (!activeConversationId) return;
+    const tx = activeConversation?.transaction;
+    const buyerAlsoConfirmed = tx?.buyerConfirmedPayment;
+    updateTransaction(activeConversationId, {
+      sellerConfirmedPayment: true,
+      status: buyerAlsoConfirmed ? 'completed' : 'payment_pending',
+    });
+    if (buyerAlsoConfirmed) {
+      addTransactionSystemMessage(activeConversationId, 'completed', 'Giao dịch hoàn tất!');
+    }
+  }, [activeConversationId, activeConversation, updateTransaction, addTransactionSystemMessage]);
+
+  const handleCancelTransaction = useCallback(() => {
+    if (!activeConversationId) return;
+    updateTransaction(activeConversationId, { status: 'cancelled' });
+    addTransactionSystemMessage(activeConversationId, 'cancelled', 'Giao dịch đã bị huỷ');
+  }, [activeConversationId, updateTransaction, addTransactionSystemMessage]);
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     if (scrollContainerRef.current) {
@@ -189,7 +324,12 @@ const MessagesPage = () => {
 
                 <ProductSnippet 
                   product={activeConversation.relatedPost} 
-                  isSeller={activeConversation.id % 2 === 0} // Giả lập role: Seller nếu ID chẵn
+                  isSeller={isSeller}
+                  transaction={activeConversation.transaction}
+                  onBuyerRequest={handleBuyerRequest}
+                  onBuyerCancelRequest={handleBuyerCancelRequest}
+                  onSellerConfirm={handleSellerConfirm}
+                  onSellerReject={handleSellerReject}
                 />
 
                 <div className="relative flex-1 overflow-hidden">
@@ -234,20 +374,53 @@ const MessagesPage = () => {
                                 </span>
                               </div>
                             )}
-                            <MessageBubble
-                              message={message}
-                              isOwnMessage={isOwn}
-                              displayTime={formatMessageTime(message.sentAt)}
-                              senderAvatar={
-                                !isOwn && isLastInGroup
-                                  ? activeConversation.participant.avatar
-                                  : undefined
-                              }
-                            />
+
+                            {/* Transaction system event → render pill instead of bubble */}
+                            {message.transactionEvent ? (
+                              <TransactionSystemMessage
+                                event={message.transactionEvent}
+                                actorName={
+                                  isOwn
+                                    ? undefined   // resolve from context inside component
+                                    : activeConversation.participant.name
+                                }
+                                sentAt={message.sentAt}
+                              />
+                            ) : (
+                              <MessageBubble
+                                message={message}
+                                isOwnMessage={isOwn}
+                                displayTime={formatMessageTime(message.sentAt)}
+                                senderAvatar={
+                                  !isOwn && isLastInGroup
+                                    ? activeConversation.participant.avatar
+                                    : undefined
+                                }
+                              />
+                            )}
                           </div>
                         );
                       })
                     )}
+
+                    {/* ── Transaction Action Card (live, pinned to bottom of chat) ── */}
+                    {activeConversation.transaction &&
+                      ['seller_confirmed', 'meetup_confirmed', 'payment_pending', 'completed', 'cancelled'].includes(
+                        activeConversation.transaction.status
+                      ) && (
+                        <TransactionActionCard
+                          transaction={activeConversation.transaction}
+                          relatedPost={activeConversation.relatedPost}
+                          isSeller={isSeller}
+                          sellerName={isSeller ? 'Bạn' : activeConversation.participant.name}
+                          buyerName={!isSeller ? 'Bạn' : activeConversation.participant.name}
+                          onSellerSetMeetup={handleSellerSetMeetup}
+                          onBuyerConfirmMeetup={handleBuyerConfirmMeetup}
+                          onBuyerConfirmPayment={handleBuyerConfirmPayment}
+                          onSellerConfirmPayment={handleSellerConfirmPayment}
+                          onCancel={handleCancelTransaction}
+                        />
+                      )}
                   </div>
                 </div>
 

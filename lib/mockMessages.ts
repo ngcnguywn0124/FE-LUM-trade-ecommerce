@@ -26,6 +26,13 @@ export const mockConversations: Conversation[] = [
     },
     unreadCount: 2,
     isPinned: true,
+    transaction: {
+      id: 999,
+      status: 'seller_confirmed', // Card sẽ hiện ngay lập tức
+  agreedPrice: '9.000.000đ',
+      createdAt: hoursAgo(1),
+      updatedAt: hoursAgo(1),
+    },
     messages: [
       {
         id: 1,
