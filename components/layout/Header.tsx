@@ -1,24 +1,32 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { 
-  Menu, Search, MapPin, Bell, MessageCircle, 
-  Heart, User, ChevronDown, PlusCircle, Laptop, BookOpen, Home, X, ArrowLeft
+  Menu, Search, Bell, MessageCircle,
+  Heart, User, PlusCircle, BookOpen, X
 } from "lucide-react";
 import LocationSelector from "../shared/LocationSelector";
 import CategorySelector from "../shared/CategorySelector";
 import CategoryMegaMenu from "../shared/CategoryMegaMenu";
 import AuthModal from "../features/auth/AuthModal";
+import NotificationsDropdown from "../features/notifications/NotificationsDropdown";
+import { mockNotifications } from "@/lib/mockNotifications";
+import { NotificationItemData } from "@/types/notifications";
 
 const Header = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItemData[]>(mockNotifications);
+  const notificationsRef = useRef<HTMLDivElement>(null);
   
   // State cho Trường và Cơ sở
   const [selectedSchool, setSelectedSchool] = useState("HUTECH");
@@ -26,6 +34,19 @@ const Header = () => {
 
   // Kiểm tra xem có đang ở trang chủ không
   const isHomePage = pathname === "/";
+
+  const unreadCount = useMemo(
+    () => notifications.filter((item) => !item.isRead).length,
+    [notifications]
+  );
+
+  const previewNotifications = useMemo(
+    () =>
+      [...notifications]
+        .sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime())
+        .slice(0, 5),
+    [notifications]
+  );
 
   // Xử lý sticky header khi cuộn
   useEffect(() => {
@@ -42,6 +63,59 @@ const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHomePage]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!notificationsRef.current) return;
+      if (!notificationsRef.current.contains(event.target as Node)) {
+        setIsNotificationsOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  useEffect(() => {
+    setIsNotificationsOpen(false);
+  }, [pathname]);
+
+  const handleMarkRead = (id: number) => {
+    setNotifications((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              isRead: true,
+            }
+          : item
+      )
+    );
+  };
+
+  const handleMarkAllRead = () => {
+    setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
+  };
+
+  const handleBellClick = () => {
+    if (window.innerWidth < 1024) {
+      // lg breakpoint in Tailwind is 1024px
+      router.push("/thong-bao");
+    } else {
+      setIsNotificationsOpen((prev) => !prev);
+    }
+  };
 
   return (
     <div className="flex flex-col w-full font-sans">
@@ -131,10 +205,29 @@ const Header = () => {
                  >
                     <Heart size={20} strokeWidth={2.5} />
                  </Link>
-                 <button className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer">
-                    <Bell size={20} strokeWidth={2.5} />
-                    <span className="absolute top-2 right-2 sm:right-3 w-2 h-2 bg-red-600 rounded-full border border-[#FFBA00]"></span>
-                 </button>
+                 <div className="relative" ref={notificationsRef}>
+                   <button
+                     type="button"
+                     onClick={handleBellClick}
+                     className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer"
+                   >
+                      <Bell size={20} strokeWidth={2.5} />
+                      {unreadCount > 0 && (
+                        <span className="absolute top-1.5 right-1.5 sm:right-2 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                   </button>
+
+                   {isNotificationsOpen && (
+                     <NotificationsDropdown
+                       notifications={previewNotifications}
+                       onMarkRead={handleMarkRead}
+                       onMarkAllRead={handleMarkAllRead}
+                       onClose={() => setIsNotificationsOpen(false)}
+                     />
+                   )}
+                 </div>
                   <Link href="/tin-nhan" className="hidden sm:flex items-center gap-2 px-4 py-2 hover:bg-black/10 rounded-lg font-bold text-sm transition-colors text-gray-800 cursor-pointer">
                     <MessageCircle size={20} strokeWidth={2.5} />
                     <span className="hidden xl:inline">Chat</span>

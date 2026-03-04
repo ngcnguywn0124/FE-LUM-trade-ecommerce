@@ -77,7 +77,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         </span>
         <ChevronDown
           size={16}
-          className={`text-gray-400 transition-transform flex-shrink-0 ${
+          className={`text-gray-400 transition-transform shrink-0 ${
             isOpen ? "rotate-180" : ""
           } ${disabled ? "opacity-40" : ""}`}
         />
