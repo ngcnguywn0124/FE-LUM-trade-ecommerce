@@ -125,9 +125,12 @@ const Header = () => {
             {/* --- RIGHT: Actions --- */}
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 z-10">
               <div className="flex items-center gap-0.5 sm:gap-1 text-gray-800">
-                 <button className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer">
+                 <Link 
+                   href="/tin-da-luu" 
+                   className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer"
+                 >
                     <Heart size={20} strokeWidth={2.5} />
-                 </button>
+                 </Link>
                  <button className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer">
                     <Bell size={20} strokeWidth={2.5} />
                     <span className="absolute top-2 right-2 sm:right-3 w-2 h-2 bg-red-600 rounded-full border border-[#FFBA00]"></span>
