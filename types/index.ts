@@ -65,3 +65,5 @@ export interface Campus {
   name: string;
   schoolId: string;
 }
+
+export * from './notifications';
