@@ -1,11 +1,17 @@
+"use client";
+
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import AuthInput from './AuthInput';
+import { useAuthStore } from '@/stores/authStore';
 
 interface LoginFormProps {
   onForgotPassword: () => void;
+  onSuccess?: () => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSuccess }) => {
+  const { login, isLoading } = useAuthStore();
   const [formData, setFormData] = useState({
     identifier: '',
     password: '',
@@ -15,7 +21,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
     password: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors = { identifier: '', password: '' };
     let isValid = true;
@@ -30,9 +36,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
     }
 
     setErrors(newErrors);
+    if (!isValid) return;
 
-    if (isValid) {
-      console.log('Login submitted:', formData);
+    try {
+      await login({ identifier: formData.identifier.trim(), password: formData.password });
+      toast.success('Đăng nhập thành công!');
+      onSuccess?.();
+    } catch {
+      toast.error('Email/SĐT hoặc mật khẩu không chính xác');
     }
   };
 
@@ -40,55 +51,63 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
     const { id, value } = e.target;
     const key = id === 'login-identifier' ? 'identifier' : 'password';
     setFormData(prev => ({ ...prev, [key]: value }));
+    setErrors(prev => ({ ...prev, [key]: '' }));
   };
 
   return (
     <form className="flex flex-col gap-5 w-full mt-4" onSubmit={handleSubmit} noValidate>
       <div className="flex flex-col gap-4">
-        <AuthInput 
-           id="login-identifier"
-           label="Email hoặc Số điện thoại"
-           placeholder="Nhập email hoặc số điện thoại của bạn"
-           type="text"
-           value={formData.identifier}
-           onChange={handleChange}
-           error={errors.identifier}
-           required
+        <AuthInput
+          id="login-identifier"
+          label="Email hoặc Số điện thoại"
+          placeholder="Nhập email hoặc số điện thoại của bạn"
+          type="text"
+          value={formData.identifier}
+          onChange={handleChange}
+          error={errors.identifier}
+          required
         />
-        <AuthInput 
-           id="login-password"
-           label="Mật khẩu"
-           placeholder="Nhập mật khẩu"
-           isPassword
-           value={formData.password}
-           onChange={handleChange}
-           error={errors.password}
-           required
+        <AuthInput
+          id="login-password"
+          label="Mật khẩu"
+          placeholder="Nhập mật khẩu"
+          isPassword
+          value={formData.password}
+          onChange={handleChange}
+          error={errors.password}
+          required
         />
       </div>
 
       <div className="flex items-center justify-between w-full">
-         <label className="flex items-center gap-2 cursor-pointer group">
-             <input 
-                type="checkbox" 
-                className="w-4 h-4 rounded border-gray-300 accent-emerald-600 cursor-pointer" 
-             />
-             <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">Ghi nhớ đăng nhập</span>
-         </label>
-         <button 
-           type="button"
-           onClick={onForgotPassword}
-           className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors font-medium cursor-pointer"
-         >
-             Quên mật khẩu?
-         </button>
+        <label className="flex items-center gap-2 cursor-pointer group">
+          <input
+            type="checkbox"
+            className="w-4 h-4 rounded border-gray-300 accent-emerald-600 cursor-pointer"
+          />
+          <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">
+            Ghi nhớ đăng nhập
+          </span>
+        </label>
+        <button
+          type="button"
+          onClick={onForgotPassword}
+          className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors font-medium cursor-pointer"
+        >
+          Quên mật khẩu?
+        </button>
       </div>
 
-      <button type="submit" className="w-full bg-gray-900 hover:bg-emerald-700 text-[#FFBA00] font-bold py-3 rounded-lg transition-colors shadow-md mt-2 text-base cursor-pointer">
-          Đăng nhập
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="w-full bg-gray-900 hover:bg-emerald-700 text-[#FFBA00] font-bold py-3 rounded-lg transition-colors shadow-md mt-2 text-base cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
       </button>
     </form>
   );
 };
 
 export default LoginForm;
+

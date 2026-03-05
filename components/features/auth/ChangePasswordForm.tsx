@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import AuthInput from './AuthInput';
-import { Lock, CheckCircle2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Lock, ShieldCheck, ArrowRight } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 
 const ChangePasswordForm = () => {
+  const { changePassword, isLoading } = useAuthStore();
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -30,7 +33,7 @@ const ChangePasswordForm = () => {
     };
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
@@ -45,16 +48,26 @@ const ChangePasswordForm = () => {
       newErrors.newPassword = 'Mật khẩu mới không đủ mạnh';
     }
 
-    if (formData.confirmPassword !== formData.newPassword) {
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Vui lòng xác nhận mật khẩu mới';
+    } else if (formData.confirmPassword !== formData.newPassword) {
       newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
     }
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      // Logic call API đổi mật khẩu ở đây
-      setIsSubmitted(true);
-      console.log('Password changed successfully');
+      try {
+        await changePassword({
+          currentPassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+          confirmPassword: formData.confirmPassword,
+        });
+        toast.success('Đổi mật khẩu thành công!');
+        setIsSubmitted(true);
+      } catch {
+        toast.error('Mật khẩu hiện tại không đúng hoặc có lỗi xảy ra');
+      }
     }
   };
 
@@ -64,8 +77,8 @@ const ChangePasswordForm = () => {
         <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
           <ShieldCheck size={40} />
         </div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-3">Đổi mật khẩu thành công!</h3>
-        <p className="text-gray-500 mb-8 max-w-sm">
+        <h3 className="text-3xl font-bold text-white mb-4">Đổi mật khẩu thành công!</h3>
+        <p className="text-emerald-50 mb-10 max-w-md text-lg leading-relaxed opacity-90">
           Mật khẩu của bạn đã được cập nhật an toàn. Vui lòng sử dụng mật khẩu mới cho lần đăng nhập tiếp theo.
         </p>
         <button 
@@ -84,9 +97,6 @@ const ChangePasswordForm = () => {
   return (
     <div className="max-w-md mx-auto bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 animate-in slide-in-from-bottom-4 duration-500">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl mb-4">
-          <Lock size={24} />
-        </div>
         <h2 className="text-2xl font-bold text-gray-800">Đổi mật khẩu</h2>
         <p className="text-gray-500 text-sm mt-1">Vui lòng nhập mật khẩu mới để bảo mật tài khoản của bạn</p>
       </div>
@@ -139,10 +149,11 @@ const ChangePasswordForm = () => {
         />
 
         <button 
-          type="submit" 
-          className="w-full bg-gray-900 hover:bg-emerald-700 text-[#FFBA00] font-bold py-4 rounded-xl transition-all shadow-md mt-4 text-base cursor-pointer active:scale-[0.98]"
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-gray-900 hover:bg-emerald-700 text-[#FFBA00] font-bold py-4 rounded-xl transition-all shadow-md mt-4 text-base cursor-pointer active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Cập nhật mật khẩu
+          {isLoading ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}
         </button>
       </form>
     </div>
