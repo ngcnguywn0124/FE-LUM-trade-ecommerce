@@ -2,10 +2,18 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import AuthInput from './AuthInput';
-import { Lock, ShieldCheck, ArrowRight, KeyRound } from 'lucide-react';
+import { Lock, ShieldCheck, ArrowRight, AlertCircle } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 
 const ResetPasswordForm = () => {
+  const { resetPassword, isLoading } = useAuthStore();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const token = searchParams.get('token') ?? '';
+
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: '',
@@ -30,7 +38,7 @@ const ResetPasswordForm = () => {
     };
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
@@ -41,18 +49,48 @@ const ResetPasswordForm = () => {
       newErrors.password = 'Mật khẩu chưa đủ mạnh';
     }
 
-    if (formData.confirmPassword !== formData.password) {
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Vui lòng xác nhận mật khẩu mới';
+    } else if (formData.confirmPassword !== formData.password) {
       newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
     }
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      // Logic call API reset password với token từ URL ở đây
-      setIsSubmitted(true);
-      console.log('Password reset successfully');
+      try {
+        await resetPassword({
+          token,
+          newPassword: formData.password,
+          confirmPassword: formData.confirmPassword,
+        });
+        toast.success('Đặt lại mật khẩu thành công!');
+        setIsSubmitted(true);
+      } catch {
+        toast.error('Token không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu đặt lại mật khẩu mới.');
+      }
     }
   };
+
+  if (!token) {
+    return (
+      <div className="flex flex-col items-center text-center py-8">
+        <div className="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-6">
+          <AlertCircle size={40} />
+        </div>
+        <h3 className="text-xl font-bold text-gray-800 mb-2">Liên kết không hợp lệ</h3>
+        <p className="text-gray-500 mb-6 max-w-sm">
+          Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng thử lại.
+        </p>
+        <button
+          onClick={() => router.push('/')}
+          className="bg-gray-900 text-[#FFBA00] px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all cursor-pointer"
+        >
+          Về trang chủ
+        </button>
+      </div>
+    );
+  }
 
   if (isSubmitted) {
     return (
@@ -60,12 +98,12 @@ const ResetPasswordForm = () => {
         <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
           <ShieldCheck size={40} />
         </div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-3">Đặt lại mật khẩu thành công!</h3>
-        <p className="text-gray-500 mb-8 max-w-sm">
+        <h3 className="text-3xl font-bold text-white mb-4">Đặt lại mật khẩu thành công!</h3>
+        <p className="text-emerald-50 mb-10 max-w-md text-lg leading-relaxed opacity-90">
           Mật khẩu của bạn đã được thay đổi. Bây giờ bạn có thể đăng nhập vào hệ thống bằng mật khẩu mới.
         </p>
         <button 
-          onClick={() => window.location.href = '/'} // Hoặc mở modal đăng nhập
+          onClick={() => router.push('/')}
           className="bg-gray-900 text-[#FFBA00] px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 group cursor-pointer"
         >
           Đăng nhập ngay
@@ -130,10 +168,11 @@ const ResetPasswordForm = () => {
         />
 
         <button 
-          type="submit" 
-          className="w-full bg-gray-900 hover:bg-emerald-700 text-[#FFBA00] font-bold py-4 rounded-xl transition-all shadow-md mt-4 text-base cursor-pointer active:scale-[0.98]"
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-gray-900 hover:bg-emerald-700 text-[#FFBA00] font-bold py-4 rounded-xl transition-all shadow-md mt-4 text-base cursor-pointer active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Xác nhận đặt lại mật khẩu
+          {isLoading ? 'Đang xử lý...' : 'Xác nhận đặt lại mật khẩu'}
         </button>
       </form>
     </div>

@@ -16,19 +16,23 @@ import AuthModal from "../features/auth/AuthModal";
 import NotificationsDropdown from "../features/notifications/NotificationsDropdown";
 import { mockNotifications } from "@/lib/mockNotifications";
 import { NotificationItemData } from "@/types/notifications";
+import { useAuthStore } from "@/stores/authStore";
 
 const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { isAuthenticated, user, logout } = useAuthStore();
   const [isScrolled, setIsScrolled] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItemData[]>(mockNotifications);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   
   // State cho Trường và Cơ sở
   const [selectedSchool, setSelectedSchool] = useState("HUTECH");
@@ -77,6 +81,11 @@ const Header = () => {
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
         setIsMobileMenuOpen(false);
       }
+
+      // Đóng user menu
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
     };
 
     const handleEscape = (event: KeyboardEvent) => {
@@ -98,7 +107,14 @@ const Header = () => {
   useEffect(() => {
     setIsNotificationsOpen(false);
     setIsMobileMenuOpen(false);
+    setIsUserMenuOpen(false);
   }, [pathname]);
+
+  const handleLogout = async () => {
+    setIsUserMenuOpen(false);
+    await logout();
+    router.push('/');
+  };
 
   const handleMarkRead = (id: number) => {
     setNotifications((prev) =>
@@ -118,11 +134,24 @@ const Header = () => {
   };
 
   const handleBellClick = () => {
+    if (!isAuthenticated) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     if (window.innerWidth < 1024) {
       // lg breakpoint in Tailwind is 1024px
       router.push("/thong-bao");
     } else {
       setIsNotificationsOpen((prev) => !prev);
+    }
+  };
+
+  const handleProtectedAction = (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      setIsAuthModalOpen(true);
+    } else {
+      router.push(path);
     }
   };
 
@@ -211,12 +240,12 @@ const Header = () => {
             {/* --- RIGHT: Actions --- */}
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 z-10">
               <div className="flex items-center gap-0.5 sm:gap-1 text-gray-800">
-                 <Link 
-                   href="/tin-da-luu" 
+                 <button 
+                   onClick={(e) => handleProtectedAction(e, "/tin-da-luu")}
                    className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer"
                  >
                     <Heart size={20} strokeWidth={2.5} />
-                 </Link>
+                 </button>
                  <div className="relative" ref={notificationsRef}>
                    <button
                      type="button"
@@ -224,14 +253,14 @@ const Header = () => {
                      className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer"
                    >
                       <Bell size={20} strokeWidth={2.5} />
-                      {unreadCount > 0 && (
+                      {isAuthenticated && unreadCount > 0 && (
                         <span className="absolute top-1.5 right-1.5 sm:right-2 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white">
                           {unreadCount > 9 ? '9+' : unreadCount}
                         </span>
                       )}
                    </button>
 
-                   {isNotificationsOpen && (
+                   {isAuthenticated && isNotificationsOpen && (
                      <NotificationsDropdown
                        notifications={previewNotifications}
                        onMarkRead={handleMarkRead}
@@ -240,36 +269,89 @@ const Header = () => {
                      />
                    )}
                  </div>
-                  <Link href="/tin-nhan" className="hidden sm:flex items-center gap-2 px-4 py-2 hover:bg-black/10 rounded-lg font-bold text-sm transition-colors text-gray-800 cursor-pointer">
+                  <button 
+                    onClick={(e) => handleProtectedAction(e, "/tin-nhan")}
+                    className="hidden sm:flex items-center gap-2 px-4 py-2 hover:bg-black/10 rounded-lg font-bold text-sm transition-colors text-gray-800 cursor-pointer"
+                  >
                     <MessageCircle size={20} strokeWidth={2.5} />
                     <span className="hidden xl:inline">Chat</span>
-                  </Link>
+                  </button>
               </div>
 
+              {isAuthenticated && (
+                <Link
+                  href="/quan-ly-tin-dang"
+                  className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-gray-900 rounded-lg text-sm font-bold transition-all cursor-pointer"
+                >
+                  <BookOpen size={18} />
+                  <span>Tin của tôi</span>
+                </Link>
+              )}
 
-
-              <Link
-                href="/quan-ly-tin-dang"
-                className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-gray-900 rounded-lg text-sm font-bold transition-all cursor-pointer"
-              >
-                <BookOpen size={18} />
-                <span>Tin của tôi</span>
-              </Link>
-
-              <Link 
-                href="/dang-tin"
+              <button 
+                onClick={(e) => handleProtectedAction(e, "/dang-tin")}
                 className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 bg-gray-900 text-[#FFBA00] rounded-lg font-bold hover:bg-gray-800 hover:scale-105 transition-all shadow-lg active:scale-95 cursor-pointer"
               >
                 <PlusCircle size={18} />
                 <span className="text-[10px] sm:text-sm whitespace-nowrap">ĐĂNG TIN</span>
-              </Link>
-              <button
-                onClick={() => setIsAuthModalOpen(true)}
-                className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-sm font-bold shadow-sm hover:shadow-md transition-all cursor-pointer"
-              >
-                <User size={18} />
-                <span>Tài khoản</span>
               </button>
+              {isAuthenticated && user ? (
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                    className="hidden lg:flex items-center p-1 bg-white text-black rounded-full border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden ring-2 ring-transparent hover:ring-[#FFBA00]/30"
+                  >
+                    <Image
+                      src={user.avatarUrl || "/user/avatar-user-profile-default.png"}
+                      alt="avatar"
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  </button>
+
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="px-4 py-3 border-b border-gray-50 mb-1">
+                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-0.5">Tài khoản</p>
+                        <p className="text-sm font-bold text-gray-900 truncate">{user.fullName}</p>
+                      </div>
+                      <Link
+                        href={`/tai-khoan/${user.userId}`}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-medium transition-colors"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <User size={16} className="text-gray-400" />
+                        Hồ sơ của tôi
+                      </Link>
+                      <Link
+                        href="/doi-mat-khau"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-medium"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Đổi mật khẩu
+                      </Link>
+                      <hr className="my-1 border-gray-100" />
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium cursor-pointer transition-colors text-left"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        Đăng xuất
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="hidden lg:flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg text-sm font-bold shadow-sm hover:shadow-md transition-all cursor-pointer"
+                >
+                  <User size={18} />
+                  <span>Tài khoản</span>
+                </button>
+              )}
             </div>
       
       <AuthModal 
@@ -279,7 +361,7 @@ const Header = () => {
 
       {/* --- MOBILE SIDEBAR MENU --- */}
       <div 
-        className={`fixed inset-0 z-[60] lg:hidden transition-all duration-300 ${
+        className={`fixed inset-0 z-60 lg:hidden transition-all duration-300 ${
           isMobileMenuOpen ? "visible opacity-100" : "invisible opacity-0"
         }`}
       >
@@ -289,19 +371,37 @@ const Header = () => {
         {/* Sidebar Content */}
         <div 
           ref={mobileMenuRef}
-          className={`absolute top-0 left-0 bottom-0 w-[280px] bg-white transition-transform duration-300 ease-out shadow-2xl flex flex-col ${
+          className={`absolute top-0 left-0 bottom-0 w-70 bg-white transition-transform duration-300 ease-out shadow-2xl flex flex-col ${
             isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           {/* Header Sidebar */}
-          <div className="p-5 flex items-center justify-between border-b border-gray-100 bg-[#8cceae]">
-            <Image src="/logo/lum-logo.png" alt="Logo" width={80} height={32} />
-            <button 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="p-1.5 bg-white/20 rounded-full text-gray-900 hover:bg-white/30"
-            >
-              <X size={20} />
-            </button>
+          <div className="p-5 flex flex-col gap-4 border-b border-gray-100 bg-[#8cceae]">
+            <div className="flex items-center justify-between">
+              <Image src="/logo/lum-logo.png" alt="Logo" width={80} height={32} />
+              <button 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-1.5 bg-white/20 rounded-full text-gray-900 hover:bg-white/30"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {isAuthenticated && user && (
+              <div className="flex items-center gap-3 p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                <Image 
+                  src={user.avatarUrl || "/user/avatar-user-profile-default.png"} 
+                  alt="Avatar" 
+                  width={44} 
+                  height={44} 
+                  className="w-11 h-11 rounded-full border-2 border-white object-cover"
+                />
+                <div className="flex flex-col overflow-hidden">
+                  <span className="text-xs font-medium text-gray-800 tracking-wide uppercase">Xin chào,</span>
+                  <span className="text-base font-bold text-gray-900 truncate">{user.fullName}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -318,35 +418,56 @@ const Header = () => {
                <div>
                  <h3 className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Cá nhân</h3>
                  <div className="space-y-1">
-                    <Link href="/quan-ly-tin-dang" className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors">
+                    {isAuthenticated && (
+                      <Link href={`/tai-khoan/${user?.userId}`} className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors">
+                        <User size={20} className="text-gray-400" />
+                        <span>Hồ sơ của tôi</span>
+                      </Link>
+                    )}
+                    <button 
+                      onClick={(e) => { setIsMobileMenuOpen(false); handleProtectedAction(e, "/quan-ly-tin-dang"); }}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors text-left"
+                    >
                       <BookOpen size={20} className="text-gray-400" />
                       <span>Tin của tôi</span>
-                    </Link>
-                    <Link href="/tin-nhan" className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors">
+                    </button>
+                    <button 
+                      onClick={(e) => { setIsMobileMenuOpen(false); handleProtectedAction(e, "/tin-nhan"); }}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors text-left"
+                    >
                       <MessageCircle size={20} className="text-gray-400" />
                       <span>Tin nhắn</span>
-                    </Link>
-                    <Link href="/tin-da-luu" className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors">
+                    </button>
+                    <button 
+                      onClick={(e) => { setIsMobileMenuOpen(false); handleProtectedAction(e, "/tin-da-luu"); }}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors text-left"
+                    >
                       <Heart size={20} className="text-gray-400" />
                       <span>Tin đã lưu</span>
-                    </Link>
+                    </button>
                  </div>
                </div>
 
                <div>
                  <h3 className="px-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Hệ thống</h3>
                  <div className="space-y-1">
-                    <Link href="/thong-bao" className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors">
-                      <Bell size={20} className="text-gray-400" />
-                      <span>Thông báo</span>
-                    </Link>
                     <button 
-                      onClick={() => { setIsMobileMenuOpen(false); setIsAuthModalOpen(true); }}
+                      onClick={(e) => { setIsMobileMenuOpen(false); handleProtectedAction(e, "/thong-bao"); }}
                       className="w-full flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors text-left"
                     >
-                      <User size={20} className="text-gray-400" />
-                      <span>Tài khoản</span>
+                      <Bell size={20} className="text-gray-400" />
+                      <span>Thông báo</span>
                     </button>
+                    
+                    {!isAuthenticated && (
+                      <button 
+                        onClick={() => { setIsMobileMenuOpen(false); setIsAuthModalOpen(true); }}
+                        className="w-full flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors text-left"
+                      >
+                        <User size={20} className="text-gray-400" />
+                        <span>Tài khoản</span>
+                      </button>
+                    )}
                  </div>
                </div>
             </div>
@@ -358,6 +479,19 @@ const Header = () => {
               <a href="#" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Blog sinh viên</a>
             </div>
           </div>
+
+          {/* Bottom Action: Logout */}
+          {isAuthenticated && (
+            <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-50 font-bold transition-all border border-red-100 shadow-sm"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Đăng xuất</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
           </div>
