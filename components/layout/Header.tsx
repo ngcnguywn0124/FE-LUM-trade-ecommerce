@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { 
   Menu, Search, Bell, MessageCircle,
-  Heart, User, PlusCircle, BookOpen, X
+  Heart, User, PlusCircle, BookOpen, X, Settings
 } from "lucide-react";
 import LocationSelector from "../shared/LocationSelector";
 import CategorySelector from "../shared/CategorySelector";
@@ -332,6 +332,23 @@ const Header = () => {
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                         Đổi mật khẩu
                       </Link>
+                      {/* Admin links — chỉ hiển thị với admin */}
+                      {user.roles?.some(r => ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN'].includes(r)) && (
+                        <>
+                          <hr className="my-1 border-gray-100" />
+                          <div className="px-4 py-1.5">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Quản trị</p>
+                          </div>
+                          <Link
+                            href="/admin"
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 font-medium transition-colors"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <Settings size={16} className="text-orange-500" />
+                            Admin Dashboard
+                          </Link>
+                        </>
+                      )}
                       <hr className="my-1 border-gray-100" />
                       <button
                         onClick={handleLogout}
@@ -467,6 +484,16 @@ const Header = () => {
                         <User size={20} className="text-gray-400" />
                         <span>Tài khoản</span>
                       </button>
+                    )}
+                    {isAuthenticated && user?.roles?.some(r => ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN'].includes(r)) && (
+                      <Link
+                        href="/admin"
+                        className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-orange-50 font-medium transition-colors"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Settings size={20} className="text-orange-500" />
+                        <span>Admin Dashboard</span>
+                      </Link>
                     )}
                  </div>
                </div>
