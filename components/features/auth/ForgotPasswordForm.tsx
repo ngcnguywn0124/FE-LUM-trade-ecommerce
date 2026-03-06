@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import AuthInput from './AuthInput';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 
 interface ForgotPasswordFormProps {
   onBack: () => void;
 }
 
 const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
+  const { forgotPassword, isLoading } = useAuthStore();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
       setError('Vui lòng nhập email của bạn');
@@ -21,11 +24,18 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
       setError('Email không hợp lệ');
       return;
     }
-    
+
     setError('');
-    // Simulate sending reset link
-    setIsSubmitted(true);
-    console.log('Reset link sent to:', email);
+    try {
+      await forgotPassword({ email: email.trim() });
+      setIsSubmitted(true);
+    } catch (err: any) {
+      if (err.response?.data?.code === 4003) {
+        toast.error('Tài khoản này đăng nhập bằng Google, vui lòng đổi mật khẩu tại trang quản lý tài khoản Google của bạn.');
+      } else {
+        toast.error('Không thể gửi email khôi phục. Vui lòng thử lại.');
+      }
+    }
   };
 
   if (isSubmitted) {
@@ -77,9 +87,10 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
 
         <button 
           type="submit" 
-          className="w-full bg-gray-900 hover:bg-emerald-700 text-[#FFBA00] font-bold py-3.5 rounded-xl transition-all shadow-md mt-2 text-base cursor-pointer active:scale-[0.98]"
+          disabled={isLoading}
+          className="w-full bg-gray-900 hover:bg-emerald-700 text-[#FFBA00] font-bold py-3.5 rounded-xl transition-all shadow-md mt-2 text-base cursor-pointer active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Gửi liên kết khôi phục
+          {isLoading ? 'Đang gửi...' : 'Gửi liên kết khôi phục'}
         </button>
       </form>
     </div>

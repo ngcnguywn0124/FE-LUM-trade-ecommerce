@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import ResetPasswordForm from '@/components/features/auth/ResetPasswordForm';
 
 export const metadata = {
@@ -11,7 +11,9 @@ const ResetPasswordPage = () => {
     <main className="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-emerald-500/50">
       <div className="w-full max-w-lg">
         {/* Reset Form */}
-        <ResetPasswordForm />
+        <Suspense fallback={<div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>}>
+          <ResetPasswordForm />
+        </Suspense>
 
         {/* Security Footer */}
         <div className="mt-8 text-center">

@@ -1,10 +1,15 @@
 "use client";
 
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import AuthInput from './AuthInput';
-import { Lock, CheckCircle2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Lock, ShieldCheck, ArrowRight } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
+import { useRouter } from 'next/navigation';
 
 const ChangePasswordForm = () => {
+  const { user, changePassword, isLoading } = useAuthStore();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -12,6 +17,9 @@ const ChangePasswordForm = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Kiểm tra tài khoản mạng xã hội (Google)
+  const isSocialAccount = user?.isSocialAccount || user?.avatarUrl?.includes('googleusercontent.com');
 
   const validatePassword = (pass: string) => {
     const minLength = pass.length >= 8;
@@ -30,7 +38,7 @@ const ChangePasswordForm = () => {
     };
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
@@ -45,16 +53,30 @@ const ChangePasswordForm = () => {
       newErrors.newPassword = 'Mật khẩu mới không đủ mạnh';
     }
 
-    if (formData.confirmPassword !== formData.newPassword) {
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Vui lòng xác nhận mật khẩu mới';
+    } else if (formData.confirmPassword !== formData.newPassword) {
       newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
     }
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      // Logic call API đổi mật khẩu ở đây
-      setIsSubmitted(true);
-      console.log('Password changed successfully');
+      try {
+        await changePassword({
+          currentPassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+          confirmPassword: formData.confirmPassword,
+        });
+        toast.success('Đổi mật khẩu thành công!');
+        setIsSubmitted(true);
+      } catch (err: any) {
+        if (err.response?.data?.code === 4003) {
+          toast.error('Tài khoản này đăng nhập bằng Google, vui lòng đổi mật khẩu tại trang quản lý tài khoản Google của bạn.');
+        } else {
+          toast.error(err.response?.data?.message || 'Mật khẩu hiện tại không đúng hoặc có lỗi xảy ra');
+        }
+      }
     }
   };
 
@@ -64,12 +86,33 @@ const ChangePasswordForm = () => {
         <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
           <ShieldCheck size={40} />
         </div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-3">Đổi mật khẩu thành công!</h3>
-        <p className="text-gray-500 mb-8 max-w-sm">
+        <h3 className="text-3xl font-bold text-white mb-4">Đổi mật khẩu thành công!</h3>
+        <p className="text-emerald-50 mb-10 max-w-md text-lg leading-relaxed opacity-90">
           Mật khẩu của bạn đã được cập nhật an toàn. Vui lòng sử dụng mật khẩu mới cho lần đăng nhập tiếp theo.
         </p>
         <button 
           onClick={() => window.location.href = '/'}
+          className="bg-gray-900 text-[#FFBA00] px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 group cursor-pointer"
+        >
+          Quay lại trang chủ
+          <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+        </button>
+      </div>
+    );
+  }
+
+  if (isSocialAccount) {
+    return (
+      <div className="flex flex-col items-center text-center py-8 animate-in fade-in zoom-in duration-500">
+        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+          <Lock size={40} />
+        </div>
+        <h3 className="text-3xl font-bold text-white mb-4">Không thể đặt lại mật khẩu!</h3>
+        <p className="text-emerald-50 mb-10 max-w-md text-lg leading-relaxed opacity-90">
+          Tài khoản này đăng nhập bằng Google, vui lòng đổi mật khẩu tại trang quản lý tài khoản Google của bạn.
+        </p>
+        <button 
+          onClick={() => router.push('/')}
           className="bg-gray-900 text-[#FFBA00] px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 group cursor-pointer"
         >
           Quay lại trang chủ
@@ -84,9 +127,6 @@ const ChangePasswordForm = () => {
   return (
     <div className="max-w-md mx-auto bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 animate-in slide-in-from-bottom-4 duration-500">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl mb-4">
-          <Lock size={24} />
-        </div>
         <h2 className="text-2xl font-bold text-gray-800">Đổi mật khẩu</h2>
         <p className="text-gray-500 text-sm mt-1">Vui lòng nhập mật khẩu mới để bảo mật tài khoản của bạn</p>
       </div>
@@ -139,10 +179,11 @@ const ChangePasswordForm = () => {
         />
 
         <button 
-          type="submit" 
-          className="w-full bg-gray-900 hover:bg-emerald-700 text-[#FFBA00] font-bold py-4 rounded-xl transition-all shadow-md mt-4 text-base cursor-pointer active:scale-[0.98]"
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-gray-900 hover:bg-emerald-700 text-[#FFBA00] font-bold py-4 rounded-xl transition-all shadow-md mt-4 text-base cursor-pointer active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Cập nhật mật khẩu
+          {isLoading ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}
         </button>
       </form>
     </div>

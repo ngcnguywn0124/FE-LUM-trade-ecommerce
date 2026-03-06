@@ -1,6 +1,17 @@
-import React from 'react';
+"use client";
+
+import React, { useState } from 'react';
+import { useAuthStore } from '@/stores/authStore';
 
 const SocialLogin = () => {
+  const loginWithGoogle = useAuthStore((state) => state.loginWithGoogle);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  const handleGoogleLogin = () => {
+    setIsRedirecting(true);
+    loginWithGoogle();
+  };
+
   return (
     <div className="flex flex-col w-full gap-4">
       <div className="flex flex-col w-full items-center gap-3">
@@ -12,8 +23,10 @@ const SocialLogin = () => {
       </div>
 
       <div className="flex w-full">
-        <button 
-          className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 border border-gray-200 py-3 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all font-semibold text-sm shadow-sm cursor-pointer"
+        <button
+          onClick={handleGoogleLogin}
+          disabled={isRedirecting}
+          className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 border border-gray-200 py-3 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all font-semibold text-sm shadow-sm cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
             {/* Google Icon/Logo - SVG for better quality */}
             <div className="relative w-5 h-5 flex items-center justify-center">
@@ -24,7 +37,7 @@ const SocialLogin = () => {
                     <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
                 </svg>
             </div>
-             Đăng nhập với Google
+            {isRedirecting ? 'Đang chuyển đến Google...' : 'Đăng nhập với Google'}
         </button>
       </div>
     </div>

@@ -129,9 +129,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
 
                     {/* Forms */}
                     {activeTab === 'login' ? (
-                        <LoginForm onForgotPassword={() => setActiveTab('forgot')} />
+                        <LoginForm onForgotPassword={() => setActiveTab('forgot')} onSuccess={onClose} />
                     ) : (
-                        <RegisterForm />
+                        <RegisterForm onSuccess={onClose} />
                     )}
 
                     {/* Social Login */}
