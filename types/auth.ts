@@ -54,6 +54,7 @@ export interface AuthResponse {
 export interface LoginRequest {
   identifier: string; // email hoặc số điện thoại
   password: string;
+  rememberMe?: boolean;
 }
 
 export interface RegisterRequest {

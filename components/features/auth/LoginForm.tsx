@@ -15,6 +15,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSuccess }) =>
   const [formData, setFormData] = useState({
     identifier: '',
     password: '',
+    rememberMe: false,
   });
   const [errors, setErrors] = useState({
     identifier: '',
@@ -39,7 +40,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSuccess }) =>
     if (!isValid) return;
 
     try {
-      await login({ identifier: formData.identifier.trim(), password: formData.password });
+      await login({
+        identifier: formData.identifier.trim(),
+        password: formData.password,
+        rememberMe: formData.rememberMe,
+      });
       toast.success('Đăng nhập thành công!');
       onSuccess?.();
     } catch {
@@ -48,7 +53,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSuccess }) =>
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
+    const { id, value, type, checked } = e.target;
+    if (type === 'checkbox') {
+      setFormData(prev => ({ ...prev, rememberMe: checked }));
+      return;
+    }
     const key = id === 'login-identifier' ? 'identifier' : 'password';
     setFormData(prev => ({ ...prev, [key]: value }));
     setErrors(prev => ({ ...prev, [key]: '' }));
@@ -84,6 +93,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSuccess }) =>
           <input
             type="checkbox"
             className="w-4 h-4 rounded border-gray-300 accent-emerald-600 cursor-pointer"
+            checked={formData.rememberMe}
+            onChange={handleChange}
           />
           <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">
             Ghi nhớ đăng nhập
