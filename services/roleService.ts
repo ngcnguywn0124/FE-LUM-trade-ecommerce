@@ -14,7 +14,7 @@ export async function getRoles(): Promise<RoleResponse[]> {
   return res.data.data;
 }
 
-export async function getRoleById(id: number): Promise<RoleResponse> {
+export async function getRoleById(id: string): Promise<RoleResponse> {
   const res = await apiClient.get<ApiResponse<RoleResponse>>(`/roles/${id}`);
   return res.data.data;
 }
@@ -24,17 +24,17 @@ export async function createRole(data: RoleRequest): Promise<RoleResponse> {
   return res.data.data;
 }
 
-export async function updateRole(id: number, data: RoleRequest): Promise<RoleResponse> {
+export async function updateRole(id: string, data: RoleRequest): Promise<RoleResponse> {
   const res = await apiClient.put<ApiResponse<RoleResponse>>(`/roles/${id}`, data);
   return res.data.data;
 }
 
-export async function deleteRole(id: number): Promise<void> {
+export async function deleteRole(id: string): Promise<void> {
   await apiClient.delete(`/roles/${id}`);
 }
 
 export async function assignPermissions(
-  roleId: number,
+  roleId: string,
   data: AssignPermissionsRequest,
 ): Promise<RoleResponse> {
   const res = await apiClient.post<ApiResponse<RoleResponse>>(
@@ -45,7 +45,7 @@ export async function assignPermissions(
 }
 
 export async function revokePermissions(
-  roleId: number,
+  roleId: string,
   data: AssignPermissionsRequest,
 ): Promise<RoleResponse> {
   const res = await apiClient.delete<ApiResponse<RoleResponse>>(

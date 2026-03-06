@@ -36,7 +36,7 @@ export default function AssignPermissionsModal({
   onClose,
   onSaved,
 }: AssignPermissionsModalProps) {
-  const [selected, setSelected] = useState<Set<number>>(
+  const [selected, setSelected] = useState<Set<string>>(
     new Set(role.permissions.map((p) => p.id))
   );
   const [saving, setSaving] = useState(false);
@@ -47,7 +47,7 @@ export default function AssignPermissionsModal({
     return acc;
   }, {});
 
-  function toggle(id: number) {
+  function toggle(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {

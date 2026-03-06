@@ -8,16 +8,17 @@ export type { ApiResponse };
 // ── Campus ───────────────────────────────────────────────────
 
 export interface CampusResponse {
-  campusId: number;
-  universityId: number;
+  campusId: string;
+  universityId: string;
   universityName: string;
   campusName: string;
+  slug: string | null;
   address: string | null;
   createdAt: string;
 }
 
 export interface CampusRequest {
-  universityId: number;
+  universityId: string;
   campusName: string;
   address?: string;
 }
@@ -25,9 +26,10 @@ export interface CampusRequest {
 // ── University ───────────────────────────────────────────────
 
 export interface UniversityResponse {
-  universityId: number;
+  universityId: string;
   universityName: string;
   shortName: string | null;
+  slug: string | null;
   city: string | null;
   address: string | null;
   createdAt: string;
@@ -44,7 +46,7 @@ export interface UniversityRequest {
 // ── Permission ───────────────────────────────────────────────
 
 export interface PermissionResponse {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
   resource: string;
@@ -55,7 +57,7 @@ export interface PermissionResponse {
 // ── Role ─────────────────────────────────────────────────────
 
 export interface RoleResponse {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
   permissions: PermissionResponse[];
@@ -69,5 +71,5 @@ export interface RoleRequest {
 }
 
 export interface AssignPermissionsRequest {
-  permissionIds: number[];
+  permissionIds: string[];
 }

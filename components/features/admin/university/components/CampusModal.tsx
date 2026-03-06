@@ -14,7 +14,7 @@ function apiErrMsg(err: unknown, fallback: string) {
 }
 
 interface CampusModalProps {
-  universityId: number;
+  universityId: string;
   universityName: string;
   initial?: CampusResponse | null;
   onClose: () => void;

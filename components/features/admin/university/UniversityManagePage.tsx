@@ -27,7 +27,7 @@ export default function UniversityManagePage() {
   const [universities, setUniversities] = useState<UniversityResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState('');
-  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   // Modals
   const [uniModal, setUniModal] = useState<{ open: boolean; data?: UniversityResponse | null }>({
@@ -35,13 +35,13 @@ export default function UniversityManagePage() {
   });
   const [campusModal, setCampusModal] = useState<{
     open: boolean;
-    universityId: number;
+    universityId: string;
     universityName: string;
     data?: CampusResponse | null;
   } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{
     type: 'university' | 'campus';
-    id: number;
+    id: string;
     name: string;
   } | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -62,7 +62,7 @@ export default function UniversityManagePage() {
     load();
   }, [load]);
 
-  function toggleExpand(id: number) {
+  function toggleExpand(id: string) {
     setExpandedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
