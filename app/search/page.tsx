@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { SlidersHorizontal, LayoutGrid, List } from "lucide-react";
 import FilterSidebar from "@/components/features/search/FilterSidebar";
@@ -16,7 +16,7 @@ import { generateMockProducts } from "@/lib/mockData";
 // Generate mock data - thay thế bằng API call thực tế
 const mockProducts: Product[] = generateMockProducts(100);
 
-const SearchPage = () => {
+const SearchContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const keyword = searchParams.get("q") || "";
@@ -313,6 +313,14 @@ const SearchPage = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const SearchPage = () => {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Đang tải...</div>}>
+      <SearchContent />
+    </Suspense>
   );
 };
 
