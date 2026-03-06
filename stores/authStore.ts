@@ -36,6 +36,8 @@ interface AuthState {
   forgotPassword: (data: ForgotPasswordRequest) => Promise<void>;
   resetPassword: (data: ResetPasswordRequest) => Promise<void>;
   changePassword: (data: ChangePasswordRequest) => Promise<void>;
+  /** Redirect browser đến Google OAuth2 authorize endpoint trên backend */
+  loginWithGoogle: () => void;
   clearError: () => void;
 }
 
@@ -156,6 +158,16 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
       throw error;
     }
+  },
+
+  /**
+   * Redirect browser đến backend /auth/google/authorize.
+   * Không có async – chỉ đơn giản đổi window.location.
+   * Sau khi Google xác nhận, backend set cookies và redirect về /.
+   * AuthProvider.initialize() sẽ tự nhận diện user từ cookie mới.
+   */
+  loginWithGoogle: () => {
+    authService.loginWithGoogle();
   },
 
   clearError: () => set({ error: null }),

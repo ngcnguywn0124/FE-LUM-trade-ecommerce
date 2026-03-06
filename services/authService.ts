@@ -73,3 +73,16 @@ export async function getCurrentUser(): Promise<UserResponse> {
   const res = await apiClient.get<ApiResponse<UserResponse>>('/auth/me');
   return res.data.data;
 }
+
+/**
+ * Bắt đầu luồng Google OAuth2:
+ * Redirect browser đến backend /auth/google/authorize.
+ * Backend sẽ set state cookie và redirect sang Google.
+ * Sau khi Google xác thực xong, backend callback set JWT cookies
+ * và redirect về frontend trang chủ.
+ */
+export function loginWithGoogle(): void {
+  const backendUrl =
+    process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8686/api/v1';
+  window.location.href = `${backendUrl}/auth/google/authorize`;
+}

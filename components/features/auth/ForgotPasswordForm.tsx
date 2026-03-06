@@ -29,8 +29,12 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
     try {
       await forgotPassword({ email: email.trim() });
       setIsSubmitted(true);
-    } catch {
-      toast.error('Không thể gửi email khôi phục. Vui lòng thử lại.');
+    } catch (err: any) {
+      if (err.response?.data?.code === 4003) {
+        toast.error('Tài khoản này đăng nhập bằng Google, vui lòng đổi mật khẩu tại trang quản lý tài khoản Google của bạn.');
+      } else {
+        toast.error('Không thể gửi email khôi phục. Vui lòng thử lại.');
+      }
     }
   };
 

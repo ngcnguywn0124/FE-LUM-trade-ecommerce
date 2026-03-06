@@ -299,7 +299,7 @@ const Header = () => {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                    className="hidden lg:flex items-center p-1 bg-white text-black rounded-full border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden ring-2 ring-transparent hover:ring-[#FFBA00]/30"
+                    className="hidden lg:flex items-center p-1 bg-white text-black rounded-full border border-emerald-100 shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden ring-2 ring-transparent hover:ring-[#FFBA00]/30"
                   >
                     <Image
                       src={user.avatarUrl || "/user/avatar-user-profile-default.png"}

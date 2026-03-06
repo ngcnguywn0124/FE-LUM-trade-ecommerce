@@ -18,6 +18,7 @@ export interface UserResponse {
   avatarUrl: string | null;
   coverUrl: string | null;
   roles: string[];
+  isSocialAccount: boolean;
   studentId: string | null;
   universityId: number | null;
   campusId: number | null;
@@ -54,6 +55,7 @@ export interface AuthResponse {
 export interface LoginRequest {
   identifier: string; // email hoặc số điện thoại
   password: string;
+  rememberMe?: boolean;
 }
 
 export interface RegisterRequest {
@@ -61,6 +63,7 @@ export interface RegisterRequest {
   email: string;
   phoneNumber: string;
   password: string;
+  acceptTerms: boolean;
 }
 
 export interface ForgotPasswordRequest {
