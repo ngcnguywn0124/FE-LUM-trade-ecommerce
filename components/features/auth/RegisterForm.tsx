@@ -22,6 +22,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
     phoneNumber: '',
     password: '',
     confirmPassword: '',
+    acceptTerms: false,
   });
 
   const [errors, setErrors] = useState({
@@ -30,6 +31,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
     phoneNumber: '',
     password: '',
     confirmPassword: '',
+    acceptTerms: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,6 +42,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       phoneNumber: '',
       password: '',
       confirmPassword: '',
+      acceptTerms: '',
     };
     let isValid = true;
 
@@ -81,6 +84,11 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       isValid = false;
     }
 
+    if (!formData.acceptTerms) {
+      newErrors.acceptTerms = 'Bạn phải đồng ý với điều khoản và chính sách';
+      isValid = false;
+    }
+
     setErrors(newErrors);
     if (!isValid) return;
 
@@ -90,6 +98,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
         email: formData.email.trim(),
         phoneNumber: formData.phoneNumber.trim(),
         password: formData.password,
+        acceptTerms: formData.acceptTerms,
       });
       toast.success('Đăng ký tài khoản thành công!');
       onSuccess?.();
@@ -99,17 +108,21 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
+    const { id, value, type, checked } = e.target;
     const fieldMap: Record<string, keyof typeof formData> = {
       'register-fullName': 'fullName',
       'register-email': 'email',
       'register-phoneNumber': 'phoneNumber',
       'register-password': 'password',
       'register-confirm-password': 'confirmPassword',
+      'terms': 'acceptTerms',
     };
     const key = fieldMap[id];
     if (key) {
-      setFormData(prev => ({ ...prev, [key]: value }));
+      setFormData(prev => ({
+        ...prev,
+        [key]: type === 'checkbox' ? checked : value
+      }));
       setErrors(prev => ({ ...prev, [key]: '' }));
     }
   };
@@ -173,19 +186,26 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="terms"
-          className="w-4 h-4 rounded border-gray-300 accent-emerald-600 cursor-pointer"
-          required
-        />
-        <label htmlFor="terms" className="text-sm text-gray-600 cursor-pointer">
-          Tôi đồng ý với{' '}
-          <a href="#" className="text-emerald-600 hover:underline">Điều khoản dịch vụ</a>{' '}
-          &amp;{' '}
-          <a href="#" className="text-emerald-600 hover:underline">Chính sách bảo mật</a>.
-        </label>
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="terms"
+            className="w-4 h-4 rounded border-gray-300 accent-emerald-600 cursor-pointer"
+            checked={formData.acceptTerms}
+            onChange={handleChange}
+            required
+          />
+          <label htmlFor="terms" className="text-sm text-gray-600 cursor-pointer">
+            Tôi đồng ý với{' '}
+            <a href="#" className="text-emerald-600 hover:underline">Điều khoản dịch vụ</a>{' '}
+            &amp;{' '}
+            <a href="#" className="text-emerald-600 hover:underline">Chính sách bảo mật</a>.
+          </label>
+        </div>
+        {errors.acceptTerms && (
+          <p className="text-xs text-red-500 ml-6">{errors.acceptTerms}</p>
+        )}
       </div>
 
       <button

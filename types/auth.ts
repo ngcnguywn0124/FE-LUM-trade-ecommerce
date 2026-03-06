@@ -61,6 +61,7 @@ export interface RegisterRequest {
   email: string;
   phoneNumber: string;
   password: string;
+  acceptTerms: boolean;
 }
 
 export interface ForgotPasswordRequest {
