@@ -18,6 +18,7 @@ export interface UserResponse {
   avatarUrl: string | null;
   coverUrl: string | null;
   roles: string[];
+  isSocialAccount: boolean;
   studentId: string | null;
   universityId: number | null;
   campusId: number | null;

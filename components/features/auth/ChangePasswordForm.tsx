@@ -5,9 +5,11 @@ import { toast } from 'sonner';
 import AuthInput from './AuthInput';
 import { Lock, ShieldCheck, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { useRouter } from 'next/navigation';
 
 const ChangePasswordForm = () => {
-  const { changePassword, isLoading } = useAuthStore();
+  const { user, changePassword, isLoading } = useAuthStore();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -15,6 +17,9 @@ const ChangePasswordForm = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Kiểm tra tài khoản mạng xã hội (Google)
+  const isSocialAccount = user?.isSocialAccount || user?.avatarUrl?.includes('googleusercontent.com');
 
   const validatePassword = (pass: string) => {
     const minLength = pass.length >= 8;
@@ -65,8 +70,12 @@ const ChangePasswordForm = () => {
         });
         toast.success('Đổi mật khẩu thành công!');
         setIsSubmitted(true);
-      } catch {
-        toast.error('Mật khẩu hiện tại không đúng hoặc có lỗi xảy ra');
+      } catch (err: any) {
+        if (err.response?.data?.code === 4003) {
+          toast.error('Tài khoản này đăng nhập bằng Google, vui lòng đổi mật khẩu tại trang quản lý tài khoản Google của bạn.');
+        } else {
+          toast.error(err.response?.data?.message || 'Mật khẩu hiện tại không đúng hoặc có lỗi xảy ra');
+        }
       }
     }
   };
@@ -83,6 +92,27 @@ const ChangePasswordForm = () => {
         </p>
         <button 
           onClick={() => window.location.href = '/'}
+          className="bg-gray-900 text-[#FFBA00] px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 group cursor-pointer"
+        >
+          Quay lại trang chủ
+          <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+        </button>
+      </div>
+    );
+  }
+
+  if (isSocialAccount) {
+    return (
+      <div className="flex flex-col items-center text-center py-8 animate-in fade-in zoom-in duration-500">
+        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+          <Lock size={40} />
+        </div>
+        <h3 className="text-3xl font-bold text-white mb-4">Không thể đặt lại mật khẩu!</h3>
+        <p className="text-emerald-50 mb-10 max-w-md text-lg leading-relaxed opacity-90">
+          Tài khoản này đăng nhập bằng Google, vui lòng đổi mật khẩu tại trang quản lý tài khoản Google của bạn.
+        </p>
+        <button 
+          onClick={() => router.push('/')}
           className="bg-gray-900 text-[#FFBA00] px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 group cursor-pointer"
         >
           Quay lại trang chủ
