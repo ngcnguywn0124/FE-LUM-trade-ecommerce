@@ -43,6 +43,31 @@ export interface UniversityRequest {
   address?: string;
 }
 
+// ── Category ─────────────────────────────────────────────────
+
+export interface CategoryResponse {
+  categoryId: string;
+  categoryName: string;
+  slug: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  imageCloudId: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  parentCategoryId: string | null;
+  parentCategoryName: string | null;
+  children?: CategoryResponse[];
+}
+
+export interface CategoryRequest {
+  categoryName: string;
+  parentCategoryId: string | null;
+  description?: string;
+  displayOrder?: number;
+  isActive?: boolean;
+}
+
 // ── Permission ───────────────────────────────────────────────
 
 export interface PermissionResponse {
