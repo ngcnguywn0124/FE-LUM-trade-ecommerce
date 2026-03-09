@@ -1,4 +1,10 @@
-import { FolderTree, LayoutDashboard, School, ShieldCheck } from 'lucide-react';
+import {
+  FolderTree,
+  LayoutDashboard,
+  School,
+  ShieldCheck,
+  SlidersHorizontal,
+} from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
 
 export interface AdminNavItem {
@@ -22,6 +28,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     href: '/admin/danh-muc',
     label: 'Danh mục',
     icon: FolderTree,
+  },
+  {
+    href: '/admin/thong-so-thuoc-tinh-tags',
+    label: 'Thông số & Tags',
+    icon: SlidersHorizontal,
   },
   {
     href: '/admin/phan-quyen',
