@@ -68,6 +68,42 @@ export interface CategoryRequest {
   isActive?: boolean;
 }
 
+// ── Product Attribute & Tag ────────────────────────────────
+
+export type AttributeType = 'text' | 'number' | 'boolean' | 'select';
+
+export interface ProductAttributeResponse {
+  attributeId: string;
+  categoryId: string;
+  categoryName: string;
+  attributeName: string;
+  attributeType: AttributeType;
+  isRequired: boolean;
+  options: string[] | null;
+  displayOrder: number;
+}
+
+export interface ProductAttributeRequest {
+  categoryId: string;
+  attributeName: string;
+  attributeType: AttributeType;
+  isRequired?: boolean;
+  options?: string[];
+  displayOrder?: number;
+}
+
+export interface TagResponse {
+  tagId: string;
+  tagName: string;
+  slug: string | null;
+  usageCount: number;
+  createdAt: string;
+}
+
+export interface TagRequest {
+  tagName: string;
+}
+
 // ── Permission ───────────────────────────────────────────────
 
 export interface PermissionResponse {
