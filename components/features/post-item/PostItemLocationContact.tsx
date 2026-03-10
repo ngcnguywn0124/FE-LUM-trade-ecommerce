@@ -1,7 +1,9 @@
-import { getCampusesBySchool, mockSchools } from '@/lib/categoriesData';
+import { useEffect, useMemo, useState } from 'react';
 import PostItemSection from './PostItemSection';
 import { PostItemErrors, PostItemFormData, TransactionType } from '../../../types/post';
 import CustomSelect from '@/components/shared/CustomSelect';
+import { getUniversities } from '@/services/universityService';
+import type { UniversityResponse } from '@/types/admin';
 
 interface PostItemLocationContactProps {
   formData: PostItemFormData;
@@ -10,8 +12,26 @@ interface PostItemLocationContactProps {
 }
 
 const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLocationContactProps) => {
-  const selectedSchool = mockSchools.find((school) => school.id === formData.schoolId);
-  const campuses = selectedSchool ? getCampusesBySchool(selectedSchool.id) : [];
+  const [universities, setUniversities] = useState<UniversityResponse[]>([]);
+
+  useEffect(() => {
+    const loadUniversities = async () => {
+      try {
+        const data = await getUniversities();
+        setUniversities(data);
+      } catch {
+        setUniversities([]);
+      }
+    };
+
+    loadUniversities();
+  }, []);
+
+  const selectedSchool = useMemo(
+    () => universities.find((school) => school.universityId === formData.schoolId),
+    [universities, formData.schoolId],
+  );
+  const campuses = selectedSchool?.campuses || [];
   const transactionTypeOptions = [
     { id: 'meetup', name: 'Gặp mặt trực tiếp' },
     { id: 'delivery', name: 'Giao hàng' },
@@ -31,7 +51,10 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
             </label>
             <CustomSelect
               value={formData.schoolId}
-              options={mockSchools.map(s => ({ id: s.id, name: s.name }))}
+              options={universities.map((s) => ({
+                id: s.universityId,
+                name: s.shortName || s.universityName,
+              }))}
               onChange={(value) => {
                 onFieldChange('schoolId', value);
                 onFieldChange('campusId', '');
@@ -48,7 +71,7 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
             </label>
             <CustomSelect
               value={formData.campusId}
-              options={campuses.map(c => ({ id: c.id, name: c.name }))}
+              options={campuses.map((c) => ({ id: c.campusId, name: c.campusName }))}
               onChange={(value) => onFieldChange('campusId', value)}
               disabled={!formData.schoolId}
               placeholder="Chọn cơ sở"

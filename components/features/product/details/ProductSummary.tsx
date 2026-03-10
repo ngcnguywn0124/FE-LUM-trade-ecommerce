@@ -23,7 +23,7 @@ interface ProductSummaryProps {
   postedTime: string;
   infoTags: string[];
   seller: {
-    id?: number;
+    id?: string | number;
     name: string;
     avatar?: string;
     rating?: number;

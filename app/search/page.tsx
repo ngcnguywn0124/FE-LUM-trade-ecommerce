@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { SlidersHorizontal, LayoutGrid, List } from "lucide-react";
 import FilterSidebar from "@/components/features/search/FilterSidebar";
@@ -11,10 +11,7 @@ import Pagination from "@/components/shared/Pagination";
 import SuggestedCategories from "@/components/features/search/SuggestedCategories";
 import Breadcrumb from "@/components/shared/Breadcrumb";
 import { Product, SearchFilters, SortOption } from "@/types";
-import { generateMockProducts } from "@/lib/mockData";
-
-// Generate mock data - thay thế bằng API call thực tế
-const mockProducts: Product[] = generateMockProducts(100);
+import { getProducts, mapSummaryToCardProduct, searchProducts } from "@/services/productService";
 
 const SearchContent = () => {
   const searchParams = useSearchParams();
@@ -22,135 +19,146 @@ const SearchContent = () => {
   const keyword = searchParams.get("q") || "";
   const categoryParam = searchParams.get("category") || "";
 
-  // States
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [filters, setFilters] = useState<SearchFilters>({
     category: categoryParam || undefined,
-    condition: 'all',
-    sortBy: 'newest',
+    condition: "all",
+    sortBy: "newest",
   });
-  const [viewMode, setViewMode] = useState<'grid-4' | 'list'>('grid-4');
+  const [viewMode, setViewMode] = useState<"grid-4" | "list">("grid-4");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const itemsPerPage = 24;
 
-  // Sync URL params with local state
   useEffect(() => {
-    const categoryParam = searchParams.get("category") || undefined;
-    
-    // Sử dụng current state trực tiếp thay vì functional state if (filters.category === categoryParam)
-    // Functional style: setFilters(prev => { ... })
-    setFilters(prev => {
-      if (prev.category === categoryParam) return prev;
-      
+    const categoryFromUrl = searchParams.get("category") || undefined;
+
+    setFilters((prev) => {
+      if (prev.category === categoryFromUrl) return prev;
       return {
         ...prev,
-        category: categoryParam,
-        subcategory: undefined, 
+        category: categoryFromUrl,
+        subcategory: undefined,
       };
     });
-    // Tránh reset page nếu không đổi category thực sự
-    setFilters(prev => {
-        if (prev.category !== categoryParam) {
-            setCurrentPage(1);
-        }
-        return prev;
-    });
+
+    setCurrentPage(1);
   }, [searchParams]);
 
-  // Filter and sort products
-  const filteredProducts = mockProducts.filter((product) => {
-    // Keyword search
-    if (keyword && !product.name.toLowerCase().includes(keyword.toLowerCase())) {
-      return false;
-    }
+  useEffect(() => {
+    const loadProducts = async () => {
+      setIsLoading(true);
+      try {
+        const page = keyword
+          ? await searchProducts(keyword, 0, 120)
+          : await getProducts({ page: 0, size: 120, sort: "createdAt,desc" });
 
-    // Category filter
-    if (filters.category && product.category !== filters.category) {
-      return false;
-    }
+        setAllProducts(page.content.map(mapSummaryToCardProduct));
+      } catch {
+        setAllProducts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    // Subcategory filter (kiểm tra trong tên sản phẩm)
-    if (filters.subcategory && !product.name.toLowerCase().includes(filters.subcategory.toLowerCase())) {
-      return false;
-    }
+    loadProducts();
+  }, [keyword]);
 
-    // Condition filter
-    if (filters.condition && filters.condition !== 'all' && product.condition !== filters.condition) {
-      return false;
-    }
-
-    // Price range filter
-    if (filters.priceRange) {
-      const price = parseInt(product.price.replace(/[^\d]/g, ''));
-      if (price < filters.priceRange.min || price > filters.priceRange.max) {
+  const filteredProducts = useMemo(() => {
+    return allProducts.filter((product) => {
+      if (keyword && !product.name.toLowerCase().includes(keyword.toLowerCase())) {
         return false;
       }
-    }
 
-    // School filter
-    if (filters.school && product.school !== filters.school) {
-      return false;
-    }
+      if (filters.category && product.category !== filters.category) {
+        return false;
+      }
 
-    // Campus filter
-    if (filters.campus && product.campus !== filters.campus) {
-      return false;
-    }
+      if (
+        filters.subcategory &&
+        !product.name.toLowerCase().includes(filters.subcategory.toLowerCase())
+      ) {
+        return false;
+      }
 
-    return true;
-  });
+      if (filters.condition && filters.condition !== "all" && product.condition !== filters.condition) {
+        return false;
+      }
 
-  // Sort products
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    const priceA = parseInt(a.price.replace(/[^\d]/g, ''));
-    const priceB = parseInt(b.price.replace(/[^\d]/g, ''));
+      if (filters.priceRange) {
+        const price = parseInt(product.price.replace(/[^\d]/g, "") || "0", 10);
+        if (price < filters.priceRange.min || price > filters.priceRange.max) {
+          return false;
+        }
+      }
 
-    switch (filters.sortBy) {
-      case 'price-asc':
-        return priceA - priceB;
-      case 'price-desc':
-        return priceB - priceA;
-      case 'popular':
-        return (b.imageCount || 0) - (a.imageCount || 0);
-      case 'newest':
-      default:
-        return 0; // Mock - in reality would sort by date
-    }
-  });
+      if (filters.school && product.school !== filters.school) {
+        return false;
+      }
 
-  // Pagination
+      if (filters.campus && product.campus !== filters.campus) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [allProducts, filters, keyword]);
+
+  const sortedProducts = useMemo(() => {
+    const sorted = [...filteredProducts];
+
+    sorted.sort((a, b) => {
+      const priceA = parseInt(a.price.replace(/[^\d]/g, "") || "0", 10);
+      const priceB = parseInt(b.price.replace(/[^\d]/g, "") || "0", 10);
+
+      switch (filters.sortBy) {
+        case "price-asc":
+          return priceA - priceB;
+        case "price-desc":
+          return priceB - priceA;
+        case "popular":
+          return (b.imageCount || 0) - (a.imageCount || 0);
+        case "newest":
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [filteredProducts, filters.sortBy]);
+
   const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
   const paginatedProducts = sortedProducts.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
-  // Handlers
   const handleFiltersChange = (newFilters: SearchFilters) => {
     setFilters(newFilters);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
 
-    // Sync specific filters to URL for better UX
     const params = new URLSearchParams(searchParams.toString());
     if (newFilters.category) {
       params.set("category", newFilters.category);
     } else {
       params.delete("category");
     }
+
     router.push(`/search?${params.toString()}`, { scroll: false });
   };
 
   const handleRemoveFilter = (filterKey: keyof SearchFilters) => {
     const newFilters = {
       ...filters,
-      [filterKey]: filterKey === 'condition' ? 'all' : undefined,
+      [filterKey]: filterKey === "condition" ? "all" : undefined,
     };
+
     setFilters(newFilters);
     setCurrentPage(1);
 
-    if (filterKey === 'category') {
+    if (filterKey === "category") {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("category");
       router.push(`/search?${params.toString()}`, { scroll: false });
@@ -163,59 +171,47 @@ const SearchContent = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  // Simulate loading when filters change
-  useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, [filters, currentPage]);
 
   const clearFilters = () => {
     setFilters({
       category: undefined,
       subcategory: undefined,
-      condition: 'all',
+      condition: "all",
       priceRange: undefined,
       school: undefined,
       campus: undefined,
-      sortBy: 'newest',
+      sortBy: "newest",
     });
+
     setCurrentPage(1);
 
-    // Update URL - remove category but keep keyword (q)
     const params = new URLSearchParams(searchParams.toString());
     params.delete("category");
     router.push(`/search?${params.toString()}`);
   };
 
-  // Breadcrumb items
   const breadcrumbItems = [
     {
-      label: keyword 
-        ? `Kết quả tìm kiếm "${keyword}"` 
-        : filters.subcategory 
-        ? `${filters.category} > ${filters.subcategory}`
-        : filters.category 
-        ? filters.category
-        : "Tất cả sản phẩm",
+      label: keyword
+        ? `Kết quả tìm kiếm "${keyword}"`
+        : filters.subcategory
+          ? `${filters.category} > ${filters.subcategory}`
+          : filters.category
+            ? filters.category
+            : "Tất cả sản phẩm",
     },
   ];
 
-  // Determine if popular categories are shown
   const showSuggestedCategories = !keyword && !filters.category;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumb */}
         <Breadcrumb items={breadcrumbItems} />
 
         <div className="flex gap-6">
-          {/* Left Sidebar - Filters */}
           <div className="hidden lg:block w-64 shrink-0">
             <FilterSidebar
               filters={filters}
@@ -226,9 +222,7 @@ const SearchContent = () => {
             />
           </div>
 
-          {/* Main Content */}
           <div className="flex-1 min-w-0">
-            {/* Mobile Filter & View Toggle */}
             <div className="lg:hidden flex items-center gap-2 mb-4">
               <button
                 onClick={() => setIsFilterOpen(true)}
@@ -237,24 +231,24 @@ const SearchContent = () => {
                 <SlidersHorizontal size={18} className="text-gray-600" />
                 <span className="font-medium text-sm text-gray-700">Bộ lọc & Sắp xếp</span>
               </button>
-              
+
               <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200 shadow-sm">
                 <button
-                  onClick={() => setViewMode('grid-4')}
+                  onClick={() => setViewMode("grid-4")}
                   className={`p-1.5 rounded-md transition-all ${
-                    viewMode === 'grid-4'
-                      ? 'bg-white text-emerald-600 shadow-sm'
-                      : 'text-gray-400 hover:text-gray-600'
+                    viewMode === "grid-4"
+                      ? "bg-white text-emerald-600 shadow-sm"
+                      : "text-gray-400 hover:text-gray-600"
                   }`}
                 >
                   <LayoutGrid size={18} />
                 </button>
                 <button
-                  onClick={() => setViewMode('list')}
+                  onClick={() => setViewMode("list")}
                   className={`p-1.5 rounded-md transition-all ${
-                    viewMode === 'list'
-                      ? 'bg-white text-emerald-600 shadow-sm'
-                      : 'text-gray-400 hover:text-gray-600'
+                    viewMode === "list"
+                      ? "bg-white text-emerald-600 shadow-sm"
+                      : "text-gray-400 hover:text-gray-600"
                   }`}
                 >
                   <List size={18} />
@@ -262,7 +256,6 @@ const SearchContent = () => {
               </div>
             </div>
 
-            {/* Mobile Filter Sidebar */}
             <div className="lg:hidden">
               <FilterSidebar
                 filters={filters}
@@ -273,26 +266,20 @@ const SearchContent = () => {
               />
             </div>
 
-            {/* Search Header */}
             <SearchHeader
               resultCount={sortedProducts.length}
               keyword={keyword}
               category={filters.category}
-              sortBy={filters.sortBy || 'newest'}
+              sortBy={filters.sortBy || "newest"}
               onSortChange={handleSortChange}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
             />
 
-            {/* Active Filters */}
             <ActiveFilters filters={filters} onRemoveFilter={handleRemoveFilter} />
 
-            {/* Suggested Categories - show when no filters applied */}
-            {showSuggestedCategories && (
-              <SuggestedCategories />
-            )}
+            {showSuggestedCategories && <SuggestedCategories />}
 
-            {/* Results Grid */}
             <SearchResultsGrid
               products={paginatedProducts}
               viewMode={viewMode}
@@ -301,7 +288,6 @@ const SearchContent = () => {
               keyword={keyword}
             />
 
-            {/* Pagination */}
             {!isLoading && sortedProducts.length > 0 && (
               <Pagination
                 currentPage={currentPage}
@@ -318,7 +304,9 @@ const SearchContent = () => {
 
 const SearchPage = () => {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Đang tải...</div>}>
+    <Suspense
+      fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Đang tải...</div>}
+    >
       <SearchContent />
     </Suspense>
   );

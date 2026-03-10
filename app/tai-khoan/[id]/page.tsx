@@ -1,26 +1,58 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { SearchX } from "lucide-react";
 import UserProfileHeader from "@/components/features/user-profile/UserProfileHeader";
 import UserReviewsSection from "@/components/features/user-profile/UserReviewsSection";
 import UserListingsSection from "@/components/features/user-profile/UserListingsSection";
-import { generateMockProducts } from "@/lib/mockData";
+import { getProducts, mapSummaryToCardProduct } from "@/services/productService";
 import { getUserProfileData } from "@/lib/mockUserProfile";
-
-const PRODUCT_DATA = generateMockProducts(300);
-const CURRENT_USER_ID = 1;
+import { getCurrentUser } from "@/services/authService";
 
 const UserProfilePage = () => {
   const params = useParams<{ id: string }>();
-  const userId = Number(params.id);
+  const userId = params.id;
 
-  const userData = useMemo(
-    () => getUserProfileData(userId, PRODUCT_DATA),
-    [userId]
-  );
+  const [allProducts, setAllProducts] = useState<ReturnType<typeof mapSummaryToCardProduct>[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+
+      try {
+        const [productsPage, me] = await Promise.allSettled([
+          getProducts({ page: 0, size: 150, sort: "createdAt,desc" }),
+          getCurrentUser(),
+        ]);
+
+        if (productsPage.status === "fulfilled") {
+          setAllProducts(productsPage.value.content.map(mapSummaryToCardProduct));
+        } else {
+          setAllProducts([]);
+        }
+
+        if (me.status === "fulfilled") {
+          setCurrentUserId(me.value.userId);
+        } else {
+          setCurrentUserId(null);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const userData = useMemo(() => getUserProfileData(userId, allProducts), [allProducts, userId]);
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-gray-50 pt-24 pb-12" />;
+  }
 
   if (!userData) {
     return (
@@ -53,7 +85,7 @@ const UserProfilePage = () => {
   }
 
   const { profile, listings, reviews } = userData;
-  const isOwnProfile = userId === CURRENT_USER_ID;
+  const isOwnProfile = userId === currentUserId;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">

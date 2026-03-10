@@ -1,4 +1,4 @@
-export type ItemCondition = 'new' | 'like-new' | 'used' | 'old' | 'broken';
+export type ItemCondition = 'new' | 'like_new' | 'used' | 'old' | 'broken';
 export type TransactionType = 'meetup' | 'delivery' | 'both';
 
 export interface TechnicalSpecField {

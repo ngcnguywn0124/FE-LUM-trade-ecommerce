@@ -11,11 +11,11 @@ interface PostActionMenuProps {
   isOpen: boolean;
   onToggle: () => void;
   onClose: () => void;
-  onEdit: (id: number) => void;
-  onToggleVisibility: (id: number) => void; // hide/show
-  onRenew: (id: number) => void;
-  onDelete: (id: number) => void;
-  onView: (id: number) => void;
+  onEdit: (id: string) => void;
+  onToggleVisibility: (id: string) => void; // hide/show
+  onRenew: (id: string) => void;
+  onDelete: (id: string) => void;
+  onView: (id: string) => void;
 }
 
 const PostActionMenu: React.FC<PostActionMenuProps> = ({
@@ -66,7 +66,7 @@ const PostActionMenu: React.FC<PostActionMenuProps> = ({
               Xem tin đăng
             </button>
 
-            {post.status !== 'sold' && (
+            {post.status !== 'sold' && post.status !== 'expired' && (
               <button
                 onClick={(e) => { e.stopPropagation(); onEdit(post.id); onClose(); }}
                 className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
@@ -95,7 +95,7 @@ const PostActionMenu: React.FC<PostActionMenuProps> = ({
                 className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
               >
                 <RefreshCw size={15} className="text-emerald-500" />
-                Gia hạn tin
+                Đánh dấu đã bán
               </button>
             )}
 

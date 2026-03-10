@@ -1,9 +1,12 @@
-import { Plus, X, Info, BadgeCheck, Check } from 'lucide-react';
-import { mockCategories, getSubcategoriesByCategory, getTechnicalSpecsByCategory, getBadgeInfoByCategory } from '@/lib/categoriesData';
+import { Plus, X, Info, BadgeCheck, Check, Loader2 } from 'lucide-react';
 import PostItemSection from './PostItemSection';
 import { PostItemErrors, PostItemFormData } from '../../../types/post';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import CustomSelect from '@/components/shared/CustomSelect';
+import { getCategoryTree } from '@/services/categoryService';
+import { getAttributesByCategory } from '@/services/productAttributeService';
+import { getTags } from '@/services/tagService';
+import type { CategoryResponse, ProductAttributeResponse, TagResponse } from '@/types/admin';
 
 interface PostItemBasicInfoProps {
   formData: PostItemFormData;
@@ -13,20 +16,68 @@ interface PostItemBasicInfoProps {
 
 const conditionOptions = [
   { value: 'new', label: 'Mới 100%', sub: 'Chưa bóc hộp' },
-  { value: 'like-new', label: 'Như mới 99%', sub: 'Cực đẹp' },
+  { value: 'like_new', label: 'Như mới 99%', sub: 'Cực đẹp' },
   { value: 'used', label: 'Đã qua sử dụng', sub: 'Bình thường' },
   { value: 'old', label: 'Cũ/vẫn dùng tốt', sub: 'Có trầy xước' },
   { value: 'broken', label: 'Hỏng / Lấy linh kiện', sub: 'Chỉ lấy xác' },
 ] as const;
 
 const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInfoProps) => {
-  const selectedCategory = mockCategories.find((category) => category.id === formData.categoryId);
-  const subcategories = selectedCategory ? getSubcategoriesByCategory(selectedCategory.id) : [];
-  const technicalSpecs = getTechnicalSpecsByCategory(formData.categoryId);
-  const badgeInfo = getBadgeInfoByCategory(formData.categoryId);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [attributes, setAttributes] = useState<ProductAttributeResponse[]>([]);
+  const [trendingTags, setTrendingTags] = useState<TagResponse[]>([]);
+  const [isLoadingAttributes, setIsLoadingAttributes] = useState(false);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await getCategoryTree();
+        setCategories(data);
+      } catch {
+        setCategories([]);
+      }
+    };
+
+    const loadTags = async () => {
+      try {
+        const data = await getTags();
+        setTrendingTags(data.slice(0, 10)); // Lấy 10 tag phổ biến nhất
+      } catch {
+        setTrendingTags([]);
+      }
+    };
+
+    loadCategories();
+    loadTags();
+  }, []);
+
+  useEffect(() => {
+    const loadAttributes = async () => {
+      if (!formData.categoryId) {
+        setAttributes([]);
+        return;
+      }
+
+      setIsLoadingAttributes(true);
+      try {
+        // Luôn lấy thuộc tính theo danh mục CHA
+        const data = await getAttributesByCategory(formData.categoryId);
+        setAttributes(data);
+      } catch {
+        setAttributes([]);
+      } finally {
+        setIsLoadingAttributes(false);
+      }
+    };
+
+    loadAttributes();
+  }, [formData.categoryId]); // Chỉ phụ thuộc vào categoryId của cha
+
+  const selectedCategory = categories.find((category) => category.categoryId === formData.categoryId);
+  const subcategories = selectedCategory?.children || [];
 
   const subcategorySpecs = useMemo(() => 
-    subcategories.map(s => ({ id: s.id, name: s.name })), 
+    subcategories.map((s) => ({ id: s.categoryId, name: s.categoryName })), 
     [subcategories]
   );
 
@@ -50,12 +101,12 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
     );
   };
 
-  const toggleBadgeInfo = (info: string) => {
-    const isSelected = formData.tags.includes(info);
+  const toggleTag = (tagName: string) => {
+    const isSelected = formData.tags.includes(tagName);
     if (isSelected) {
-      onFieldChange('tags', formData.tags.filter(t => t !== info));
+      onFieldChange('tags', formData.tags.filter(t => t !== tagName));
     } else if (formData.tags.length < 3) {
-      onFieldChange('tags', [...formData.tags, info]);
+      onFieldChange('tags', [...formData.tags, tagName]);
     }
   };
 
@@ -90,7 +141,7 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
             </label>
             <CustomSelect
               value={formData.categoryId}
-              options={mockCategories.map(c => ({ id: c.id, name: c.name }))}
+              options={categories.map((c) => ({ id: c.categoryId, name: c.categoryName }))}
               onChange={(value) => {
                 onFieldChange('categoryId', value);
                 onFieldChange('subcategoryId', '');
@@ -109,7 +160,10 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
             <CustomSelect
               value={formData.subcategoryId}
               options={subcategorySpecs}
-              onChange={(value) => onFieldChange('subcategoryId', value)}
+              onChange={(value) => {
+                onFieldChange('subcategoryId', value);
+                onFieldChange('technicalSpecs', []); // Reset thuộc tính khi đổi danh mục con
+              }}
               disabled={!formData.categoryId}
               placeholder="Chọn danh mục con"
               disabledPlaceholder="Chọn danh mục trước"
@@ -155,18 +209,18 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
 
         <div>
           <label className="text-sm font-medium text-gray-700 flex items-center justify-between mb-3">
-            <span className="tracking-wider font-medium">Thông tin highlight</span>
+            <span className="tracking-wider font-medium">Thông tin highlight / Tags</span>
             <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Tối đa 3</span>
           </label>
           <div className="flex flex-wrap gap-2">
-            {badgeInfo.map((info) => {
-              const isSelected = formData.tags.includes(info);
+            {trendingTags.map((tag) => {
+              const isSelected = formData.tags.includes(tag.tagName);
               const isMax = formData.tags.length >= 3;
               return (
                 <button
-                  key={info}
+                  key={tag.tagId}
                   type="button"
-                  onClick={() => toggleBadgeInfo(info)}
+                  onClick={() => toggleTag(tag.tagName)}
                   disabled={!isSelected && isMax}
                   className={`inline-flex items-center px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
                     isSelected
@@ -175,7 +229,7 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
                   } disabled:opacity-40 disabled:cursor-not-allowed`}
                 >
                   {isSelected && <Check size={14} className="mr-1.5" />}
-                  {info}
+                  {tag.tagName}
                 </button>
               );
             })}
@@ -187,14 +241,19 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
           )}
         </div>
 
-        {technicalSpecs.length > 0 ? (
+        {isLoadingAttributes ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+            <span className="ml-2 text-sm text-gray-500">Đang tải thuộc tính...</span>
+          </div>
+        ) : attributes.length > 0 ? (
           <div className="pt-2">
             <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-2">
               <div>
-                <p className="text-sm font-bold text-gray-800 uppercase tracking-tight">Thông số kỹ thuật</p>
+                <p className="text-sm font-bold text-gray-800 uppercase tracking-tight">Thông số kỹ thuật / Thuộc tính</p>
                 <p className="text-[11px] text-gray-500 mt-0.5 font-medium">Chọn các thông số quan trọng của sản phẩm</p>
               </div>
-              {formData.technicalSpecs.length < technicalSpecs.length ? (
+              {formData.technicalSpecs.length < attributes.length ? (
                 <button
                   type="button"
                   onClick={addSpec}
@@ -211,27 +270,38 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
                 const usedKeys = formData.technicalSpecs
                   .map((s, i) => (i === index ? "" : s.key))
                   .filter(Boolean);
-                const availableSpecs = technicalSpecs.filter((s) => !usedKeys.includes(s.key));
-                const currentField = technicalSpecs.find((f) => f.key === item.key);
+                const availableSpecs = attributes.filter((s) => !usedKeys.includes(s.attributeId));
+                const currentField = attributes.find((f) => f.attributeId === item.key);
 
                 return (
                   <div key={index} className="flex items-center gap-2 p-2 sm:p-3 bg-gray-50/50 rounded-lg border border-gray-100 animate-in fade-in slide-in-from-top-2">
-                    <div className="w-[120px] sm:w-1/3 shrink-0">
+                    <div className="w-[140px] sm:w-1/3 shrink-0">
                       <CustomSelect
                         value={item.key}
-                        options={availableSpecs.map(s => ({ id: s.key, name: s.label }))}
+                        options={availableSpecs.map(s => ({ id: s.attributeId, name: s.attributeName }))}
                         onChange={(value) => updateSpec(index, "key", value)}
-                        placeholder="Thông số"
+                        placeholder="Chọn thuộc tính"
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <input
-                        value={item.value}
-                        onChange={(e) => updateSpec(index, "value", e.target.value)}
-                        placeholder={currentField?.placeholder || "Nhập giá trị..."}
-                        disabled={!item.key}
-                        className="w-full rounded-lg border border-gray-200 px-2.5 sm:px-4 py-2.5 text-[13px] sm:text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-gray-100 disabled:text-gray-400 transition-all"
-                      />
+                      {currentField?.attributeType === 'select' && currentField.options ? (
+                         <CustomSelect
+                            value={item.value}
+                            options={currentField.options.map(opt => ({ id: opt, name: opt }))}
+                            onChange={(value) => updateSpec(index, "value", value)}
+                            placeholder="Chọn giá trị"
+                            disabled={!item.key}
+                         />
+                      ) : (
+                        <input
+                          value={item.value}
+                          onChange={(e) => updateSpec(index, "value", e.target.value)}
+                          placeholder={currentField?.isRequired ? "Bắt buộc điền..." : "Nhập giá trị..."}
+                          type={currentField?.attributeType === 'number' ? 'number' : 'text'}
+                          disabled={!item.key}
+                          className="w-full rounded-lg border border-gray-200 px-2.5 sm:px-4 py-2.5 text-[13px] sm:text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-gray-100 disabled:text-gray-400 transition-all"
+                        />
+                      )}
                     </div>
                     <button
                       type="button"

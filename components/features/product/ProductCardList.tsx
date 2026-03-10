@@ -4,7 +4,7 @@ import { Heart, Image as ImageIcon, MapPin, Clock, User, Star } from "lucide-rea
 
 interface ProductProps {
   product: {
-    id: number;
+    id: string | number;
     name: string;
     price: string;
     school: string;
@@ -13,9 +13,9 @@ interface ProductProps {
     tag?: string;
     time?: string;
     imageCount?: number;
-    condition?: 'new' | 'like-new' | 'used' | 'for-parts';
+    condition?: 'new' | 'like_new' | 'used' | 'old' | 'broken' | 'for-parts';
     seller?: {
-      id: number;
+      id: string | number;
       name: string;
       avatar?: string;
       rating?: number;
@@ -28,8 +28,10 @@ const ProductCardList = ({ product }: ProductProps) => {
 
   const conditionLabels = {
     'new': 'Mới 100%',
-    'like-new': 'Như mới',
+    'like_new': 'Như mới 99%',
     'used': 'Đã qua sử dụng',
+    'old': 'Cũ/Vẫn dùng tốt',
+    'broken': 'Hỏng/Lấy linh kiện',
     'for-parts': 'Phụ tùng'
   };
 

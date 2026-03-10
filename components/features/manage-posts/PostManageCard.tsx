@@ -48,7 +48,7 @@ const STATUS_CONFIG: Record<
 
 const CONDITION_LABELS: Record<ManagedPost['condition'], string> = {
   new: 'Mới 100%',
-  'like-new': 'Như mới',
+  'like_new': 'Như mới',
   used: 'Đã dùng',
   old: 'Cũ',
   broken: 'Hỏng',
@@ -88,15 +88,15 @@ const StatPill = ({
 interface PostManageCardProps {
   post: ManagedPost;
   isSelected: boolean;
-  onSelect: (id: number, checked: boolean) => void;
-  openMenuId: number | null;
-  onToggleMenu: (id: number) => void;
+  onSelect: (id: string, checked: boolean) => void;
+  openMenuId: string | null;
+  onToggleMenu: (id: string) => void;
   onCloseMenu: () => void;
-  onEdit: (id: number) => void;
-  onToggleVisibility: (id: number) => void;
-  onRenew: (id: number) => void;
-  onDeleteRequest: (id: number) => void;
-  onView: (id: number) => void;
+  onEdit: (id: string) => void;
+  onToggleVisibility: (id: string) => void;
+  onRenew: (id: string) => void;
+  onDeleteRequest: (id: string) => void;
+  onView: (id: string) => void;
 }
 
 const PostManageCard: React.FC<PostManageCardProps> = ({
@@ -264,7 +264,7 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
 
       {/* ── Quick Action Footer ── */}
       <div className="border-t border-gray-100 px-3.5 py-2 flex items-center gap-2">
-        {post.status !== 'sold' && (
+        {post.status !== 'sold' && post.status !== 'expired' && (
           <button
             onClick={() => onEdit(post.id)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
@@ -273,13 +273,13 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
             Chỉnh sửa
           </button>
         )}
-        {(post.status === 'active' || post.status === 'expired') && (
+        {post.status === 'expired' && (
           <button
             onClick={() => onRenew(post.id)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer"
           >
             <RefreshCw size={13} />
-            Gia hạn
+            Gia hạn {post.renewedCount > 0 && `(${post.renewedCount}/3)`}
           </button>
         )}
         <div className="flex-1" />

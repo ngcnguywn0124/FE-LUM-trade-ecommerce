@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { SearchX } from "lucide-react";
@@ -12,43 +12,87 @@ import ProductComments from "@/components/features/product/details/ProductCommen
 import RelatedProducts from "@/components/features/product/details/RelatedProducts";
 import SimilarProducts from "@/components/features/product/details/SimilarProducts";
 import StickyMobileBar from "@/components/layout/StickyMobileBar";
-import { generateMockProducts } from "@/lib/mockData";
 import { Product } from "@/types";
-
-const PRODUCT_DATA: Product[] = generateMockProducts(300);
+import {
+  getProductById,
+  getProducts,
+  mapDetailToCardProduct,
+  mapSummaryToCardProduct,
+} from "@/services/productService";
+import type { ProductDetailDto } from "@/types/product-api";
 
 const conditionLabels: Record<string, string> = {
   new: "Mới 100%",
-  "like-new": "Như mới",
+  like_new: "Như mới 99%",
   used: "Đã qua sử dụng",
-  "for-parts": "Dùng để lấy linh kiện",
+  old: "Cũ/Vẫn dùng tốt",
+  broken: "Hỏng/Lấy linh kiện",
 };
 
 const ProductDetailPage = () => {
   const params = useParams<{ id: string }>();
-  const productId = Number(params.id);
+  const productId = params.id;
 
-  const product = useMemo(
-    () => PRODUCT_DATA.find((item) => item.id === productId),
-    [productId]
-  );
+  const [productDetail, setProductDetail] = useState<ProductDetailDto | null>(null);
+  const [relatedPool, setRelatedPool] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadDetail = async () => {
+      setIsLoading(true);
+
+      try {
+        const detail = await getProductById(productId);
+        setProductDetail(detail);
+
+        const related = await getProducts({ page: 0, size: 120, sort: "createdAt,desc" });
+        setRelatedPool(related.content.map(mapSummaryToCardProduct));
+      } catch {
+        setProductDetail(null);
+        setRelatedPool([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDetail();
+  }, [productId]);
+
+  const product = useMemo(() => {
+    if (!productDetail) return null;
+    return mapDetailToCardProduct(productDetail);
+  }, [productDetail]);
 
   const relatedProducts = useMemo(() => {
     if (!product) return [];
-    // Lọc các sản phẩm của cùng người bán
-    return PRODUCT_DATA.filter(
-      (item) => item.id !== product.id && item.seller?.id === product.seller?.id
-    ).slice(0, 20);
-  }, [product]);
+
+    return relatedPool
+      .filter((item) => item.id !== product.id && item.seller?.id === product.seller?.id)
+      .slice(0, 20);
+  }, [product, relatedPool]);
+
+  const similarProductsPool = useMemo(() => {
+    if (!product) return [];
+    return relatedPool.filter((item) => item.id !== product.id);
+  }, [product, relatedPool]);
 
   const imageList = useMemo(() => {
-    if (!product) return [];
-    // Ưu tiên ảnh chính, nếu không có thì dùng fallback
-    const mainImage = product.image || "/cate/khac-v2.png";
-    return Array.from({ length: Math.max(product.imageCount || 1, 4) }, () => mainImage);
-  }, [product]);
+    if (!productDetail) return [];
 
-  if (!product) {
+    if (productDetail.images.length > 0) {
+      return productDetail.images
+        .sort((a, b) => a.displayOrder - b.displayOrder)
+        .map((item) => item.imageUrl);
+    }
+
+    return ["/cate/khac-v2.png"];
+  }, [productDetail]);
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-gray-50 pt-24 pb-12" />;
+  }
+
+  if (!product || !productDetail) {
     return (
       <div className="min-h-screen bg-gray-50 pt-24 pb-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -79,61 +123,33 @@ const ProductDetailPage = () => {
   }
 
   const productCondition = conditionLabels[product.condition || "used"] || "Đã qua sử dụng";
-  const productDescription = `Mình cần nhượng lại ${product.name} này. Sản phẩm vẫn còn sử dụng rất tốt, ngoại hình còn khá mới và chưa qua sửa chữa.
-
-Thông tin chi tiết:
-- Tình trạng: ${productCondition}
-- Lý do bán: Mình mới nâng cấp lên dòng cao hơn nên không còn nhu cầu sử dụng.
-- Ưu điểm: Máy chạy ổn định, pin còn tốt, đầy đủ phụ kiện đi kèm.
-
-Mình ưu tiên giao dịch trực tiếp tại khu vực ${product.school}${product.campus ? ` (${product.campus})` : ""} để các bạn có thể kiểm tra sản phẩm kỹ lưỡng trước khi mua.
-
-Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt tình. Vui lòng nhắn tin qua hệ thống chat để hẹn lịch xem máy hoặc hỏi thêm thông tin nhé. Cảm ơn mọi người đã quan tâm!Mình cần nhượng lại ${product.name} này. Sản phẩm vẫn còn sử dụng rất tốt, ngoại hình còn khá mới và chưa qua sửa chữa.
-
-Thông tin chi tiết:
-- Tình trạng: ${productCondition}
-- Lý do bán: Mình mới nâng cấp lên dòng cao hơn nên không còn nhu cầu sử dụng.
-- Ưu điểm: Máy chạy ổn định, pin còn tốt, đầy đủ phụ kiện đi kèm.
-
-Mình ưu tiên giao dịch trực tiếp tại khu vực ${product.school}${product.campus ? ` (${product.campus})` : ""} để các bạn có thể kiểm tra sản phẩm kỹ lưỡng trước khi mua.
-
-Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt tình. Vui lòng nhắn tin qua hệ thống chat để hẹn lịch xem máy hoặc hỏi thêm thông tin nhé. Cảm ơn mọi người đã quan tâm!Mình cần nhượng lại ${product.name} này. Sản phẩm vẫn còn sử dụng rất tốt, ngoại hình còn khá mới và chưa qua sửa chữa.
-
-Thông tin chi tiết:
-- Tình trạng: ${productCondition}
-- Lý do bán: Mình mới nâng cấp lên dòng cao hơn nên không còn nhu cầu sử dụng.
-- Ưu điểm: Máy chạy ổn định, pin còn tốt, đầy đủ phụ kiện đi kèm.
-
-Mình ưu tiên giao dịch trực tiếp tại khu vực ${product.school}${product.campus ? ` (${product.campus})` : ""} để các bạn có thể kiểm tra sản phẩm kỹ lưỡng trước khi mua.
-
-Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt tình. Vui lòng nhắn tin qua hệ thống chat để hẹn lịch xem máy hoặc hỏi thêm thông tin nhé. Cảm ơn mọi người đã quan tâm!Mình cần nhượng lại ${product.name} này. Sản phẩm vẫn còn sử dụng rất tốt, ngoại hình còn khá mới và chưa qua sửa chữa.
-
-Thông tin chi tiết:
-- Tình trạng: ${productCondition}
-- Lý do bán: Mình mới nâng cấp lên dòng cao hơn nên không còn nhu cầu sử dụng.
-- Ưu điểm: Máy chạy ổn định, pin còn tốt, đầy đủ phụ kiện đi kèm.
-
-Mình ưu tiên giao dịch trực tiếp tại khu vực ${product.school}${product.campus ? ` (${product.campus})` : ""} để các bạn có thể kiểm tra sản phẩm kỹ lưỡng trước khi mua.
-
-Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt tình. Vui lòng nhắn tin qua hệ thống chat để hẹn lịch xem máy hoặc hỏi thêm thông tin nhé. Cảm ơn mọi người đã quan tâm!`;
+  const productDescription = productDetail.description || "Chưa có mô tả chi tiết.";
 
   const specs = [
-    { label: "Danh mục", value: product.category || "Đang cập nhật" },
+    { label: "Danh mục", value: productDetail.categoryName || "Đang cập nhật" },
     { label: "Tình trạng", value: productCondition },
-    { label: "Khu vực", value: `${product.school}${product.campus ? ` • ${product.campus}` : ""}` },
-    { label: "Số hình ảnh", value: `${product.imageCount || 1} ảnh` },
+    {
+      label: "Khu vực",
+      value: `${product.school}${product.campus ? ` • ${product.campus}` : ""}`,
+    },
+    { label: "Số hình ảnh", value: `${imageList.length} ảnh` },
     { label: "Thời gian đăng", value: product.time || "Vừa xong" },
     { label: "Người bán", value: product.seller?.name || "Người bán ẩn danh" },
-    { label: "Đánh giá người bán", value: "Chưa có đánh giá" },
-    { label: "Lượt xem", value: `${Math.floor(product.id * 3.7)} lượt` },
-    { label: "Lượt thích", value: `${Math.floor(product.id * 1.2)} lượt` },
-    { label: "Lượt bình luận", value: `${Math.floor(product.id * 0.8)} bình luận` },
+    {
+      label: "Đánh giá người bán",
+      value: productDetail.sellerReputation
+        ? `${productDetail.sellerReputation.toFixed(1)}/5`
+        : "Chưa có đánh giá",
+    },
+    { label: "Lượt xem", value: `${productDetail.viewCount || 0} lượt` },
+    { label: "Lượt thích", value: `${productDetail.favoriteCount || 0} lượt` },
+    { label: "Lượt bình luận", value: `${productDetail.messageCount || 0} bình luận` },
   ];
 
   const infoTags = [
-    "Kèm phụ kiện",
-    `${productCondition}`,
-    `${product.imageCount || 1} ảnh thật`,
+    productCondition,
+    `${imageList.length} ảnh thật`,
+    productDetail.isNegotiable ? "Có thương lượng" : "Giá cố định",
   ];
 
   return (
@@ -142,7 +158,10 @@ Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt t�
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Breadcrumb
           items={[
-            { label: product.category || "Sản phẩm", href: `/search?category=${encodeURIComponent(product.category || "")}` },
+            {
+              label: product.category || "Sản phẩm",
+              href: `/search?category=${encodeURIComponent(product.category || "")}`,
+            },
             { label: product.name },
           ]}
         />
@@ -167,7 +186,7 @@ Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt t�
                   avatar: product.seller?.avatar,
                   rating: product.seller?.rating,
                   activityStatus: "Đang hoạt động",
-                  soldCount: Math.max(3, Math.floor(product.id / 2)),
+                  soldCount: 0,
                 }}
               />
             </div>
@@ -183,14 +202,11 @@ Giá cả có thể thương lượng nhẹ cho các bạn sinh viên nhiệt t�
           </div>
         </div>
 
-        <RelatedProducts 
-          products={relatedProducts} 
-          sellerName={product.seller?.name} 
-        />
+        <RelatedProducts products={relatedProducts} sellerName={product.seller?.name} />
 
-        <SimilarProducts 
-          products={PRODUCT_DATA} 
-          currentProductId={product.id} 
+        <SimilarProducts
+          products={similarProductsPool}
+          currentProductId={product.id}
           category={product.category}
         />
       </div>

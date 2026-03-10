@@ -66,7 +66,7 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/80 hover:bg-emerald-500 transition-colors cursor-pointer whitespace-nowrap"
           >
             <RefreshCw size={14} />
-            Gia hạn
+            Đã bán
           </button>
           <button
             onClick={onBulkDelete}

@@ -27,7 +27,7 @@ const PostItemPreview = ({ formData, inModal = false }: PostItemPreviewProps) =>
 
   const conditionLabel = {
     new: 'Mới 100%',
-    'like-new': 'Như mới 99%',
+    'like_new': 'Như mới 99%',
     used: 'Đã qua sử dụng',
     old: 'Cũ - vẫn tốt',
     broken: 'Hỏng / Linh kiện',

@@ -3,7 +3,7 @@
 export type PostStatus = 'active' | 'expired' | 'pending' | 'hidden' | 'sold';
 
 export interface ManagedPost {
-  id: number;
+  id: string;
   title: string;
   price: string;
   isFree: boolean;
@@ -11,7 +11,7 @@ export interface ManagedPost {
   imageCount: number;
   category: string;
   subcategory: string;
-  condition: 'new' | 'like-new' | 'used' | 'old' | 'broken';
+  condition: 'new' | 'like_new' | 'used' | 'old' | 'broken';
   school: string;
   campus?: string;
   status: PostStatus;

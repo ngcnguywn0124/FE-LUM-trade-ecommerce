@@ -5,7 +5,7 @@ import { Heart, Image as ImageIcon, MapPin } from "lucide-react";
 
 interface ProductProps {
   product: {
-    id: number;
+    id: string | number;
     name: string;
     price: string;
     school: string;

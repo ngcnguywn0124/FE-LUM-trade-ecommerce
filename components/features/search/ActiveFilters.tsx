@@ -32,8 +32,10 @@ const ActiveFilters = ({ filters, onRemoveFilter }: ActiveFiltersProps) => {
   if (filters.condition && filters.condition !== 'all') {
     const conditionLabels = {
       new: 'Mới 100%',
-      'like-new': 'Như mới',
+          'like_new': 'Như mới',
       used: 'Đã qua sử dụng',
+          old: 'Cũ',
+          broken: 'Hỏng',
     };
     activeFilters.push({
       key: 'condition',
