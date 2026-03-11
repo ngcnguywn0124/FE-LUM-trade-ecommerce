@@ -20,6 +20,7 @@ export interface ProductSummaryDto {
   isNegotiable: boolean;
   listingType: 'sell' | 'exchange' | 'both';
   status: 'available' | 'pending' | 'hidden' | 'expired' | 'sold' | 'deleted' | 'admin_hidden';
+  previousStatus: string | null;
   viewCount: number;
   favoriteCount: number;
   imageCount: number;
@@ -61,7 +62,8 @@ export interface ProductDetailDto {
   contactPhone: string | null;
   zaloLink: string | null;
   facebookLink: string | null;
-  status: 'available' | 'pending' | 'hidden' | 'expired' | 'sold' | 'deleted';
+  status: 'available' | 'pending' | 'hidden' | 'expired' | 'sold' | 'deleted' | 'admin_hidden';
+  previousStatus: string | null;
   viewCount: number;
   favoriteCount: number;
   messageCount: number;

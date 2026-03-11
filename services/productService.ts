@@ -33,6 +33,12 @@ const statusToManageStatus = (status: string): PostStatus => {
 const formatVnd = (price?: number | null, isFree?: boolean): string => {
   if (isFree) return 'Miễn phí';
   if (!price) return '0đ';
+  if (price >= 1000000000) {
+    return `${(price / 1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tỷ`;
+  }
+  if (price >= 1000000) {
+    return `${(price / 1000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} triệu`;
+  }
   return `${Math.round(price).toLocaleString('vi-VN')}đ`;
 };
 
@@ -111,28 +117,41 @@ export const mapDetailToCardProduct = (item: ProductDetailDto): Product => ({
   },
 });
 
-export const mapSummaryToManagedPost = (item: ProductSummaryDto): ManagedPost => ({
-  id: item.productId,
-  title: item.title,
-  price: normalizePriceForManage(item.price, item.isFree),
-  isFree: Boolean(item.isFree),
-  image: item.thumbnailUrl || FALLBACK_IMAGE,
-  imageCount: item.imageCount || 1,
-  category: item.categoryName || 'Khác',
-  subcategory: item.categoryName || 'Khác',
-  condition: (conditionToUi(item.condition) as ManagedPost['condition']) || 'used',
-  school: item.universityShortName || 'Đang cập nhật',
-  campus: item.campusName || undefined,
-  status: statusToManageStatus(item.status),
-  createdAt: item.createdAt,
-  expiresAt: item.expiresAt || item.createdAt,
-  renewedCount: item.renewalCount || 0,
-  stats: {
-    views: item.viewCount || 0,
-    favorites: item.favoriteCount || 0,
-    messages: 0,
-  },
-});
+export const mapSummaryToManagedPost = (item: ProductSummaryDto): ManagedPost => {
+  const formatPriceForManage = (price: number | null, isFree: boolean | null | undefined) => {
+    if (isFree) return 'Miễn phí';
+    if (!price) return '0đ';
+    if (price >= 1000000000) {
+      return `${(price / 1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tỷ`;
+    }
+    if (price >= 1000000) {
+      return `${(price / 1000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} triệu`;
+    }
+    return `${price.toLocaleString('vi-VN')}đ`;
+  };
+
+  return {
+    id: item.productId,
+    title: item.title,
+    price: formatPriceForManage(item.price, item.isFree),
+    isFree: Boolean(item.isFree),
+    image: item.thumbnailUrl || FALLBACK_IMAGE,
+    imageCount: item.imageCount || 1,
+    category: item.categoryName || 'Khác',
+    subcategory: item.categoryName || 'Khác',
+    condition: (conditionToUi(item.condition) as ManagedPost['condition']) || 'used',
+    school: item.universityShortName || 'Đang cập nhật',
+    campus: item.campusName || undefined,
+    status: statusToManageStatus(item.status),  previousStatus: item.previousStatus || undefined,    createdAt: item.createdAt,
+    expiresAt: item.expiresAt || item.createdAt,
+    renewedCount: item.renewalCount || 0,
+    stats: {
+      views: item.viewCount || 0,
+      favorites: item.favoriteCount || 0,
+      messages: 0,
+    },
+  };
+};
 
 export const computeAggregate = (posts: ManagedPost[]) => ({
   total: posts.length,

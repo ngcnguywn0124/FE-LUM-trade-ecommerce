@@ -80,7 +80,8 @@ const PostActionMenu: React.FC<PostActionMenuProps> = ({
               Xem tin đăng
             </button>
 
-            {post.status !== 'sold' && post.status !== 'expired' && post.status !== 'hidden' && !isAdminHidden && (
+            {((post.status !== 'sold' && post.status !== 'expired' && post.status !== 'hidden' && !isAdminHidden) || 
+             (isAdminHidden && post.previousStatus === 'pending')) && (
               <button
                 onClick={(e) => { e.stopPropagation(); onEdit(post.id); onClose(); }}
                 className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"

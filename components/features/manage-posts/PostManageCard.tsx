@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { ManagedPost, PostStatus } from '@/types/manage-posts';
 import {
   Eye, Heart, MessageCircle, RefreshCw,
-  Edit2, Clock, Images, CheckCircle2
+  Edit2, Clock, Images, CheckCircle2,AlertCircle
 } from 'lucide-react';
 import PostActionMenu from './PostActionMenu';
 
@@ -187,9 +187,17 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
           )}
           {/* Overlay for expired/hidden/admin_hidden */}
           {(post.status === 'expired' || post.status === 'hidden' || post.status === 'admin_hidden') && (
-            <div className={`absolute inset-0 flex items-center justify-center ${post.status === 'admin_hidden' ? 'bg-rose-900/40' : 'bg-black/30'}`}>
+            <div className={`absolute inset-0 flex items-center justify-center ${
+              post.status === 'admin_hidden' 
+                ? (post.previousStatus === 'pending' ? 'bg-amber-900/40' : 'bg-rose-900/40') 
+                : 'bg-black/30'
+            }`}>
               <span className="text-white text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded backdrop-blur-[2px]">
-                {post.status === 'expired' ? 'Hết hạn' : post.status === 'admin_hidden' ? 'Vi phạm' : 'Đã ẩn'}
+                {post.status === 'expired' 
+                  ? 'Hết hạn' 
+                  : post.status === 'admin_hidden' 
+                    ? (post.previousStatus === 'pending' ? 'Cảnh báo' : 'Vi phạm') 
+                    : 'Đã ẩn'}
               </span>
             </div>
           )}
@@ -226,12 +234,19 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
           {/* Metadata row */}
           <div className="flex flex-wrap items-center gap-1.5 mt-1">
             {/* Status badge */}
-            <span
-              className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${status.bg} ${status.text}`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-              {status.label}
-            </span>
+            {post.status === 'admin_hidden' && post.previousStatus === 'pending' ? (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                Cảnh báo vi phạm
+              </span>
+            ) : (
+              <span
+                className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${status.bg} ${status.text}`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                {status.label}
+              </span>
+            )}
             {/* Condition */}
             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
               {CONDITION_LABELS[post.condition]}
@@ -244,7 +259,7 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
               <span className="text-sm font-bold text-emerald-600">Miễn phí</span>
             ) : (
               <span className="text-sm font-bold text-rose-600">
-                {post.price}₫
+                {post.price}
               </span>
             )}
           </div>
@@ -273,7 +288,8 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
 
       {/* ── Quick Action Footer ── */}
       <div className="border-t border-gray-100 px-3.5 py-2 flex items-center gap-2">
-        {post.status !== 'sold' && post.status !== 'expired' && post.status !== 'hidden' && post.status !== 'admin_hidden' && (
+        {((post.status !== 'sold' && post.status !== 'expired' && post.status !== 'hidden' && post.status !== 'admin_hidden') || 
+         (post.status === 'admin_hidden' && post.previousStatus === 'pending')) && (
           <button
             onClick={() => onEdit(post.id)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
@@ -283,8 +299,25 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
           </button>
         )}
         {post.status === 'admin_hidden' ? (
-           <div className="flex items-center gap-1.5 flex-1">
-              <span className="text-[10px] uppercase font-bold tracking-wider bg-rose-50 text-rose-600 px-2 py-1 rounded border border-rose-100">Khóa do vi phạm</span>
+           <div className="flex items-center gap-1.5 flex-1 group/tooltip relative">
+              {post.previousStatus === 'pending' ? (
+                 <>
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 text-amber-600 rounded-lg border border-amber-100 cursor-help transition-colors hover:bg-amber-100">
+                       <AlertCircle size={14} className="shrink-0" />
+                    </div>
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full left-0 mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-20 shadow-xl border border-gray-800">
+                       <div className="font-bold mb-1 flex items-center gap-1 text-amber-400">
+                          <AlertCircle size={10} />
+                          THÔNG BÁO ADMIN
+                       </div>
+                       Tin đăng của bạn có nội dung chưa phù hợp. Vui lòng chỉnh sửa lại để hệ thống có thể duyệt bài.
+                       <div className="absolute top-full left-6 -mt-1 border-8 border-transparent border-t-gray-900" />
+                    </div>
+                 </>
+              ) : (
+                 <span className="text-[10px] uppercase font-bold tracking-wider bg-rose-50 text-rose-600 px-2 py-1 rounded border border-rose-100">Tin vi phạm</span>
+              )}
            </div>
         ) : post.status === 'hidden' && (
            <div className="flex items-center gap-1.5 flex-1">

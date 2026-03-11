@@ -34,6 +34,16 @@ const AdminProductManagement: React.FC = () => {
   // State for Dropdown Menu
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
+  const formatPrice = (price: number) => {
+    if (price >= 1000000000) {
+      return `${(price / 1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tỷ`;
+    }
+    if (price >= 1000000) {
+      return `${(price / 1000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} triệu`;
+    }
+    return `${price.toLocaleString('vi-VN')}đ`;
+  };
+
   const fetchProducts = useCallback(async (page: number, currentStatus: string, currentKeyword: string) => {
     setIsLoading(true);
     try {
@@ -244,7 +254,7 @@ const AdminProductManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <p className="text-sm font-bold text-emerald-600">
-                        {product.isFree ? 'Miễn phí' : `${product.price?.toLocaleString()}đ`}
+                        {product.isFree ? 'Miễn phí' : formatPrice(product.price ?? 0)}
                       </p>
                       <p className="text-xs text-gray-400">{new Date(product.createdAt).toLocaleDateString('vi-VN')}</p>
                     </td>

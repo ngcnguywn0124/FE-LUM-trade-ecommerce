@@ -68,9 +68,14 @@ const PostItemPage = ({ productId }: PostItemPageProps) => {
         }
 
         if (data.status === 'admin_hidden') {
-          toast.error('Tin đăng đang bị khóa do vi phạm, không thể chỉnh sửa');
-          router.push('/quan-ly-tin-dang');
-          return;
+          // Chỉ cho phép sửa nếu tin bị admin ẩn khi đang ở trạng thái 'pending'
+          if (data.previousStatus === 'pending') {
+            toast.info('Tin đăng đang chờ duyệt và bị Admin khóa. Bạn có thể chỉnh sửa để yêu cầu duyệt lại.');
+          } else {
+            toast.error('Tin đăng đang bị khóa do vi phạm, không thể chỉnh sửa');
+            router.push('/quan-ly-tin-dang');
+            return;
+          }
         }
 
         if (data.status === 'hidden') {

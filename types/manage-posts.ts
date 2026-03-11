@@ -15,6 +15,7 @@ export interface ManagedPost {
   school: string;
   campus?: string;
   status: PostStatus;
+  previousStatus?: string;
   createdAt: string;       // ISO date string
   expiresAt: string;       // ISO date string
   renewedCount: number;    // Số lần gia hạn
