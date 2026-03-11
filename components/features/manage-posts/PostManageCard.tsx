@@ -95,6 +95,7 @@ interface PostManageCardProps {
   onEdit: (id: string) => void;
   onToggleVisibility: (id: string) => void;
   onRenew: (id: string) => void;
+  onMarkAsSold: (id: string) => void;
   onDeleteRequest: (id: string) => void;
   onView: (id: string) => void;
 }
@@ -109,6 +110,7 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
   onEdit,
   onToggleVisibility,
   onRenew,
+  onMarkAsSold,
   onDeleteRequest,
   onView,
 }) => {
@@ -208,6 +210,7 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
                 onEdit={onEdit}
                 onToggleVisibility={onToggleVisibility}
                 onRenew={onRenew}
+                onMarkAsSold={onMarkAsSold}
                 onDelete={onDeleteRequest}
                 onView={onView}
               />

@@ -26,6 +26,7 @@ import {
   renewProduct,
   toggleHidden,
 } from '@/services/productService';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 const POSTS_PER_PAGE = 15;
 
@@ -46,6 +47,7 @@ const ManagePostsPage: React.FC = () => {
   const router = useRouter();
 
   const [posts, setPosts] = useState<ManagedPost[]>([]);
+  const [allPosts, setAllPosts] = useState<ManagedPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [filters, setFilters] = useState<ManagePostsFilters>({
@@ -75,10 +77,21 @@ const ManagePostsPage: React.FC = () => {
   const reloadMyPosts = useCallback(async (status: ManagePostsFilters['status']) => {
     setIsLoading(true);
     try {
-      const page = await getMyProducts(mapUiStatusToApiStatus(status), 0, 120);
-      setPosts(page.content.map(mapSummaryToManagedPost));
+      // Tải tất cả tin để tính toán aggregate chính xác
+      const allPage = await getMyProducts(undefined, 0, 500);
+      const mappedAll = allPage.content.map(mapSummaryToManagedPost);
+      setAllPosts(mappedAll);
+
+      // Nếu tab hiện tại là 'all', dùng luôn mappedAll, nếu không thì lọc hoặc fetch theo status
+      if (status === 'all') {
+        setPosts(mappedAll);
+      } else {
+        const filtered = mappedAll.filter(p => p.status === status);
+        setPosts(filtered);
+      }
     } catch {
       setPosts([]);
+      setAllPosts([]);
       toast.error('Không tải được danh sách tin đăng');
     } finally {
       setIsLoading(false);
@@ -89,7 +102,7 @@ const ManagePostsPage: React.FC = () => {
     reloadMyPosts(filters.status);
   }, [filters.status, reloadMyPosts]);
 
-  const aggregate = useMemo(() => computeAggregate(posts), [posts]);
+  const aggregate = useMemo(() => computeAggregate(allPosts), [allPosts]);
 
   const filteredPosts = useMemo(() => {
     const result = [...posts];
@@ -137,20 +150,21 @@ const ManagePostsPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSearchSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      setFilters((prev) => ({ ...prev, search: searchInput }));
-      setCurrentPage(1);
-    },
-    [searchInput],
-  );
-
   const handleClearSearch = useCallback(() => {
     setSearchInput('');
     setFilters((prev) => ({ ...prev, search: '' }));
     setCurrentPage(1);
   }, []);
+
+  // Debounce search: Tự động tìm kiếm sau khi người dùng ngừng nhập 500ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => ({ ...prev, search: searchInput }));
+      setCurrentPage(1);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const handleSelectPost = useCallback((id: string, checked: boolean) => {
     setSelectedIds((prev) => {
@@ -186,12 +200,12 @@ const ManagePostsPage: React.FC = () => {
   const handleToggleVisibility = useCallback(async (id: string) => {
     try {
       await toggleHidden(id);
-      setPosts((prev) =>
-        prev.map((p) => {
-          if (p.id !== id) return p;
-          return { ...p, status: p.status === 'active' ? 'hidden' : 'active' };
-        }),
-      );
+      const updateFn = (p: ManagedPost) => {
+        if (p.id !== id) return p;
+        return { ...p, status: p.status === 'active' ? 'hidden' : 'active' } as ManagedPost;
+      };
+      setPosts((prev) => prev.map(updateFn));
+      setAllPosts((prev) => prev.map(updateFn));
       toast.success('Đã thay đổi hiển thị tin đăng');
     } catch {
       toast.error('Không thể thay đổi hiển thị tin đăng');
@@ -199,27 +213,49 @@ const ManagePostsPage: React.FC = () => {
   }, []);
 
   const handleMarkSold = useCallback(async (id: string) => {
+    const post = posts.find((p) => p.id === id);
+    if (!post || post.status !== 'active') {
+      toast.error('Chỉ có thể đánh dấu đã bán cho tin đang trong trạng thái hiển thị');
+      return;
+    }
+
     try {
       await markAsSold(id);
-      setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'sold' } : p)));
+      const updateFn = (p: ManagedPost) => (p.id === id ? { ...p, status: 'sold' } as ManagedPost : p);
+      setPosts((prev) => prev.map(updateFn));
+      setAllPosts((prev) => prev.map(updateFn));
       toast.success('Đã đánh dấu đã bán');
     } catch {
       toast.error('Không thể đánh dấu đã bán');
     }
-  }, []);
+  }, [posts]);
 
   const handleRenew = useCallback(async (id: string) => {
     try {
       const updated = await renewProduct(id, 7);
-      setPosts((prev) =>
-        prev.map((p) => (p.id === id ? mapSummaryToManagedPost(updated as any) : p)),
-      );
+      const updatedPost = mapSummaryToManagedPost(updated as any);
+      const updateFn = (p: ManagedPost) => (p.id === id ? updatedPost : p);
+      setPosts((prev) => prev.map(updateFn));
+      setAllPosts((prev) => prev.map(updateFn));
       toast.success('Gia hạn tin đăng thành công 7 ngày');
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Không thể gia hạn tin đăng';
       toast.error(msg);
     }
   }, []);
+
+  // Lắng nghe tín hiệu Realtime qua WebSocket
+  useWebSocket(useCallback((message: string) => {
+    if (message.startsWith('PRODUCT_EXPIRED:')) {
+      const productId = message.split(':')[1];
+      const updateFn = (p: ManagedPost) => (p.id === productId ? { ...p, status: 'expired' } as ManagedPost : p);
+      setPosts((prev) => prev.map(updateFn));
+      setAllPosts((prev) => prev.map(updateFn));
+      toast.warning('Một tin đăng của bạn vừa hết hạn!', {
+        description: 'Hãy gia hạn để tiếp tục hiển thị tin.'
+      });
+    }
+  }, []));
 
   const handleDeleteRequest = useCallback((id: string) => {
     setDeleteModal({ isOpen: true, ids: [id] });
@@ -235,6 +271,7 @@ const ManagePostsPage: React.FC = () => {
     try {
       await Promise.all(ids.map((id) => deleteProductById(id)));
       setPosts((prev) => prev.filter((p) => !ids.includes(p.id)));
+      setAllPosts((prev) => prev.filter((p) => !ids.includes(p.id)));
       setSelectedIds(new Set());
       toast.success(`Đã xóa ${ids.length} tin đăng.`);
     } catch {
@@ -246,36 +283,52 @@ const ManagePostsPage: React.FC = () => {
 
   const handleBulkHide = useCallback(async () => {
     const ids = [...selectedIds];
+    const postsToHide = posts.filter(p => selectedIds.has(p.id));
+    
+    // Kiểm tra xem có bài nào đang chờ duyệt không
+    const hasPending = postsToHide.some(p => p.status === 'pending');
+    if (hasPending) {
+      toast.error('Không thể ẩn/hiện tin đang trong trạng thái chờ duyệt');
+      return;
+    }
 
     try {
       await Promise.all(ids.map((id) => toggleHidden(id)));
-      setPosts((prev) =>
-        prev.map((p) => {
-          if (!selectedIds.has(p.id)) return p;
-          return { ...p, status: p.status === 'active' ? 'hidden' : 'active' };
-        }),
-      );
+      const updateFn = (p: ManagedPost) => {
+        if (!selectedIds.has(p.id)) return p;
+        return { ...p, status: p.status === 'active' ? 'hidden' : 'active' } as ManagedPost;
+      };
+      setPosts((prev) => prev.map(updateFn));
+      setAllPosts((prev) => prev.map(updateFn));
       toast.success(`Đã cập nhật hiển thị ${selectedIds.size} tin đăng.`);
       handleDeselectAll();
     } catch {
       toast.error('Không thể cập nhật hiển thị hàng loạt');
     }
-  }, [selectedIds, handleDeselectAll]);
+  }, [selectedIds, handleDeselectAll, posts]);
 
   const handleBulkSold = useCallback(async () => {
     const ids = [...selectedIds];
+    const postsToSold = posts.filter((p) => selectedIds.has(p.id));
+
+    // Phải hiển thị tin thì mới cho cập nhật đã bán
+    const hasNonActive = postsToSold.some((p) => p.status !== 'active');
+    if (hasNonActive) {
+      toast.error('Chỉ có thể đánh dấu đã bán cho các tin đang trong trạng thái hiển thị');
+      return;
+    }
 
     try {
       await Promise.all(ids.map((id) => markAsSold(id)));
-      setPosts((prev) =>
-        prev.map((p) => (selectedIds.has(p.id) ? { ...p, status: 'sold' } : p)),
-      );
+      const updateFn = (p: ManagedPost) => (selectedIds.has(p.id) ? { ...p, status: 'sold' } as ManagedPost : p);
+      setPosts((prev) => prev.map(updateFn));
+      setAllPosts((prev) => prev.map(updateFn));
       toast.success(`Đã đánh dấu bán ${selectedIds.size} tin đăng.`);
       handleDeselectAll();
     } catch {
       toast.error('Không thể đánh dấu bán hàng loạt');
     }
-  }, [selectedIds, handleDeselectAll]);
+  }, [selectedIds, handleDeselectAll, posts]);
 
   const deleteSinglePost = posts.find(
     (p) => deleteModal.ids.length === 1 && p.id === deleteModal.ids[0],
@@ -304,17 +357,16 @@ const ManagePostsPage: React.FC = () => {
         />
 
         <div className="flex flex-wrap items-center gap-3">
-          <form
-            onSubmit={handleSearchSubmit}
+          <div
             className="flex-1 min-w-45 flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 h-10 focus-within:border-emerald-400 focus-within:shadow-emerald-100 transition-all"
           >
             <Search size={15} className="text-gray-400 shrink-0" />
             <input
               type="text"
-              placeholder="Tìm kiếm..."
+              placeholder="Tìm kiếm nhanh..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="flex-1 text-sm outline-none bg-transparent placeholder-gray-400"
+              className="flex-1 text-sm text-gray-700 outline-none bg-transparent placeholder:text-gray-400"
             />
             {searchInput && (
               <button
@@ -325,7 +377,7 @@ const ManagePostsPage: React.FC = () => {
                 <X size={14} />
               </button>
             )}
-          </form>
+          </div>
 
           <div className="relative">
             <button
@@ -429,6 +481,7 @@ const ManagePostsPage: React.FC = () => {
                   onEdit={handleEdit}
                   onToggleVisibility={handleToggleVisibility}
                   onRenew={handleRenew}
+                  onMarkAsSold={handleMarkSold}
                   onDeleteRequest={handleDeleteRequest}
                   onView={handleView}
                 />
@@ -450,7 +503,7 @@ const ManagePostsPage: React.FC = () => {
         onSelectAll={handleSelectAll}
         onDeselectAll={handleDeselectAll}
         onBulkHide={handleBulkHide}
-        onBulkRenew={handleBulkSold}
+        onBulkSold={handleBulkSold}
         onBulkDelete={handleBulkDeleteRequest}
         isAllSelected={isAllSelected}
       />

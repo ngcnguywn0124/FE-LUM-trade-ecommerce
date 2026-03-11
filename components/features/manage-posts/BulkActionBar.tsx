@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Eye, EyeOff, RefreshCw, Trash2, X, CheckSquare } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle2, Trash2, X, CheckSquare } from 'lucide-react';
 
 interface BulkActionBarProps {
   selectedCount: number;
@@ -9,7 +9,7 @@ interface BulkActionBarProps {
   onSelectAll: () => void;
   onDeselectAll: () => void;
   onBulkHide: () => void;
-  onBulkRenew: () => void;
+  onBulkSold: () => void;
   onBulkDelete: () => void;
   isAllSelected: boolean;
 }
@@ -20,7 +20,7 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
   onSelectAll,
   onDeselectAll,
   onBulkHide,
-  onBulkRenew,
+  onBulkSold,
   onBulkDelete,
   isAllSelected,
 }) => {
@@ -59,13 +59,13 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 transition-colors cursor-pointer whitespace-nowrap"
           >
             <EyeOff size={14} />
-            Ẩn
+            Ẩn/Hiện
           </button>
           <button
-            onClick={onBulkRenew}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/80 hover:bg-emerald-500 transition-colors cursor-pointer whitespace-nowrap"
+            onClick={onBulkSold}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/80 hover:bg-blue-500 transition-colors cursor-pointer whitespace-nowrap"
           >
-            <RefreshCw size={14} />
+            <CheckCircle2 size={14} />
             Đã bán
           </button>
           <button

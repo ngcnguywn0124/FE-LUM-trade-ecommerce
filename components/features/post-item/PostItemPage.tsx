@@ -9,7 +9,7 @@ import PostItemLocationContact from './PostItemLocationContact';
 import PostItemPreview from './PostItemPreview';
 import PostItemPricing from './PostItemPricing';
 import { PostItemErrors, PostItemFormData } from '../../../types/post';
-import { createProduct, getProductById, updateProduct } from '@/services/productService';
+import { createProduct, getProductById, setPrimaryImage, updateProduct } from '@/services/productService';
 import { getCategoryById } from '@/services/categoryService';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -51,6 +51,7 @@ const PostItemPage = ({ productId }: PostItemPageProps) => {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(!!productId);
   const previewUrlsRef = useRef<string[]>([]);
+  const originalImagesRef = useRef<any[]>([]);
 
   useEffect(() => {
     if (!productId) return;
@@ -65,6 +66,9 @@ const PostItemPage = ({ productId }: PostItemPageProps) => {
           router.push('/quan-ly-tin-dang');
           return;
         }
+
+        // Lưu bản gốc để lấy imageId sau này
+        originalImagesRef.current = data.images || [];
 
         // Xác định category cha và con
         let finalCategoryId = '';
@@ -234,6 +238,58 @@ const PostItemPage = ({ productId }: PostItemPageProps) => {
     setImageFiles((prev) => prev.filter((_, currentIndex) => currentIndex !== index));
   };
 
+  const onSetPrimaryImage = (index: number) => {
+    if (index === 0) return; // Đã là ảnh chính rồi
+
+    setFormData((prev) => {
+      const newPreviews = [...prev.imagePreviews];
+      const [target] = newPreviews.splice(index, 1);
+      newPreviews.unshift(target);
+      return { ...prev, imagePreviews: newPreviews };
+    });
+
+      setImageFiles((prev) => {
+      const newFiles = [...prev];
+      // Tìm vị trí của file mới trong mảng imageFiles
+      // Lưu ý: imagePreviews chứa cả ảnh cũ (từ URL) và ảnh mới (từ blob:)
+      // Chúng ta cần xác định xem 'index' đang trỏ vào ảnh cũ hay ảnh mới
+      
+      const targetPreview = formData.imagePreviews[index];
+      const isNewImage = targetPreview.startsWith('blob:');
+
+      if (isNewImage) {
+        // Tìm xem đây là file thứ mấy trong số các ảnh mới tính trong mảng imagePreviews
+        const currentNewImagesIndex = index;
+        const indexInImageFiles = formData.imagePreviews
+          .slice(0, currentNewImagesIndex)
+          .filter(p => p.startsWith('blob:')).length;
+        
+        // indexInImageFiles chính là index hiện tại của file đó trong imageFiles
+        if (indexInImageFiles < newFiles.length) {
+          const [targetFile] = newFiles.splice(indexInImageFiles, 1);
+          newFiles.unshift(targetFile);
+        }
+      }
+      
+      return newFiles;
+    });
+
+    // Nếu đang chỉnh sửa bài viết đã có sẵn trên server (có ID ảnh)
+    // Đối với ảnh CŨ (đã có URL từ server), ta cần gọi API setPrimaryImage ngay lập tức
+    if (productId) {
+      const targetPreview = formData.imagePreviews[index];
+      if (!targetPreview.startsWith('blob:')) {
+        // Tìm imageId từ dữ liệu gốc đã lưu
+        const originalImage = originalImagesRef.current.find(img => img.imageUrl === targetPreview);
+        if (originalImage?.imageId) {
+          setPrimaryImage(productId, originalImage.imageId)
+            .then(() => toast.success('Đã cập nhật ảnh bìa'))
+            .catch(() => toast.error('Không thể cập nhật ảnh bìa'));
+        }
+      }
+    }
+  };
+
   const validateForm = () => {
     const nextErrors: PostItemErrors = {};
 
@@ -322,12 +378,16 @@ const PostItemPage = ({ productId }: PostItemPageProps) => {
 
       if (productId) {
         await updateProduct(productId, payload, imageFiles);
+        toast.success('Cập nhật tin đăng thành công!');
       } else {
         await createProduct(payload, imageFiles);
+        toast.success('Đăng tin thành công! Tin của bạn đang chờ phê duyệt.');
       }
 
       setIsSubmitted(true);
+      router.push('/quan-ly-tin-dang');
     } catch {
+      toast.error(`Không thể ${productId ? 'cập nhật' : 'đăng'} tin. Vui lòng thử lại.`);
       setErrors((prev) => ({
         ...prev,
         title: `Không thể ${productId ? 'cập nhật' : 'đăng'} tin. Vui lòng kiểm tra lại dữ liệu và thử lại.`,
@@ -372,6 +432,7 @@ const PostItemPage = ({ productId }: PostItemPageProps) => {
               error={errors.imagePreviews}
               onAddImages={onAddImages}
               onRemoveImage={onRemoveImage}
+              onSetPrimary={onSetPrimaryImage}
             />
             <PostItemBasicInfo formData={formData} errors={errors} onFieldChange={onFieldChange} />
             <PostItemPricing formData={formData} errors={errors} onFieldChange={onFieldChange} />

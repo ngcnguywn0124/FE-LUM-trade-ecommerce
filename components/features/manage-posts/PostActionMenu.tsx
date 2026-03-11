@@ -3,7 +3,7 @@
 import React, { useRef, useEffect } from 'react';
 import { ManagedPost } from '@/types/manage-posts';
 import {
-  Eye, EyeOff, Edit2, RefreshCw, Trash2, ExternalLink, MoreVertical,
+  Eye, EyeOff, Edit2, RefreshCw, Trash2, ExternalLink, MoreVertical,CheckCircle2
 } from 'lucide-react';
 
 interface PostActionMenuProps {
@@ -14,6 +14,7 @@ interface PostActionMenuProps {
   onEdit: (id: string) => void;
   onToggleVisibility: (id: string) => void; // hide/show
   onRenew: (id: string) => void;
+  onMarkAsSold: (id: string) => void;
   onDelete: (id: string) => void;
   onView: (id: string) => void;
 }
@@ -26,6 +27,7 @@ const PostActionMenu: React.FC<PostActionMenuProps> = ({
   onEdit,
   onToggleVisibility,
   onRenew,
+  onMarkAsSold,
   onDelete,
   onView,
 }) => {
@@ -95,6 +97,16 @@ const PostActionMenu: React.FC<PostActionMenuProps> = ({
                 className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
               >
                 <RefreshCw size={15} className="text-emerald-500" />
+                Gia hạn tin đăng
+              </button>
+            )}
+
+            {post.status === 'active' && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onMarkAsSold(post.id); onClose(); }}
+                className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-blue-700 hover:bg-blue-50 transition-colors cursor-pointer"
+              >
+                <CheckCircle2 size={15} className="text-blue-500" />
                 Đánh dấu đã bán
               </button>
             )}

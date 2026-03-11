@@ -204,6 +204,10 @@ export async function updateProduct(id: string, payload: ProductRequestPayload, 
   return res.data.data;
 }
 
+export async function setPrimaryImage(productId: string, imageId: string): Promise<void> {
+  await apiClient.patch(`/products/${productId}/primary-image/${imageId}`);
+}
+
 export async function getMyProducts(status?: string, page = 0, size = 20): Promise<SpringPage<ProductSummaryDto>> {
   const res = await apiClient.get<ProductPageApiResponse>('/products/my', {
     params: {
