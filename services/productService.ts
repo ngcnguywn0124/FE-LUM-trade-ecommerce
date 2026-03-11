@@ -80,6 +80,7 @@ const buildProductFormData = (payload: ProductRequestPayload, images: File[]): F
 
 export const mapSummaryToCardProduct = (item: ProductSummaryDto): Product => ({
   id: item.productId,
+  slug: item.slug,
   name: item.title,
   price: formatVnd(item.price, item.isFree),
   school: item.universityShortName || 'Đang cập nhật',
@@ -99,6 +100,7 @@ export const mapSummaryToCardProduct = (item: ProductSummaryDto): Product => ({
 
 export const mapDetailToCardProduct = (item: ProductDetailDto): Product => ({
   id: item.productId,
+  slug: item.slug,
   name: item.title,
   price: formatVnd(item.price, item.isFree),
   school: item.universityShortName || 'Đang cập nhật',
@@ -132,6 +134,7 @@ export const mapSummaryToManagedPost = (item: ProductSummaryDto): ManagedPost =>
 
   return {
     id: item.productId,
+    slug: item.slug,
     title: item.title,
     price: formatPriceForManage(item.price, item.isFree),
     isFree: Boolean(item.isFree),

@@ -65,6 +65,7 @@ export interface ChatMessage {
 
 export interface MessageRelatedPost {
   id: number;
+  slug?: string;
   title: string;
   price: string;
   image: string;

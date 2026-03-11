@@ -15,6 +15,7 @@ import StickyMobileBar from "@/components/layout/StickyMobileBar";
 import { Product } from "@/types";
 import {
   getProductById,
+  getProductBySlug,
   getProducts,
   mapDetailToCardProduct,
   mapSummaryToCardProduct,
@@ -30,8 +31,8 @@ const conditionLabels: Record<string, string> = {
 };
 
 const ProductDetailPage = () => {
-  const params = useParams<{ id: string }>();
-  const productId = params.id;
+  const params = useParams<{ slug: string }>();
+  const slug = params.slug;
 
   const [productDetail, setProductDetail] = useState<ProductDetailDto | null>(null);
   const [relatedPool, setRelatedPool] = useState<Product[]>([]);
@@ -42,7 +43,8 @@ const ProductDetailPage = () => {
       setIsLoading(true);
 
       try {
-        const detail = await getProductById(productId);
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+        const detail = isUuid ? await getProductById(slug) : await getProductBySlug(slug);
         setProductDetail(detail);
 
         const related = await getProducts({ page: 0, size: 120, sort: "createdAt,desc" });
@@ -56,7 +58,7 @@ const ProductDetailPage = () => {
     };
 
     loadDetail();
-  }, [productId]);
+  }, [slug]);
 
   const product = useMemo(() => {
     if (!productDetail) return null;
@@ -132,29 +134,21 @@ const ProductDetailPage = () => {
       label: "Khu vực",
       value: `${product.school}${product.campus ? ` • ${product.campus}` : ""}`,
     },
-    { label: "Số hình ảnh", value: `${imageList.length} ảnh` },
-    { label: "Thời gian đăng", value: product.time || "Vừa xong" },
-    { label: "Người bán", value: product.seller?.name || "Người bán ẩn danh" },
-    {
-      label: "Đánh giá người bán",
-      value: productDetail.sellerReputation
-        ? `${productDetail.sellerReputation.toFixed(1)}/5`
-        : "Chưa có đánh giá",
-    },
-    { label: "Lượt xem", value: `${productDetail.viewCount || 0} lượt` },
-    { label: "Lượt thích", value: `${productDetail.favoriteCount || 0} lượt` },
-    { label: "Lượt bình luận", value: `${productDetail.messageCount || 0} bình luận` },
+    // Hiển thị các thông số kỹ thuật động từ backend
+    ...(productDetail.attributeValues?.map(attr => ({
+      label: attr.attributeName,
+      value: attr.value
+    })) || [])
   ];
 
   const infoTags = [
-    productCondition,
-    `${imageList.length} ảnh thật`,
-    productDetail.isNegotiable ? "Có thương lượng" : "Giá cố định",
+    // Hiển thị thêm các tags từ dữ liệu bài đăng
+    ...(productDetail.tags?.map(t => t.tagName) || [])
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-24 md:pb-12">
-      <StickyMobileBar />
+      <StickyMobileBar contactPhone={productDetail.contactPhone} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Breadcrumb
           items={[
@@ -180,13 +174,15 @@ const ProductDetailPage = () => {
                 campus={product.campus}
                 postedTime={product.time || "Vừa xong"}
                 infoTags={infoTags}
+                isNegotiable={productDetail.isNegotiable}
+                contactPhone={productDetail.contactPhone}
                 seller={{
                   id: product.seller?.id,
                   name: product.seller?.name || "Người bán ẩn danh",
                   avatar: product.seller?.avatar,
-                  rating: product.seller?.rating,
+                  rating: productDetail.sellerReputation ?? 0,
                   activityStatus: "Đang hoạt động",
-                  soldCount: 0,
+                  totalSales: productDetail.sellerTotalSales ?? 0,
                 }}
               />
             </div>

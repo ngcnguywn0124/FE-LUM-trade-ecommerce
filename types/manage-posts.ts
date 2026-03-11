@@ -4,6 +4,7 @@ export type PostStatus = 'active' | 'expired' | 'pending' | 'hidden' | 'sold' | 
 
 export interface ManagedPost {
   id: string;
+  slug?: string;
   title: string;
   price: string;
   isFree: boolean;

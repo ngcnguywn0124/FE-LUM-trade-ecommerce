@@ -103,7 +103,7 @@ interface PostManageCardProps {
   onRenew: (id: string) => void;
   onMarkAsSold: (id: string) => void;
   onDeleteRequest: (id: string) => void;
-  onView: (id: string) => void;
+  onView: (slug?: string, id?: string) => void;
 }
 
 const PostManageCard: React.FC<PostManageCardProps> = ({
@@ -169,7 +169,7 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
       <div className="flex gap-3 p-3.5">
         {/* ── Thumbnail ── */}
         <button
-          onClick={() => onView(post.id)}
+          onClick={() => onView(post.slug, post.id)}
           className="relative shrink-0 w-24 h-24 sm:w-25 sm:h-25 rounded-xl overflow-hidden bg-gray-100 cursor-pointer"
         >
           <Image
@@ -208,7 +208,7 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
           {/* Top row: title + menu */}
           <div className="flex items-start justify-between gap-2">
             <button
-              onClick={() => onView(post.id)}
+              onClick={() => onView(post.slug, post.id)}
               className="flex-1 min-w-0 text-left"
             >
               <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug hover:text-emerald-700 transition-colors cursor-pointer">

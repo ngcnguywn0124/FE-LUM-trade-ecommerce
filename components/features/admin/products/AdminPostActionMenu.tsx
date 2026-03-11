@@ -59,7 +59,7 @@ const AdminPostActionMenu: React.FC<AdminPostActionMenuProps> = ({
           <div className="py-1">
             {/* View Detail - Always visible */}
             <a 
-              href={`/bai-dang/${product.productId}`} 
+              href={`/bai-dang/${product.slug || product.productId}`} 
               target="_blank" 
               rel="noreferrer"
               className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"

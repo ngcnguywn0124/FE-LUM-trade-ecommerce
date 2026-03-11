@@ -16,7 +16,7 @@ interface PostActionMenuProps {
   onRenew: (id: string) => void;
   onMarkAsSold: (id: string) => void;
   onDelete: (id: string) => void;
-  onView: (id: string) => void;
+  onView: (slug?: string, id?: string) => void;
 }
 
 const PostActionMenu: React.FC<PostActionMenuProps> = ({
@@ -73,7 +73,7 @@ const PostActionMenu: React.FC<PostActionMenuProps> = ({
           )}
           <div className="py-1">
             <button
-              onClick={(e) => { e.stopPropagation(); onView(post.id); onClose(); }}
+              onClick={(e) => { e.stopPropagation(); onView(post.slug, post.id); onClose(); }}
               className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
             >
               <ExternalLink size={15} className="text-gray-400" />

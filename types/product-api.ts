@@ -45,6 +45,13 @@ export interface ProductImageDto {
   isPrimary: boolean;
 }
 
+export interface TagDto {
+  tagId: string;
+  tagName: string;
+  slug: string;
+  usageCount: number;
+}
+
 export interface ProductDetailDto {
   productId: string;
   title: string;
@@ -84,7 +91,17 @@ export interface ProductDetailDto {
   sellerName: string | null;
   sellerAvatar: string | null;
   sellerReputation: number | null;
+  sellerTotalSales: number | null;
   images: ProductImageDto[];
+  tags: TagDto[];
+  attributeValues: ProductAttributeValueResponse[];
+}
+
+export interface ProductAttributeValueResponse {
+  attributeId: string;
+  attributeName: string;
+  attributeType: string;
+  value: string;
 }
 
 export interface ProductFilterParams {

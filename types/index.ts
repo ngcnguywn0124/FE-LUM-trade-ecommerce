@@ -1,6 +1,7 @@
 // Product Types
 export interface Product {
   id: string | number;
+  slug?: string;
   name: string;
   price: string;
   school: string;

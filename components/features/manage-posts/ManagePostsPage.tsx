@@ -193,8 +193,8 @@ const ManagePostsPage: React.FC = () => {
     router.push(`/chinh-sua-tin/${id}`);
   }, [router]);
 
-  const handleView = useCallback((id: string) => {
-    router.push(`/bai-dang/${id}`);
+  const handleView = useCallback((slug?: string, id?: string) => {
+    router.push(`/bai-dang/${slug || id}`);
   }, [router]);
 
   const handleToggleVisibility = useCallback(async (id: string) => {
