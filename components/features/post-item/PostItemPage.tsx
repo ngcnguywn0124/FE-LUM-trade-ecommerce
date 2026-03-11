@@ -67,6 +67,18 @@ const PostItemPage = ({ productId }: PostItemPageProps) => {
           return;
         }
 
+        if (data.status === 'admin_hidden') {
+          toast.error('Tin đăng đang bị khóa do vi phạm, không thể chỉnh sửa');
+          router.push('/quan-ly-tin-dang');
+          return;
+        }
+
+        if (data.status === 'hidden') {
+          toast.error('Tin đăng đang ẩn, vui lòng Hiện tin trước khi chỉnh sửa');
+          router.push('/quan-ly-tin-dang');
+          return;
+        }
+
         // Lưu bản gốc để lấy imageId sau này
         originalImagesRef.current = data.images || [];
 

@@ -25,6 +25,7 @@ interface AuthState {
   user: UserResponse | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
   error: string | null;
 
   // Actions
@@ -46,7 +47,8 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
-  isLoading: false,
+  isLoading: true, // Default to true until checked
+  isInitialized: false,
   error: null,
 
   /**
@@ -55,13 +57,12 @@ export const useAuthStore = create<AuthState>((set) => ({
    * Không cần đọc token – browser tự gửi httpOnly cookie.
    */
   initialize: async () => {
-    set({ isLoading: true });
     try {
       const user = await authService.getCurrentUser();
-      set({ user, isAuthenticated: true, isLoading: false });
+      set({ user, isAuthenticated: true, isLoading: false, isInitialized: true });
     } catch {
       // Cookie không tồn tại / hết hạn → chưa đăng nhập
-      set({ user: null, isAuthenticated: false, isLoading: false });
+      set({ user: null, isAuthenticated: false, isLoading: false, isInitialized: true });
     }
   },
 

@@ -44,6 +44,12 @@ const STATUS_CONFIG: Record<
     text: 'text-blue-700',
     dot: 'bg-blue-400',
   },
+  admin_hidden: {
+    label: 'Vi phạm',
+    bg: 'bg-red-50',
+    text: 'text-red-700',
+    dot: 'bg-red-500',
+  },
 };
 
 const CONDITION_LABELS: Record<ManagedPost['condition'], string> = {
@@ -179,11 +185,11 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
               <span className="text-[10px] font-medium">{post.imageCount}</span>
             </div>
           )}
-          {/* Overlay for expired/hidden */}
-          {(post.status === 'expired' || post.status === 'hidden') && (
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-              <span className="text-white text-[10px] font-bold uppercase tracking-wide">
-                {post.status === 'expired' ? 'Hết hạn' : 'Đã ẩn'}
+          {/* Overlay for expired/hidden/admin_hidden */}
+          {(post.status === 'expired' || post.status === 'hidden' || post.status === 'admin_hidden') && (
+            <div className={`absolute inset-0 flex items-center justify-center ${post.status === 'admin_hidden' ? 'bg-rose-900/40' : 'bg-black/30'}`}>
+              <span className="text-white text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded backdrop-blur-[2px]">
+                {post.status === 'expired' ? 'Hết hạn' : post.status === 'admin_hidden' ? 'Vi phạm' : 'Đã ẩn'}
               </span>
             </div>
           )}
@@ -267,7 +273,7 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
 
       {/* ── Quick Action Footer ── */}
       <div className="border-t border-gray-100 px-3.5 py-2 flex items-center gap-2">
-        {post.status !== 'sold' && post.status !== 'expired' && (
+        {post.status !== 'sold' && post.status !== 'expired' && post.status !== 'hidden' && post.status !== 'admin_hidden' && (
           <button
             onClick={() => onEdit(post.id)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
@@ -275,6 +281,15 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
             <Edit2 size={13} />
             Chỉnh sửa
           </button>
+        )}
+        {post.status === 'admin_hidden' ? (
+           <div className="flex items-center gap-1.5 flex-1">
+              <span className="text-[10px] uppercase font-bold tracking-wider bg-rose-50 text-rose-600 px-2 py-1 rounded border border-rose-100">Khóa do vi phạm</span>
+           </div>
+        ) : post.status === 'hidden' && (
+           <div className="flex items-center gap-1.5 flex-1">
+              <span className="text-[10px] uppercase font-bold tracking-wider bg-gray-50 text-gray-500 px-2 py-1 rounded border border-gray-100 italic">Tin đang ẩn</span>
+           </div>
         )}
         {post.status === 'expired' && (
           <button

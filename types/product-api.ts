@@ -19,7 +19,7 @@ export interface ProductSummaryDto {
   isFree: boolean;
   isNegotiable: boolean;
   listingType: 'sell' | 'exchange' | 'both';
-  status: 'available' | 'pending' | 'hidden' | 'expired' | 'sold' | 'deleted';
+  status: 'available' | 'pending' | 'hidden' | 'expired' | 'sold' | 'deleted' | 'admin_hidden';
   viewCount: number;
   favoriteCount: number;
   imageCount: number;

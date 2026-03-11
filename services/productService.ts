@@ -24,9 +24,10 @@ const statusToManageStatus = (status: string): PostStatus => {
   if (status === 'available') return 'active';
   if (status === 'pending') return 'pending';
   if (status === 'hidden') return 'hidden';
+  if (status === 'admin_hidden') return 'admin_hidden';
   if (status === 'expired') return 'expired';
   if (status === 'sold') return 'sold';
-  return 'hidden';
+  return 'active';
 };
 
 const formatVnd = (price?: number | null, isFree?: boolean): string => {
@@ -138,7 +139,7 @@ export const computeAggregate = (posts: ManagedPost[]) => ({
   active: posts.filter((p) => p.status === 'active').length,
   expired: posts.filter((p) => p.status === 'expired').length,
   pending: posts.filter((p) => p.status === 'pending').length,
-  hidden: posts.filter((p) => p.status === 'hidden').length,
+  hidden: posts.filter((p) => p.status === 'hidden' || p.status === 'admin_hidden').length,
   sold: posts.filter((p) => p.status === 'sold').length,
   totalViews: posts.reduce((acc, p) => acc + p.stats.views, 0),
   totalFavorites: posts.reduce((acc, p) => acc + p.stats.favorites, 0),
@@ -217,6 +218,33 @@ export async function getMyProducts(status?: string, page = 0, size = 20): Promi
     },
   });
 
+  return res.data.data;
+}
+
+export async function getAllProductsForAdmin(
+  status?: string,
+  keyword?: string,
+  page = 0,
+  size = 20
+): Promise<SpringPage<ProductSummaryDto>> {
+  const res = await apiClient.get<ProductPageApiResponse>('/products/admin', {
+    params: { status, keyword, page, size },
+  });
+  return res.data.data;
+}
+
+export async function approveProduct(id: string): Promise<ProductDetailDto> {
+  const res = await apiClient.patch<ProductDetailApiResponse>(`/products/${id}/approve`);
+  return res.data.data;
+}
+
+export async function hideProductByAdmin(id: string): Promise<ProductDetailDto> {
+  const res = await apiClient.patch<ProductDetailApiResponse>(`/products/${id}/hide`);
+  return res.data.data;
+}
+
+export async function toggleFeatured(id: string): Promise<ProductDetailDto> {
+  const res = await apiClient.patch<ProductDetailApiResponse>(`/products/${id}/feature`);
   return res.data.data;
 }
 

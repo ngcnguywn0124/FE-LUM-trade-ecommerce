@@ -46,6 +46,7 @@ const PostActionMenu: React.FC<PostActionMenuProps> = ({
 
   const canRenew = post.status === 'expired' || post.status === 'active';
   const canToggle = post.status === 'active' || post.status === 'hidden';
+  const isAdminHidden = post.status === 'admin_hidden';
 
   return (
     <div className="relative" ref={menuRef}>
@@ -58,7 +59,18 @@ const PostActionMenu: React.FC<PostActionMenuProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+          {isAdminHidden && (
+            <div className="px-3.5 py-3 bg-rose-50 border-b border-rose-100">
+              <div className="flex items-center gap-2 text-rose-600 mb-1.5">
+                <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+                <span className="text-xs font-bold uppercase tracking-wider">Tin bị Admin khóa</span>
+              </div>
+              <p className="text-[11px] text-rose-500 leading-normal font-medium">
+                Tin đăng vi phạm quy định của hệ thống. Vui lòng liên hệ Admin để được hỗ trợ giải quyết.
+              </p>
+            </div>
+          )}
           <div className="py-1">
             <button
               onClick={(e) => { e.stopPropagation(); onView(post.id); onClose(); }}
@@ -68,7 +80,7 @@ const PostActionMenu: React.FC<PostActionMenuProps> = ({
               Xem tin đăng
             </button>
 
-            {post.status !== 'sold' && post.status !== 'expired' && (
+            {post.status !== 'sold' && post.status !== 'expired' && post.status !== 'hidden' && !isAdminHidden && (
               <button
                 onClick={(e) => { e.stopPropagation(); onEdit(post.id); onClose(); }}
                 className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
@@ -78,7 +90,7 @@ const PostActionMenu: React.FC<PostActionMenuProps> = ({
               </button>
             )}
 
-            {canToggle && (
+            {canToggle && !isAdminHidden && (
               <button
                 onClick={(e) => { e.stopPropagation(); onToggleVisibility(post.id); onClose(); }}
                 className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
@@ -91,7 +103,7 @@ const PostActionMenu: React.FC<PostActionMenuProps> = ({
               </button>
             )}
 
-            {canRenew && (
+            {canRenew && !isAdminHidden && (
               <button
                 onClick={(e) => { e.stopPropagation(); onRenew(post.id); onClose(); }}
                 className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
