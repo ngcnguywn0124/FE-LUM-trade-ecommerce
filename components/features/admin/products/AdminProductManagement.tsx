@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Search, CheckCircle, XCircle, Eye, 
   Trash2, Filter, MoreVertical, 
@@ -9,27 +9,47 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { useAuthStore } from '@/stores/authStore';
 import { 
   getAllProductsForAdmin, 
   approveProduct, 
   hideProductByAdmin,
   toggleFeatured,
-  deleteProductById
+  deleteProductById,
+  hardDeleteProductById
 } from '@/services/productService';
 import type { ProductSummaryDto } from '@/types/product-api';
 import Breadcrumb from '@/components/shared/Breadcrumb';
 import AdminPostActionMenu from './AdminPostActionMenu';
+import DeleteConfirmModal from '../../manage-posts/DeleteConfirmModal';
 
 const AdminProductManagement: React.FC = () => {
+  const { user } = useAuthStore();
+  const isSuperAdmin = user?.roles.includes('ROLE_SUPER_ADMIN');
+
   const [products, setProducts] = useState<ProductSummaryDto[]>([]);
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const [keyword, setKeyword] = useState('');
   const [status, setStatus] = useState<string>(''); // empty means all for admin
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // State for Confirm Modal
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    productId: string;
+    productTitle: string;
+    isHardDelete: boolean;
+  }>({
+    isOpen: false,
+    productId: '',
+    productTitle: '',
+    isHardDelete: false
+  });
   
   // State for Dropdown Menu
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -53,8 +73,15 @@ const AdminProductManagement: React.FC = () => {
         page,
         20
       );
-      setProducts(data.content);
-      setTotalElements(data.totalElements);
+
+      // Filter out 'deleted' posts for non-super admins
+      let filteredContent = data.content;
+      if (!isSuperAdmin) {
+        filteredContent = data.content.filter(p => p.status !== 'deleted');
+      }
+
+      setProducts(filteredContent);
+      setTotalElements(isSuperAdmin ? data.totalElements : filteredContent.length); // Total elements might be slightly off due to client-side filtering page by page
       setTotalPages(data.totalPages);
     } catch (error) {
       toast.error('Không thể tải danh sách tin đăng');
@@ -64,7 +91,7 @@ const AdminProductManagement: React.FC = () => {
     }
   }, []);
 
-  // Debounced search logic like user management page
+  // Debounced search logic
   useEffect(() => {
     const timer = setTimeout(() => {
       setKeyword(searchTerm);
@@ -114,14 +141,30 @@ const AdminProductManagement: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa tin "${title}"?`)) return;
+  const handleDelete = async (id: string, title: string, isHard: boolean = false) => {
+    setConfirmModal({
+      isOpen: true,
+      productId: id,
+      productTitle: title,
+      isHardDelete: isHard
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
     try {
-      await deleteProductById(id);
-      toast.success('Đã xóa tin đăng');
+      if (confirmModal.isHardDelete) {
+        await hardDeleteProductById(confirmModal.productId);
+      } else {
+        await deleteProductById(confirmModal.productId);
+      }
+      toast.success(confirmModal.isHardDelete ? 'Đã xóa vĩnh viễn tin đăng' : 'Đã xóa tin đăng');
+      setConfirmModal(prev => ({ ...prev, isOpen: false }));
       fetchProducts(currentPage, status, keyword);
     } catch (error) {
-      toast.error('Xóa tin thất bại');
+      toast.error('Xóa tin thất bại. Bạn có quyền SUPER_ADMIN không?');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -139,6 +182,8 @@ const AdminProductManagement: React.FC = () => {
         return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700">Hết hạn</span>;
       case 'admin_hidden':
         return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700">Vi phạm</span>;
+      case 'deleted':
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-300 text-gray-600">Đã xóa</span>;
       default:
         return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">{status}</span>;
     }
@@ -193,6 +238,9 @@ const AdminProductManagement: React.FC = () => {
               <option value="hidden">Admin ẩn</option>
               <option value="sold">Đã bán</option>
               <option value="expired">Hết hạn</option>
+              {isSuperAdmin && (
+                <option value="deleted">Đã xóa (Mềm)</option>
+              )}
             </select>
           </div>
         </div>
@@ -225,7 +273,7 @@ const AdminProductManagement: React.FC = () => {
                   <tr key={product.productId} className="hover:bg-gray-50/50 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100">
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-gray-100">
                           <Image 
                             src={product.thumbnailUrl || '/template.png'} 
                             alt={product.title}
@@ -305,6 +353,15 @@ const AdminProductManagement: React.FC = () => {
           </div>
         )}
       </div>
+
+      <DeleteConfirmModal
+        isLoading={isDeleting}
+        isOpen={confirmModal.isOpen}
+        count={1}
+        postTitle={confirmModal.productTitle}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 };

@@ -7,6 +7,7 @@ interface DeleteConfirmModalProps {
   isOpen: boolean;
   count: number; // Number of posts to delete (1 = single, >1 = bulk)
   postTitle?: string; // If single post, show title
+  isLoading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -15,6 +16,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   isOpen,
   count,
   postTitle,
+  isLoading = false,
   onConfirm,
   onCancel,
 }) => {
@@ -89,15 +91,24 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           <div className="flex gap-3 mt-5">
             <button
               onClick={onCancel}
-              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
             >
               Hủy bỏ
             </button>
             <button
               onClick={onConfirm}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-sm font-semibold text-white hover:bg-red-600 active:scale-95 transition-all cursor-pointer"
+              disabled={isLoading}
+              className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-sm font-semibold text-white hover:bg-red-600 active:scale-95 transition-all cursor-pointer disabled:bg-red-300 flex items-center justify-center gap-2"
             >
-              Xóa {isBulk ? `(${count})` : ''}
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Đang xử lý...
+                </>
+              ) : (
+                `Xóa ${isBulk ? `(${count})` : ''}`
+              )}
             </button>
           </div>
         </div>

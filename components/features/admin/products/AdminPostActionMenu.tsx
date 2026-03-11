@@ -6,6 +6,7 @@ import {
   CheckCircle, Star, XCircle 
 } from 'lucide-react';
 import { ProductSummaryDto } from '@/types/product-api';
+import { useAuthStore } from '@/stores/authStore';
 
 interface AdminPostActionMenuProps {
   product: ProductSummaryDto;
@@ -15,7 +16,7 @@ interface AdminPostActionMenuProps {
   onApprove: (id: string, title: string) => void;
   onHide: (id: string, title: string) => void;
   onToggleFeatured: (id: string, current: boolean) => void;
-  onDelete: (id: string, title: string) => void;
+  onDelete: (id: string, title: string, isHard?: boolean) => void;
 }
 
 const AdminPostActionMenu: React.FC<AdminPostActionMenuProps> = ({
@@ -29,6 +30,8 @@ const AdminPostActionMenu: React.FC<AdminPostActionMenuProps> = ({
   onDelete,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuthStore();
+  const isSuperAdmin = user?.roles.includes('ROLE_SUPER_ADMIN');
 
   useEffect(() => {
     if (!isOpen) return;
@@ -115,7 +118,7 @@ const AdminPostActionMenu: React.FC<AdminPostActionMenuProps> = ({
             <button 
               onClick={(e) => { 
                   e.stopPropagation(); 
-                  onDelete(product.productId, product.title); 
+                  onDelete(product.productId, product.title, false); 
                   onClose(); 
               }}
               className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer font-medium"
@@ -123,6 +126,21 @@ const AdminPostActionMenu: React.FC<AdminPostActionMenuProps> = ({
               <Trash2 size={15} />
               Xóa tin đăng
             </button>
+
+            {/* Hard Delete - Thường dành cho Super Admin quản lý */}
+            {isSuperAdmin && (
+              <button 
+                onClick={(e) => { 
+                    e.stopPropagation(); 
+                    onDelete(product.productId, product.title, true); 
+                    onClose(); 
+                }}
+                className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-red-700 hover:bg-red-50 transition-colors cursor-pointer font-bold border-t border-gray-100"
+              >
+                <Trash2 size={15} />
+                Xóa vĩnh viễn 
+              </button>
+            )}
           </div>
         </div>
       )}

@@ -287,3 +287,7 @@ export async function renewProduct(id: string, days = 30): Promise<ProductDetail
 export async function deleteProductById(id: string): Promise<void> {
   await apiClient.delete<ApiResponse<void>>(`/products/${id}`);
 }
+
+export async function hardDeleteProductById(id: string): Promise<void> {
+  await apiClient.delete<ApiResponse<void>>(`/products/${id}/hard`);
+}
