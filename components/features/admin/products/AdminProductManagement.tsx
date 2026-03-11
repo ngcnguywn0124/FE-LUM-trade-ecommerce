@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Search, CheckCircle, XCircle, Eye, 
-  Trash2, Filter, MoreHorizontal, 
+  Trash2, Filter, MoreVertical, 
   ChevronLeft, ChevronRight, Star,
   AlertCircle, ExternalLink, ShieldCheck
 } from 'lucide-react';
@@ -18,6 +18,7 @@ import {
 } from '@/services/productService';
 import type { ProductSummaryDto } from '@/types/product-api';
 import Breadcrumb from '@/components/shared/Breadcrumb';
+import AdminPostActionMenu from './AdminPostActionMenu';
 
 const AdminProductManagement: React.FC = () => {
   const [products, setProducts] = useState<ProductSummaryDto[]>([]);
@@ -29,6 +30,9 @@ const AdminProductManagement: React.FC = () => {
   const [keyword, setKeyword] = useState('');
   const [status, setStatus] = useState<string>(''); // empty means all for admin
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // State for Dropdown Menu
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const fetchProducts = useCallback(async (page: number, currentStatus: string, currentKeyword: string) => {
     setIsLoading(true);
@@ -118,11 +122,13 @@ const AdminProductManagement: React.FC = () => {
       case 'pending':
         return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Chờ duyệt</span>;
       case 'hidden':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">Đã ẩn (Admin)</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">Đang ẩn</span>;
       case 'sold':
         return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Đã bán</span>;
       case 'expired':
         return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700">Hết hạn</span>;
+      case 'admin_hidden':
+        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700">Vi phạm</span>;
       default:
         return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">{status}</span>;
     }
@@ -147,7 +153,7 @@ const AdminProductManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-visible">
         {/* Filters */}
         <div className="p-4 border-b border-gray-50 flex flex-wrap items-center gap-4">
           <form onSubmit={handleSearch} className="relative flex-1 min-w-[300px]">
@@ -182,7 +188,7 @@ const AdminProductManagement: React.FC = () => {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div className="overflow-visible">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50 text-gray-500 text-[11px] font-bold uppercase tracking-wider">
@@ -246,52 +252,17 @@ const AdminProductManagement: React.FC = () => {
                       {getStatusBadge(product.status)}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        {(product.status === 'pending' || product.status === 'admin_hidden') && (
-                          <button 
-                            onClick={() => handleApprove(product.productId, product.title)}
-                            className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                            title={product.status === 'admin_hidden' ? "Hiện lại tin" : "Duyệt tin"}
-                          >
-                            <CheckCircle size={18} />
-                          </button>
-                        )}
-                        
-                        {(product.status === 'available' || product.status === 'pending') && (
-                          <button 
-                             onClick={() => handleHide(product.productId, product.title)}
-                             className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                             title="Ẩn tin (Admin)"
-                          >
-                            <XCircle size={18} />
-                          </button>
-                        )}
-
-                        <button 
-                          onClick={() => handleToggleFeatured(product.productId, product.isFeatured)}
-                          className={`p-2 rounded-lg transition-colors ${product.isFeatured ? 'text-amber-500 hover:bg-amber-50' : 'text-gray-400 hover:bg-gray-50'}`}
-                          title={product.isFeatured ? 'Bỏ nổi bật' : 'Đánh dấu nổi bật'}
-                        >
-                          <Star size={18} fill={product.isFeatured ? 'currentColor' : 'none'} />
-                        </button>
-
-                        <a 
-                          href={`/bai-dang/${product.productId}`} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Xem trước"
-                        >
-                          <ExternalLink size={18} />
-                        </a>
-
-                        <button 
-                          onClick={() => handleDelete(product.productId, product.title)}
-                          className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                          title="Xóa tin"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                      <div className="flex items-center justify-end">
+                        <AdminPostActionMenu
+                           product={product}
+                           isOpen={openMenuId === product.productId}
+                           onToggle={() => setOpenMenuId(openMenuId === product.productId ? null : product.productId)}
+                           onClose={() => setOpenMenuId(null)}
+                           onApprove={handleApprove}
+                           onHide={handleHide}
+                           onToggleFeatured={handleToggleFeatured}
+                           onDelete={handleDelete}
+                        />
                       </div>
                     </td>
                   </tr>
