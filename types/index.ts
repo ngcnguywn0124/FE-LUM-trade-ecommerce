@@ -1,6 +1,7 @@
 // Product Types
 export interface Product {
-  id: number;
+  id: string | number;
+  slug?: string;
   name: string;
   price: string;
   school: string;
@@ -9,10 +10,10 @@ export interface Product {
   tag?: string;
   time?: string;
   imageCount?: number;
-  condition?: 'new' | 'like-new' | 'used' | 'for-parts';
+  condition?: 'new' | 'like_new' | 'used' | 'old' | 'broken' | 'for-parts';
   category?: string;
   seller?: {
-    id: number;
+    id: string | number;
     name: string;
     avatar?: string;
     rating?: number;
@@ -21,7 +22,7 @@ export interface Product {
 
 // Filter Types
 export type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'popular';
-export type ConditionFilter = 'all' | 'new' | 'like-new' | 'used';
+export type ConditionFilter = 'all' | 'new' | 'like_new' | 'used' | 'old' | 'broken';
 export type PriceRange = {
   min: number;
   max: number;

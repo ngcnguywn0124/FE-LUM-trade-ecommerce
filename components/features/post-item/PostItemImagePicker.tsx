@@ -7,9 +7,16 @@ interface PostItemImagePickerProps {
   error?: string;
   onAddImages: (files: FileList | null) => void;
   onRemoveImage: (index: number) => void;
+  onSetPrimary?: (index: number) => void;
 }
 
-const PostItemImagePicker = ({ imagePreviews, error, onAddImages, onRemoveImage }: PostItemImagePickerProps) => {
+const PostItemImagePicker = ({ 
+  imagePreviews, 
+  error, 
+  onAddImages, 
+  onRemoveImage,
+  onSetPrimary 
+}: PostItemImagePickerProps) => {
   return (
     <PostItemSection
       title="Hình ảnh sản phẩm"
@@ -44,27 +51,41 @@ const PostItemImagePicker = ({ imagePreviews, error, onAddImages, onRemoveImage 
         {imagePreviews.length > 0 ? (
           <div className="grid grid-cols-4 gap-2 sm:gap-3 pt-2">
             {imagePreviews.map((image, index) => (
-              <div key={`${image}-${index}`} className="relative rounded-lg overflow-hidden border border-gray-100 shadow-sm group aspect-square sm:aspect-auto">
+              <div 
+                key={`${image}-${index}`} 
+                className={`relative rounded-lg overflow-hidden border shadow-sm group aspect-square cursor-pointer transition-all ${
+                  index === 0 ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-gray-100 hover:border-emerald-300'
+                }`}
+                onClick={() => onSetPrimary?.(index)}
+              >
                 <Image
                   src={image}
                   alt={`Ảnh sản phẩm ${index + 1}`}
-                  width={320}
-                  height={112}
+                  fill
                   unoptimized
-                  className="h-full sm:h-28 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <button
                   type="button"
-                  onClick={() => onRemoveImage(index)}
-                  className="absolute top-1.5 right-1.5 h-6 w-6 rounded-lg bg-black/50 text-white flex items-center justify-center hover:bg-red-500 transition-colors cursor-pointer backdrop-blur-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveImage(index);
+                  }}
+                  className="absolute top-1.5 right-1.5 h-6 w-6 rounded-lg bg-black/50 text-white flex items-center justify-center hover:bg-red-500 transition-colors cursor-pointer backdrop-blur-sm z-10"
                 >
                   <Trash2 size={12} />
                 </button>
                 {index === 0 ? (
-                  <span className="absolute left-1.5 bottom-1.5 rounded bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm uppercase tracking-wider">
+                  <span className="absolute left-1.5 bottom-1.5 rounded bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm uppercase tracking-wider z-10">
                     Ảnh bìa
                   </span>
-                ) : null}
+                ) : (
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <span className="bg-white/90 text-gray-800 text-[10px] font-bold px-2 py-1 rounded shadow-sm">
+                      Đặt làm ảnh bìa?
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
           </div>

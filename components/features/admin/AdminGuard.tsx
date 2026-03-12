@@ -20,7 +20,7 @@ export default function AdminGuard({
   children,
   allowedRoles = ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN'],
 }: AdminGuardProps) {
-  const { isAuthenticated, isLoading, user } = useAuthStore();
+  const { isAuthenticated, isLoading, isInitialized, user } = useAuthStore();
   const router = useRouter();
 
   const hasRole =
@@ -28,12 +28,14 @@ export default function AdminGuard({
     user?.roles?.some((r) => allowedRoles.includes(r));
 
   useEffect(() => {
-    if (!isLoading && (!isAuthenticated || !hasRole)) {
-      router.replace('/');
+    if (isInitialized && !isLoading) {
+      if (!isAuthenticated || !hasRole) {
+        router.replace('/');
+      }
     }
-  }, [isLoading, isAuthenticated, hasRole, router]);
+  }, [isInitialized, isLoading, isAuthenticated, hasRole, router]);
 
-  if (isLoading) {
+  if (!isInitialized || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />

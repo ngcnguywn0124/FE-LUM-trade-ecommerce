@@ -1,9 +1,10 @@
 // Types for Manage Posts feature
 
-export type PostStatus = 'active' | 'expired' | 'pending' | 'hidden' | 'sold';
+export type PostStatus = 'active' | 'expired' | 'pending' | 'hidden' | 'sold' | 'admin_hidden';
 
 export interface ManagedPost {
-  id: number;
+  id: string;
+  slug?: string;
   title: string;
   price: string;
   isFree: boolean;
@@ -11,10 +12,11 @@ export interface ManagedPost {
   imageCount: number;
   category: string;
   subcategory: string;
-  condition: 'new' | 'like-new' | 'used' | 'old' | 'broken';
+  condition: 'new' | 'like_new' | 'used' | 'old' | 'broken';
   school: string;
   campus?: string;
   status: PostStatus;
+  previousStatus?: string;
   createdAt: string;       // ISO date string
   expiresAt: string;       // ISO date string
   renewedCount: number;    // Số lần gia hạn

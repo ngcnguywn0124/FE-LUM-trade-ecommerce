@@ -22,13 +22,15 @@ interface ProductSummaryProps {
   campus?: string;
   postedTime: string;
   infoTags: string[];
+  isNegotiable?: boolean;
+  contactPhone?: string | null;
   seller: {
-    id?: number;
+    id?: string | number;
     name: string;
     avatar?: string;
     rating?: number;
     activityStatus?: string;
-    soldCount?: number;
+    totalSales?: number;
   };
 }
 
@@ -39,16 +41,19 @@ const ProductSummary = ({
   campus,
   postedTime,
   infoTags,
+  isNegotiable = true,
+  contactPhone,
   seller,
 }: ProductSummaryProps) => {
   const parsedPrice = useMemo(() => Number(price.replace(/[^\d]/g, "")) || 0, [price]);
-  const sellerRating = (seller.rating || 4.5).toFixed(1);
+  const sellerRating = (seller.rating ?? 4.5).toFixed(1);
   const sellerActivityStatus = seller.activityStatus || "Đang hoạt động";
-  const sellerSoldCount = seller.soldCount ?? 0;
+  const sellerSoldCount = seller.totalSales ?? 0;
   const sellerProfileHref = seller.id ? `/tai-khoan/${seller.id}` : undefined;
   const [offerPrice, setOfferPrice] = useState(
     parsedPrice ? Math.round(parsedPrice * 0.9) : 100000
   );
+  const [shownPhone, setShownPhone] = useState<string | null>(null);
 
   const formattedOfferPrice = useMemo(
     () => `${Math.max(offerPrice, 0).toLocaleString("vi-VN")}đ`,
@@ -56,6 +61,10 @@ const ProductSummary = ({
   );
 
   const quickOfferRates = [0.95, 0.9, 0.85];
+
+  const handleShowPhone = () => {
+    setShownPhone(contactPhone || "Chưa cập nhật");
+  };
 
   return (
     <section className="h-full rounded-2xl p-1">
@@ -99,42 +108,57 @@ const ProductSummary = ({
           <MessageCircle size={18} />
           Nhắn tin người bán
         </button>
-        <button className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-          <PhoneCall size={18} />
-          Yêu cầu số điện thoại
-        </button>
-      </div>
-
-      <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 sm:p-4">
-        <p className="text-sm font-semibold text-gray-900">Deal giá với người bán</p>
-        <p className="mt-1 text-xs text-gray-600">Đề xuất mức giá hợp lý để bắt đầu thương lượng nhanh hơn</p>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          {quickOfferRates.map((rate) => (
-            <button
-              key={rate}
-              onClick={() => setOfferPrice(Math.round(parsedPrice * rate))}
-              className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
-            >
-              {Math.round(rate * 100)}% giá niêm yết
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-          <input
-            type="number"
-            min={0}
-            value={offerPrice}
-            onChange={(event) => setOfferPrice(Number(event.target.value) || 0)}
-            className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 outline-none focus:border-emerald-500"
-            aria-label="Giá đề xuất"
-          />
-          <button className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">
-            Gửi đề xuất {formattedOfferPrice}
+        {shownPhone ? (
+          <a
+            href={`tel:${shownPhone}`}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-900 bg-white px-4 py-3 text-sm font-bold text-emerald-700 hover:bg-gray-100 transition-colors cursor-pointer"
+          >
+            <PhoneCall size={18} />
+            {shownPhone}
+          </a>
+        ) : (
+          <button
+            onClick={handleShowPhone}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+          >
+            <PhoneCall size={18} />
+            Yêu cầu số điện thoại
           </button>
-        </div>
+        )}
       </div>
+
+      {isNegotiable && (
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 sm:p-4">
+          <p className="text-sm font-semibold text-gray-900">Deal giá với người bán</p>
+          <p className="mt-1 text-xs text-gray-600">Đề xuất mức giá hợp lý để bắt đầu thương lượng nhanh hơn</p>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            {quickOfferRates.map((rate) => (
+              <button
+                key={rate}
+                onClick={() => setOfferPrice(Math.round(parsedPrice * rate))}
+                className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
+              >
+                {Math.round(rate * 100)}% giá niêm yết
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              type="number"
+              min={0}
+              value={offerPrice}
+              onChange={(event) => setOfferPrice(Number(event.target.value) || 0)}
+              className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 outline-none focus:border-emerald-500"
+              aria-label="Giá đề xuất"
+            />
+            <button className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">
+              Gửi đề xuất {formattedOfferPrice}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="mt-5 border-t border-gray-200 pt-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Người đăng tin</p>
@@ -200,7 +224,17 @@ const ProductSummary = ({
           <Flag size={16} />
           Báo xấu
         </button>
-        <button className="inline-flex items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors sm:col-span-1 col-span-2 cursor-pointer">
+        <button 
+          onClick={() => {
+            const element = document.getElementById("seller-other-posts");
+            if (element) {
+              const yOffset = -100; // Khoảng cách offset để không bị header che mất
+              const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+              window.scrollTo({ top: y, behavior: "smooth" });
+            }
+          }}
+          className="inline-flex items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors sm:col-span-1 col-span-2 cursor-pointer"
+        >
           Xem thêm tin người bán
         </button>
       </div>

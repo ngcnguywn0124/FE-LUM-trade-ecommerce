@@ -6,15 +6,20 @@ import Breadcrumb from '@/components/shared/Breadcrumb';
 import PostItemBasicInfo from './PostItemBasicInfo';
 import PostItemImagePicker from './PostItemImagePicker';
 import PostItemLocationContact from './PostItemLocationContact';
+import PostItemDescription from './PostItemDescription';
 import PostItemPreview from './PostItemPreview';
 import PostItemPricing from './PostItemPricing';
 import { PostItemErrors, PostItemFormData } from '../../../types/post';
+import { createProduct, getProductById, setPrimaryImage, updateProduct } from '@/services/productService';
+import { getCategoryById } from '@/services/categoryService';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 const initialFormData: PostItemFormData = {
   title: '',
   categoryId: '',
   subcategoryId: '',
-  condition: 'like-new',
+  condition: 'like_new',
   price: '',
   isFree: false,
   negotiable: false,
@@ -33,13 +38,114 @@ const initialFormData: PostItemFormData = {
   expiryDays: 30,
 };
 
-const PostItemPage = () => {
+interface PostItemPageProps {
+  productId?: string;
+}
+
+const PostItemPage = ({ productId }: PostItemPageProps) => {
+  const router = useRouter();
   const [formData, setFormData] = useState<PostItemFormData>(initialFormData);
   const [errors, setErrors] = useState<PostItemErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [isLoading, setIsLoading] = useState(!!productId);
   const previewUrlsRef = useRef<string[]>([]);
+  const originalImagesRef = useRef<any[]>([]);
+
+  useEffect(() => {
+    if (!productId) return;
+
+    const loadProductData = async () => {
+      setIsLoading(true);
+      try {
+        const data: any = await getProductById(productId);
+
+        if (data.status === 'expired') {
+          toast.error('Tin đăng đã hết hạn, vui lòng gia hạn để chỉnh sửa');
+          router.push('/quan-ly-tin-dang');
+          return;
+        }
+
+        if (data.status === 'admin_hidden') {
+          // Chỉ cho phép sửa nếu tin bị admin ẩn khi đang ở trạng thái 'pending'
+          //  {
+          //   toast.info('Tin đăng đang chờ duyệt và bị Admin khóa. Bạn có thể chỉnh sửa để yêu cầu duyệt lại.');
+          // } 
+          if (data.previousStatus !== 'pending') {
+            toast.error('Tin đăng đang bị khóa do vi phạm, không thể chỉnh sửa');
+            router.push('/quan-ly-tin-dang');
+            return;
+          }
+        }
+
+        if (data.status === 'hidden') {
+          toast.error('Tin đăng đang ẩn, vui lòng Hiện tin trước khi chỉnh sửa');
+          router.push('/quan-ly-tin-dang');
+          return;
+        }
+
+        // Lưu bản gốc để lấy imageId sau này
+        originalImagesRef.current = data.images || [];
+
+        // Xác định category cha và con
+        let finalCategoryId = '';
+        let finalSubcategoryId = '';
+
+        if (data.categoryId) {
+          try {
+            const categoryDetail = await getCategoryById(data.categoryId);
+            if (categoryDetail.parentCategoryId) {
+              // Nếu category này có cha, thì nó là subcategory
+              finalCategoryId = categoryDetail.parentCategoryId;
+              finalSubcategoryId = data.categoryId;
+            } else {
+              // Nếu category này không có cha, nó là category chính
+              finalCategoryId = data.categoryId;
+              finalSubcategoryId = '';
+            }
+          } catch (err) {
+            console.error('Failed to fetch category detail:', err);
+            finalCategoryId = data.categoryId;
+          }
+        }
+
+        setFormData({
+          title: data.title,
+          categoryId: finalCategoryId,
+          subcategoryId: finalSubcategoryId,
+          condition: data.condition,
+          price: data.price?.toString() || '',
+          isFree: data.isFree,
+          negotiable: data.isNegotiable,
+          tags: data.tags?.map((t: any) => t.tagName) || [],
+          description: data.description,
+          technicalSpecs:
+            data.attributeValues?.map((av: any) => ({
+              key: av.attributeId,
+              value: av.value,
+            })) || [],
+          schoolId: data.universityId || '',
+          campusId: data.campusId || '',
+          meetingPoint: data.meetingPoint || '',
+          transactionType: data.transactionType || 'meetup',
+          contactName: data.contactName || '',
+          contactPhone: data.contactPhone || '',
+          zaloLink: data.zaloLink || '',
+          facebookLink: data.facebookLink || '',
+          imagePreviews: data.images.map((img: any) => img.imageUrl),
+          expiryDays: data.expiryDays || 30,
+        });
+      } catch (err) {
+        console.error('Failed to load product:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProductData();
+  }, [productId]);
 
   useEffect(() => {
     previewUrlsRef.current = formData.imagePreviews;
@@ -47,7 +153,12 @@ const PostItemPage = () => {
 
   useEffect(() => {
     return () => {
-      previewUrlsRef.current.forEach((preview) => URL.revokeObjectURL(preview));
+      // Chỉ revoke những blob do chúng ta tạo ra (ko phải từ API)
+      previewUrlsRef.current.forEach((preview) => {
+        if (preview.startsWith('blob:')) {
+          URL.revokeObjectURL(preview);
+        }
+      });
     };
   }, []);
 
@@ -79,12 +190,12 @@ const PostItemPage = () => {
     const checks = [
       formData.title.trim().length >= 10,
       !!formData.categoryId,
-      !!formData.subcategoryId,
+      !!formData.subcategoryId || !!productId, // Cho mẫu chỉnh sửa thì có thể ko chọn lại subcat
       formData.isFree || Number(formData.price) > 0,
       formData.description.trim().length >= 30,
       !!formData.schoolId,
       !!formData.campusId,
-      formData.meetingPoint.trim().length >= 5,
+      formData.transactionType === 'delivery' || formData.meetingPoint.trim().length >= 5,
       !!formData.transactionType,
       formData.contactName.trim().length > 0,
       /^\d{10,11}$/.test(formData.contactPhone),
@@ -93,7 +204,7 @@ const PostItemPage = () => {
 
     const passed = checks.filter(Boolean).length;
     return Math.round((passed / checks.length) * 100);
-  }, [formData]);
+  }, [formData, productId]);
 
   const onFieldChange = <K extends keyof PostItemFormData>(field: K, value: PostItemFormData[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -120,6 +231,7 @@ const PostItemPage = () => {
       ...prev,
       imagePreviews: [...prev.imagePreviews, ...nextPreviews],
     }));
+    setImageFiles((prev) => [...prev, ...nextFiles]);
 
     setErrors((prev) => ({ ...prev, imagePreviews: undefined }));
     setIsSubmitted(false);
@@ -128,12 +240,73 @@ const PostItemPage = () => {
   const onRemoveImage = (index: number) => {
     setFormData((prev) => {
       const target = prev.imagePreviews[index];
-      if (target) URL.revokeObjectURL(target);
+      if (target && target.startsWith('blob:')) {
+        URL.revokeObjectURL(target);
+      }
       return {
         ...prev,
         imagePreviews: prev.imagePreviews.filter((_, currentIndex) => currentIndex !== index),
       };
     });
+    // Nếu imageFiles có file ở index tương ứng thì xóa, nhưng cẩn thận logic index vì imageFiles 
+    // không chứa danh sách ảnh cũ từ server.
+    // Tạm thời chỉ xóa imageFiles nếu index khớp với phần ảnh mới (phụ thuộc vào logic ghép mảng)
+    // Nhưng thiết kế hiện tại imagePreviews chứa cả cũ và mới. 
+    // Cho đơn giản, khi chỉnh sửa bài đăng, nếu họ xóa ảnh cũ, chúng ta cần cơ chế báo backend xóa.
+    // TODO: Cải thiện logic sync ảnh cũ/mới
+    setImageFiles((prev) => prev.filter((_, currentIndex) => currentIndex !== index));
+  };
+
+  const onSetPrimaryImage = (index: number) => {
+    if (index === 0) return; // Đã là ảnh chính rồi
+
+    setFormData((prev) => {
+      const newPreviews = [...prev.imagePreviews];
+      const [target] = newPreviews.splice(index, 1);
+      newPreviews.unshift(target);
+      return { ...prev, imagePreviews: newPreviews };
+    });
+
+      setImageFiles((prev) => {
+      const newFiles = [...prev];
+      // Tìm vị trí của file mới trong mảng imageFiles
+      // Lưu ý: imagePreviews chứa cả ảnh cũ (từ URL) và ảnh mới (từ blob:)
+      // Chúng ta cần xác định xem 'index' đang trỏ vào ảnh cũ hay ảnh mới
+      
+      const targetPreview = formData.imagePreviews[index];
+      const isNewImage = targetPreview.startsWith('blob:');
+
+      if (isNewImage) {
+        // Tìm xem đây là file thứ mấy trong số các ảnh mới tính trong mảng imagePreviews
+        const currentNewImagesIndex = index;
+        const indexInImageFiles = formData.imagePreviews
+          .slice(0, currentNewImagesIndex)
+          .filter(p => p.startsWith('blob:')).length;
+        
+        // indexInImageFiles chính là index hiện tại của file đó trong imageFiles
+        if (indexInImageFiles < newFiles.length) {
+          const [targetFile] = newFiles.splice(indexInImageFiles, 1);
+          newFiles.unshift(targetFile);
+        }
+      }
+      
+      return newFiles;
+    });
+
+    // Nếu đang chỉnh sửa bài viết đã có sẵn trên server (có ID ảnh)
+    // Đối với ảnh CŨ (đã có URL từ server), ta cần gọi API setPrimaryImage ngay lập tức
+    if (productId) {
+      const targetPreview = formData.imagePreviews[index];
+      if (!targetPreview.startsWith('blob:')) {
+        // Tìm imageId từ dữ liệu gốc đã lưu
+        const originalImage = originalImagesRef.current.find(img => img.imageUrl === targetPreview);
+        if (originalImage?.imageId) {
+          setPrimaryImage(productId, originalImage.imageId)
+            .then(() => toast.success('Đã cập nhật ảnh bìa'))
+            .catch(() => toast.error('Không thể cập nhật ảnh bìa'));
+        }
+      }
+    }
   };
 
   const validateForm = () => {
@@ -141,8 +314,6 @@ const PostItemPage = () => {
 
     if (formData.title.trim().length < 10) nextErrors.title = 'Tiêu đề cần ít nhất 10 ký tự.';
     if (!formData.categoryId) nextErrors.categoryId = 'Vui lòng chọn danh mục.';
-    if (!formData.subcategoryId) nextErrors.subcategoryId = 'Vui lòng chọn danh mục con.';
-
     const priceValue = Number(formData.price);
     if (!formData.isFree && (!formData.price || Number.isNaN(priceValue) || priceValue <= 0)) {
       nextErrors.price = 'Giá bán phải lớn hơn 0.';
@@ -196,9 +367,53 @@ const PostItemPage = () => {
     }
 
     setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    setIsSubmitting(false);
-    setIsSubmitted(true);
+    try {
+      const payload: any = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        categoryId: formData.subcategoryId || formData.categoryId,
+        condition: formData.condition,
+        price: formData.isFree ? undefined : Number(formData.price),
+        isFree: formData.isFree,
+        isNegotiable: formData.negotiable,
+        listingType: formData.isFree ? 'exchange' : 'sell',
+        transactionType: formData.transactionType,
+        meetingPoint: formData.transactionType === 'delivery' ? undefined : formData.meetingPoint,
+        universityId: formData.schoolId,
+        campusId: formData.campusId,
+        contactName: formData.contactName,
+        contactPhone: formData.contactPhone,
+        expireDays: formData.expiryDays,
+        zaloLink: formData.zaloLink || undefined,
+        facebookLink: formData.facebookLink || undefined,
+        newTagNames: formData.tags,
+        attributeValues: formData.technicalSpecs
+          .filter((s) => s.key && s.value)
+          .map((s) => ({
+            attributeId: s.key,
+            value: s.value,
+          })),
+      };
+
+      if (productId) {
+        await updateProduct(productId, payload, imageFiles);
+        toast.success('Cập nhật tin đăng thành công!');
+      } else {
+        await createProduct(payload, imageFiles);
+        toast.success('Đăng tin thành công! Tin của bạn đang chờ phê duyệt.');
+      }
+
+      setIsSubmitted(true);
+      router.push('/quan-ly-tin-dang');
+    } catch {
+      toast.error(`Không thể ${productId ? 'cập nhật' : 'đăng'} tin. Vui lòng thử lại.`);
+      setErrors((prev) => ({
+        ...prev,
+        title: `Không thể ${productId ? 'cập nhật' : 'đăng'} tin. Vui lòng kiểm tra lại dữ liệu và thử lại.`,
+      }));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -209,9 +424,13 @@ const PostItemPage = () => {
         <div className="mx-auto max-w-4xl mb-6 rounded-2xl border border-gray-200 bg-white p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Đăng tin bán đồ</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                {productId ? 'Chỉnh sửa tin đăng' : 'Đăng tin bán đồ'}
+              </h1>
               <p className="mt-1 text-sm text-gray-500">
-                Điền đầy đủ thông tin để bài đăng hiển thị đẹp và tăng tỷ lệ chốt đơn.
+                {productId 
+                  ? 'Cập nhật thông tin chi tiết để sản phẩm của bạn thu hút hơn.' 
+                  : 'Điền đầy đủ thông tin để bài đăng hiển thị đẹp và tăng tỷ lệ chốt đơn.'}
               </p>
             </div>
             <div className="w-full sm:w-64">
@@ -232,8 +451,10 @@ const PostItemPage = () => {
               error={errors.imagePreviews}
               onAddImages={onAddImages}
               onRemoveImage={onRemoveImage}
+              onSetPrimary={onSetPrimaryImage}
             />
             <PostItemBasicInfo formData={formData} errors={errors} onFieldChange={onFieldChange} />
+            <PostItemDescription formData={formData} errors={errors} onFieldChange={onFieldChange} />
             <PostItemPricing formData={formData} errors={errors} onFieldChange={onFieldChange} />
             <PostItemLocationContact formData={formData} errors={errors} onFieldChange={onFieldChange} />
 
@@ -251,6 +472,7 @@ const PostItemPage = () => {
                   onClick={() => {
                     formData.imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
                     setFormData(initialFormData);
+                    setImageFiles([]);
                     setErrors({});
                     setIsSubmitted(false);
                   }}
@@ -274,13 +496,24 @@ const PostItemPage = () => {
                 >
                   <Send size={16} />
                   <span className="text-[10px] font-bold sm:text-sm">
-                    {isSubmitting ? 'Đang gửi' : 'Đăng tin'}
+                    {isSubmitting 
+                      ? (productId ? 'Đang cập nhật' : 'Đang gửi') 
+                      : (productId ? 'Cập nhật tin' : 'Đăng tin')}
                   </span>
                 </button>
               </div>
             </div>
         </form>
       </div>
+
+      {isLoading && (
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-white/80">
+          <div className="flex flex-col items-center gap-3">
+             <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+             <p className="text-sm font-medium text-gray-600">Đang tải dữ liệu tin đăng...</p>
+          </div>
+        </div>
+      )}
 
       {isPreviewOpen ? (
         <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center sm:p-4">

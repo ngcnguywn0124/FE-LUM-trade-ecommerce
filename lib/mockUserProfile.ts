@@ -12,7 +12,7 @@ export interface UserReview {
 }
 
 export interface UserProfile {
-  id: number;
+  id: string;
   name: string;
   avatar?: string;
   rating: number;
@@ -86,16 +86,24 @@ const REVIEW_TEMPLATES: Record<number, string[]> = {
   ],
 };
 
+const toSeed = (value: string) => {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+};
+
 const getStableNumber = (base: number, offset: number, min: number, max: number) => {
   const range = max - min + 1;
   return min + ((base * 37 + offset * 11) % range);
 };
 
-const getReviewRatings = (sellerId: number, count: number): number[] => {
+const getReviewRatings = (sellerSeed: number, count: number): number[] => {
   const ratings: number[] = [];
 
   for (let i = 0; i < count; i += 1) {
-    const seed = (sellerId * 13 + i * 17) % 100;
+    const seed = (sellerSeed * 13 + i * 17) % 100;
     if (seed < 55) ratings.push(5);
     else if (seed < 82) ratings.push(4);
     else if (seed < 92) ratings.push(3);
@@ -111,18 +119,19 @@ const buildReviewComment = (rating: number, index: number) => {
   return templates[index % templates.length];
 };
 
-const buildReviews = (userId: number, listings: Product[]): UserReview[] => {
-  const reviewCount = getStableNumber(userId, 5, 12, 24);
-  const ratings = getReviewRatings(userId, reviewCount);
+const buildReviews = (userId: string, listings: Product[]): UserReview[] => {
+  const userSeed = toSeed(userId);
+  const reviewCount = getStableNumber(userSeed, 5, 12, 24);
+  const ratings = getReviewRatings(userSeed, reviewCount);
 
   return ratings.map((rating, index) => {
     const product = listings[index % listings.length];
 
     return {
-      id: userId * 1000 + index + 1,
-      reviewerName: REVIEWER_NAMES[(userId + index) % REVIEWER_NAMES.length],
+      id: userSeed * 1000 + index + 1,
+      reviewerName: REVIEWER_NAMES[(userSeed + index) % REVIEWER_NAMES.length],
       rating,
-      createdAt: REVIEW_TIMES[(userId + index * 2) % REVIEW_TIMES.length],
+      createdAt: REVIEW_TIMES[(userSeed + index * 2) % REVIEW_TIMES.length],
       comment: buildReviewComment(rating, index),
       productName: product?.name || "Sản phẩm đã giao dịch",
       isVerifiedPurchase: index % 4 !== 0,
@@ -153,10 +162,12 @@ const getAverageRating = (reviews: UserReview[]): number => {
 };
 
 export const getUserProfileData = (
-  userId: number,
+  userId: string,
   products: Product[]
 ): UserProfileData | null => {
-  if (!Number.isFinite(userId) || userId <= 0) return null;
+  if (!userId) return null;
+
+  const userSeed = toSeed(userId);
 
   const listings = products.filter((item) => item.seller?.id === userId);
   if (!listings.length) return null;
@@ -173,12 +184,12 @@ export const getUserProfileData = (
     rating: averageRating || Number((primaryListing.seller?.rating || 4.5).toFixed(1)),
     reviewCount: reviews.length,
     totalListings: listings.length,
-    totalSold: getStableNumber(userId, 1, listings.length + 8, listings.length + 55),
-    followers: getStableNumber(userId, 2, 40, 600),
-    responseRate: getStableNumber(userId, 3, 88, 99),
-    responseTime: `${getStableNumber(userId, 4, 5, 35)} phút`,
-    joinDate: `Tháng ${1 + (userId % 12)}/${2021 + (userId % 3)}`,
-    lastActive: userId % 2 === 0 ? "5p trước" : "1h trước",
+    totalSold: getStableNumber(userSeed, 1, listings.length + 8, listings.length + 55),
+    followers: getStableNumber(userSeed, 2, 40, 600),
+    responseRate: getStableNumber(userSeed, 3, 88, 99),
+    responseTime: `${getStableNumber(userSeed, 4, 5, 35)} phút`,
+    joinDate: `Tháng ${1 + (userSeed % 12)}/${2021 + (userSeed % 3)}`,
+    lastActive: userSeed % 2 === 0 ? "5p trước" : "1h trước",
     location: `${primaryListing.school}${primaryListing.campus ? ` • ${primaryListing.campus}` : ""}`,
   };
 

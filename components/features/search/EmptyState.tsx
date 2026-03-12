@@ -43,7 +43,7 @@ const EmptyState = ({ type = "no-results", keyword, onClearFilters }: EmptyState
             </button>
           )}
           <Link
-            href="/search"
+            href="/tim-kiem"
             className="px-6 py-3 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg transition-colors"
           >
             Xem tất cả sản phẩm

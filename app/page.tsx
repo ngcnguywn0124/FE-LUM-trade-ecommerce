@@ -66,7 +66,7 @@ export default function Home() {
                         />
 
                         {/* 4. Search Button (Yellow) */}
-                        <button className="bg-[#FFBA00] hover:bg-[#ffc82a] text-black font-bold h-12 sm:h-full px-6 py-2 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95">
+                        <button className="bg-[#FFBA00] hover:bg-[#ffc82a] text-black font-bold h-12 sm:h-full px-6 py-2 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer">
                            Tìm kiếm
                         </button>
                      </div>
