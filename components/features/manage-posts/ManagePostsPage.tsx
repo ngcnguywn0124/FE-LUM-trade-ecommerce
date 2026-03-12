@@ -419,17 +419,6 @@ const ManagePostsPage: React.FC = () => {
 
           <div className="hidden sm:flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden h-10">
             <button
-              onClick={() => setViewMode('list')}
-              className={`px-3.5 h-full cursor-pointer transition-colors border-r border-gray-100 last:border-0 ${
-                viewMode === 'list'
-                  ? 'bg-gray-50 text-gray-800'
-                  : 'text-gray-400 hover:text-gray-600'
-              }`}
-              title="Xem danh sách"
-            >
-              <List size={16} />
-            </button>
-            <button
               onClick={() => setViewMode('grid')}
               className={`px-3.5 h-full cursor-pointer transition-colors ${
                 viewMode === 'grid'
@@ -439,6 +428,17 @@ const ManagePostsPage: React.FC = () => {
               title="Xem lưới"
             >
               <LayoutGrid size={16} />
+            </button>            
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3.5 h-full cursor-pointer transition-colors border-r border-gray-100 last:border-0 ${
+                viewMode === 'list'
+                  ? 'bg-gray-50 text-gray-800'
+                  : 'text-gray-400 hover:text-gray-600'
+              }`}
+              title="Xem danh sách"
+            >
+              <List size={16} />
             </button>
           </div>
         </div>
