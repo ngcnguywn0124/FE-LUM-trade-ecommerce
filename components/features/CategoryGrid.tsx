@@ -1,27 +1,38 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight, ChevronLeft } from "lucide-react";
+import { getCategories } from "@/services/categoryService";
+import type { CategoryResponse } from "@/types/admin";
 
-const heroCategories = [
-  { id: 'giaotrinh', label: 'Giáo trình', image: '/cate/giao-trinh-v1.png', color: 'bg-blue-50', description: 'Sách, tài liệu' },
-  { id: 'quanao', label: 'Quần áo', image: '/cate/quan-ao-v1.jpg', color: 'bg-yellow-50', description: 'Đồng phục, đồ thể thao' },
-  { id: 'dientu', label: 'Điện tử', image: '/cate/dien-tu-v1.jpg', color: 'bg-purple-50', description: 'Laptop, phụ kiện' },
-  { id: 'phongtro', label: 'Phòng trọ', image: '/cate/phong-tro-v2-1.jpg', color: 'bg-orange-50', description: 'Tìm ở ghép' },
-  { id: 'dodung', label: 'Đồ dùng', image: '/cate/do-dung-v1.jpg', color: 'bg-emerald-50', description: 'Đồ gia dụng' },
-  { id: 'anuong', label: 'Ăn uống', image: '/cate/an-uong-v2-1.jpg', color: 'bg-red-50', description: 'Deal ăn uống' },
-  { id: 'chotangmienphi', label: 'Cho tặng miễn phí', image: '/cate/mien-phi-v1.jpg', color: 'bg-teal-50', description: 'Lấy ngay' },
-  { id: 'khac', label: 'Khác', image: '/cate/khac-v2.png', color: 'bg-gray-50', description: 'Vật dụng khác' },
+const categoryColors = [
+  'bg-blue-50', 'bg-yellow-50', 'bg-purple-50', 'bg-orange-50', 
+  'bg-emerald-50', 'bg-red-50', 'bg-teal-50', 'bg-gray-50'
 ];
 
 const CategoryGrid = () => {
   const [startIndex, setStartIndex] = useState(0);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const itemsPerPage = 6;
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getCategories();
+        // Lọc lấy các danh mục cha (không có parentCategoryId)
+        const parentCategories = data.filter(cat => !cat.parentCategoryId);
+        setCategories(parentCategories);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
   
   const handleNext = () => {
-    if (startIndex + itemsPerPage < heroCategories.length) {
+    if (startIndex + itemsPerPage < categories.length) {
       setStartIndex(prev => prev + 1);
     }
   };
@@ -37,7 +48,7 @@ const CategoryGrid = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div className="space-y-2">
-            <h3 className="text-3xl md:text-4xl font-black text-brand-dark flex items-center gap-3">
+            <h3 className="text-3xl md:text-4xl font-black text-emerald-600 flex items-center gap-3">
               <span className="w-2 h-10 bg-brand-mint rounded-full"></span>
               Khám phá danh mục
             </h3>
@@ -45,7 +56,7 @@ const CategoryGrid = () => {
           </div>
           
           <div className="flex items-center gap-5">
-            {heroCategories.length > itemsPerPage && (
+            {categories.length > itemsPerPage && (
               <div className="flex gap-2">
                 <button 
                   onClick={handlePrev}
@@ -57,7 +68,7 @@ const CategoryGrid = () => {
                 </button>
                 <button 
                   onClick={handleNext}
-                  disabled={startIndex + itemsPerPage >= heroCategories.length}
+                  disabled={startIndex + itemsPerPage >= categories.length}
                   className="p-2 rounded-full border border-gray-200 text-gray-400 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:border-gray-200 disabled:hover:bg-transparent transition-all cursor-pointer disabled:cursor-not-allowed"
                   aria-label="Next categories"
                 >
@@ -72,32 +83,34 @@ const CategoryGrid = () => {
         </div>
 
         <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8 min-h-40">
-          {heroCategories.slice(startIndex, startIndex + itemsPerPage).map((cat) => (
+          {categories.slice(startIndex, startIndex + itemsPerPage).map((cat, idx) => (
             <Link
-              key={cat.id}
-              href={`/tim-kiem?category=${cat.id}`}
+              key={cat.categoryId}
+              href={`/tim-kiem?category=${cat.slug}`}
               className="group flex flex-col items-center"
             >
               <div className="relative w-full aspect-square bg-white flex items-center justify-center mb-0 transition-all duration-500 group-hover:-translate-y-2 overflow-hidden">
                 {/* Glow Effect on Hover */}
-                <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 ${cat.color}`}></div>
+                <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 ${categoryColors[idx % categoryColors.length]}`}></div>
 
-                  <Image 
-                    src={cat.image} 
-                    alt={cat.label} 
-                    fill 
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
+                  {cat.imageUrl && (
+                    <Image 
+                      src={cat.imageUrl} 
+                      alt={cat.categoryName} 
+                      fill 
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  )}
                 
               </div>
               
               <div className="text-center group-hover:transform group-hover:scale-105 transition-all duration-300">
                 <h4 className="font-bold text-brand-dark text-lg group-hover:text-emerald-600 transition-colors">
-                  {cat.label}
+                  {cat.categoryName}
                 </h4>
                 <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
-                  {cat.description}
+                  {cat.description || cat.categoryName}
                 </p>
               </div>
             </Link>
