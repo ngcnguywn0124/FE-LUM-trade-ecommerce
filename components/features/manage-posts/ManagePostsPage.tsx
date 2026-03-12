@@ -27,6 +27,7 @@ import {
   toggleHidden,
 } from '@/services/productService';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import type { ProductStatusEvent } from '@/hooks/useWebSocket';
 
 const POSTS_PER_PAGE = 15;
 
@@ -245,17 +246,47 @@ const ManagePostsPage: React.FC = () => {
   }, []);
 
   // Lắng nghe tín hiệu Realtime qua WebSocket
-  useWebSocket(useCallback((message: string) => {
-    if (message.startsWith('PRODUCT_EXPIRED:')) {
-      const productId = message.split(':')[1];
-      const updateFn = (p: ManagedPost) => (p.id === productId ? { ...p, status: 'expired' } as ManagedPost : p);
+  useWebSocket(
+    useCallback((message: string) => {
+      // Xử lý tin hết hạn (format cũ)
+      if (message.startsWith('PRODUCT_EXPIRED:')) {
+        const productId = message.split(':')[1];
+        const updateFn = (p: ManagedPost) => (p.id === productId ? { ...p, status: 'expired' } as ManagedPost : p);
+        setPosts((prev) => prev.map(updateFn));
+        setAllPosts((prev) => prev.map(updateFn));
+        toast.warning('Một tin đăng của bạn vừa hết hạn!', {
+          description: 'Hãy gia hạn để tiếp tục hiển thị tin.'
+        });
+      }
+    }, []),
+    undefined, // không watch product cụ thể ở trang này
+    useCallback((event: ProductStatusEvent) => {
+      // Mapping từ API status sang UI status
+      const apiToUiStatus: Record<string, ManagedPost['status']> = {
+        available: 'active',
+        pending: 'pending',
+        hidden: 'hidden',
+        admin_hidden: 'admin_hidden',
+        expired: 'expired',
+        sold: 'sold',
+      };
+      const uiStatus = apiToUiStatus[event.newStatus] ?? (event.newStatus as ManagedPost['status']);
+      const updateFn = (p: ManagedPost) =>
+        p.id === event.productId ? ({ ...p, status: uiStatus } as ManagedPost) : p;
       setPosts((prev) => prev.map(updateFn));
       setAllPosts((prev) => prev.map(updateFn));
-      toast.warning('Một tin đăng của bạn vừa hết hạn!', {
-        description: 'Hãy gia hạn để tiếp tục hiển thị tin.'
-      });
-    }
-  }, []));
+
+      if (event.newStatus === 'available') {
+        toast.success('Tin đăng của bạn đã được duyệt!', {
+          description: event.message,
+        });
+      } else if (event.newStatus === 'admin_hidden') {
+        toast.error('Một tin đăng bị ẩn bởi quản trị viên', {
+          description: event.message,
+        });
+      }
+    }, []),
+  );
 
   const handleDeleteRequest = useCallback((id: string) => {
     setDeleteModal({ isOpen: true, ids: [id] });

@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { SearchX } from "lucide-react";
+import { toast } from "sonner";
+import { useAuthStore } from "@/stores/authStore";
 import Breadcrumb from "@/components/shared/Breadcrumb";
 import ProductImageGallery from "@/components/features/product/details/ProductImageGallery";
 import ProductSummary from "@/components/features/product/details/ProductSummary";
@@ -21,6 +23,7 @@ import {
   mapSummaryToCardProduct,
 } from "@/services/productService";
 import type { ProductDetailDto } from "@/types/product-api";
+import { useWebSocket, type ProductStatusEvent } from "@/hooks/useWebSocket";
 
 const conditionLabels: Record<string, string> = {
   new: "Mới 100%",
@@ -33,10 +36,41 @@ const conditionLabels: Record<string, string> = {
 const ProductDetailPage = () => {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
+  const router = useRouter();
+  const { user, isInitialized } = useAuthStore();
 
   const [productDetail, setProductDetail] = useState<ProductDetailDto | null>(null);
   const [relatedPool, setRelatedPool] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Chuyển về home nếu bài không được duyệt và người xem không phải chủ bài
+  useEffect(() => {
+    if (!isInitialized || isLoading || !productDetail) return;
+    const isOwner = !!user && user.userId === productDetail.sellerId;
+    if (productDetail.status !== 'available' && !isOwner) {
+      router.replace('/');
+    }
+  }, [isInitialized, isLoading, productDetail, user, router]);
+
+  // Lắng nghe thay đổi trạng thái realtime qua WebSocket
+  const handleProductStatusChanged = useCallback((event: ProductStatusEvent) => {
+    if (event.productId !== productDetail?.productId) return;
+    const isOwner = !!user && user.userId === productDetail?.sellerId;
+    if (event.newStatus !== 'available' && !isOwner) {
+      router.replace('/');
+      return;
+    }
+    setProductDetail((prev) => prev ? { ...prev, status: event.newStatus as ProductDetailDto['status'] } : prev);
+    if (isOwner) {
+      if (event.newStatus === 'available') {
+        toast.success('Tin đăng đã được duyệt và hiển thị trở lại!');
+      } else if (event.newStatus === 'admin_hidden') {
+        toast.error('Tin đăng này đã bị ẩn bởi quản trị viên.', { description: event.message });
+      }
+    }
+  }, [productDetail?.productId, productDetail?.sellerId, user, router]);
+
+  useWebSocket(undefined, productDetail?.productId, handleProductStatusChanged);
 
   useEffect(() => {
     const loadDetail = async () => {
@@ -124,6 +158,7 @@ const ProductDetailPage = () => {
     );
   }
 
+  const isOwner = !!user && user.userId === productDetail.sellerId;
   const productCondition = conditionLabels[product.condition || "used"] || "Đã qua sử dụng";
   const productDescription = productDetail.description || "Chưa có mô tả chi tiết.";
 
@@ -159,6 +194,36 @@ const ProductDetailPage = () => {
             { label: product.name },
           ]}
         />
+
+        {isOwner && productDetail.status === 'admin_hidden' && (
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <span className="mt-0.5 text-base">🚫</span>
+            <div>
+              <p className="font-semibold">Tin đăng này đã bị ẩn bởi quản trị viên</p>
+              <p className="text-red-600">Tin đăng hiện không hiển thị với người dùng khác. Vui lòng liên hệ hỗ trợ nếu bạn có thắc mắc.</p>
+            </div>
+          </div>
+        )}
+
+        {isOwner && productDetail.status === 'pending' && (
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+            <span className="mt-0.5 text-base">⏳</span>
+            <div>
+              <p className="font-semibold">Tin đăng đang chờ duyệt</p>
+              <p className="text-yellow-700">Tin đăng của bạn sẽ hiển thị sau khi được quản trị viên phê duyệt.</p>
+            </div>
+          </div>
+        )}
+
+        {isOwner && productDetail.status === 'hidden' && (
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+            <span className="mt-0.5 text-base">👁️‍🗨️</span>
+            <div>
+              <p className="font-semibold">Tin đăng đang bị ẩn</p>
+              <p className="text-gray-500">Tin đăng này hiện không hiển thị công khai.</p>
+            </div>
+          </div>
+        )}
 
         <section className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 lg:p-6">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">

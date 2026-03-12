@@ -22,6 +22,7 @@ import type { ProductSummaryDto } from '@/types/product-api';
 import Breadcrumb from '@/components/shared/Breadcrumb';
 import AdminPostActionMenu from './AdminPostActionMenu';
 import DeleteConfirmModal from '../../manage-posts/DeleteConfirmModal';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 const AdminProductManagement: React.FC = () => {
   const { user } = useAuthStore();
@@ -37,6 +38,26 @@ const AdminProductManagement: React.FC = () => {
   const [keyword, setKeyword] = useState('');
   const [status, setStatus] = useState<string>(''); // empty means all for admin
   const [searchTerm, setSearchTerm] = useState('');
+
+  // 1. Hook WebSocket để nhận thông báo tin mới
+  const handleNewProduct = useCallback((message: string) => {
+    if (message === 'NEW_PRODUCT_CREATED') {
+      toast('Có tin đăng mới!', {
+        description: 'Vừa có người dùng đăng tin mới, hãy kiểm duyệt ngay.',
+        action: {
+          label: 'Làm mới',
+          onClick: () => fetchProducts(currentPage, status, keyword)
+        },
+        duration: 10000,
+      });
+      // Tự động load trang đầu nếu admin đang ở tab "Tất cả" hoặc "Chờ duyệt"
+      if (currentPage === 0 && (status === '' || status === 'pending')) {
+        fetchProducts(0, status, keyword);
+      }
+    }
+  }, [currentPage, status, keyword]);
+
+  useWebSocket(handleNewProduct);
   
   // State for Confirm Modal
   const [confirmModal, setConfirmModal] = useState<{
