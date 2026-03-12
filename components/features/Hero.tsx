@@ -78,13 +78,21 @@ export default function Hero() {
               </p>
 
               <div className="flex flex-wrap gap-4 pt-4">
-                <Link href="/explore" className="group relative bg-brand-dark text-white px-8 py-4 rounded-lg font-heading font-bold hover:bg-black transition-all shadow-xl hover:shadow-2xl overflow-hidden">
+                <button 
+                  onClick={() => {const element = document.getElementById("product-section");
+            if (element) {
+              const yOffset = -100; // Khoảng cách offset để không bị header che mất
+              const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+              window.scrollTo({ top: y, behavior: "smooth" });}
+            }}
+                  className="group relative bg-brand-dark text-white px-8 py-4 rounded-lg font-heading font-bold hover:bg-black transition-all shadow-xl hover:shadow-2xl overflow-hidden cursor-pointer"
+                >
                   <span className="relative z-10 flex items-center gap-2">
                     Săn đồ ngay <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </span>
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                </Link>
-                <Link href="/post" className="bg-emerald-600 text-brand-dark px-8 py-4 rounded-lg font-heading font-bold hover:bg-brand-mint hover:border-brand-mint transition-all shadow-md hover:shadow-lg hover:scale-105 flex items-center justify-center">
+                </button>
+                <Link href="/ve-chung-toi" className="bg-emerald-600 text-brand-dark px-8 py-4 rounded-lg font-heading font-bold hover:bg-brand-mint hover:border-brand-mint transition-all shadow-md hover:shadow-lg hover:scale-105 flex items-center justify-center">
                   Tìm hiểu thêm
                 </Link>
               </div>
