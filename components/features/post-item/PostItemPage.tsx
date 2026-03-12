@@ -6,6 +6,7 @@ import Breadcrumb from '@/components/shared/Breadcrumb';
 import PostItemBasicInfo from './PostItemBasicInfo';
 import PostItemImagePicker from './PostItemImagePicker';
 import PostItemLocationContact from './PostItemLocationContact';
+import PostItemDescription from './PostItemDescription';
 import PostItemPreview from './PostItemPreview';
 import PostItemPricing from './PostItemPricing';
 import { PostItemErrors, PostItemFormData } from '../../../types/post';
@@ -452,6 +453,7 @@ const PostItemPage = ({ productId }: PostItemPageProps) => {
               onSetPrimary={onSetPrimaryImage}
             />
             <PostItemBasicInfo formData={formData} errors={errors} onFieldChange={onFieldChange} />
+            <PostItemDescription formData={formData} errors={errors} onFieldChange={onFieldChange} />
             <PostItemPricing formData={formData} errors={errors} onFieldChange={onFieldChange} />
             <PostItemLocationContact formData={formData} errors={errors} onFieldChange={onFieldChange} />
 

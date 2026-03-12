@@ -140,9 +140,14 @@ const PostItemPreview = ({ formData, inModal = false }: PostItemPreviewProps) =>
 
         <div className="mt-4">
           <p className="text-xs font-semibold text-gray-700 mb-1.5">Mô tả chi tiết</p>
-          <div className="text-sm text-gray-600 whitespace-pre-line bg-gray-50 rounded-lg p-3 border border-gray-100 min-h-[60px]">
-            {formData.description || 'Chưa có mô tả chi tiết...'}
-          </div>
+          <div 
+            className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3 border border-gray-100 min-h-[60px] prose prose-sm max-w-none 
+              prose-p:my-0.5 
+              prose-ul:list-disc prose-ul:ml-4 
+              prose-ol:list-decimal prose-ol:ml-4 
+              prose-headings:text-gray-900 prose-strong:text-gray-900"
+            dangerouslySetInnerHTML={{ __html: formData.description || 'Chưa có mô tả chi tiết...' }}
+          />
         </div>
 
         <div className="mt-5 rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3">

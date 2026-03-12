@@ -146,7 +146,7 @@ const SearchContent = () => {
       params.delete("category");
     }
 
-    router.push(`/search?${params.toString()}`, { scroll: false });
+    router.push(`/tim-kiem?${params.toString()}`, { scroll: false });
   };
 
   const handleRemoveFilter = (filterKey: keyof SearchFilters) => {
@@ -161,7 +161,7 @@ const SearchContent = () => {
     if (filterKey === "category") {
       const params = new URLSearchParams(searchParams.toString());
       params.delete("category");
-      router.push(`/search?${params.toString()}`, { scroll: false });
+      router.push(`/tim-kiem?${params.toString()}`, { scroll: false });
     }
   };
 
@@ -189,7 +189,7 @@ const SearchContent = () => {
 
     const params = new URLSearchParams(searchParams.toString());
     params.delete("category");
-    router.push(`/search?${params.toString()}`);
+    router.push(`/tim-kiem?${params.toString()}`);
   };
 
   const breadcrumbItems = [
@@ -200,7 +200,7 @@ const SearchContent = () => {
           ? `${filters.category} > ${filters.subcategory}`
           : filters.category
             ? filters.category
-            : "Tất cả sản phẩm",
+            : "Tất cả bài đăng",
     },
   ];
 

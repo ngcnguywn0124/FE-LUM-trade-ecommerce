@@ -229,7 +229,7 @@ const Header = () => {
                         )}
                       </div>
 
-                      <button className="hidden sm:flex h-8 w-8 mr-1 rounded-md bg-[#FFBA00] hover:bg-[#ffc82a] items-center justify-center text-black transition-colors shrink-0">
+                      <button className="hidden sm:flex h-8 w-8 mr-1 rounded-md bg-[#FFBA00] hover:bg-[#ffc82a] items-center justify-center text-black transition-colors shrink-0 cursor-pointer">
                         <Search size={18} strokeWidth={2.5} />
                       </button>
                   </div>

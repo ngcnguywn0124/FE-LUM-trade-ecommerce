@@ -317,27 +317,6 @@ const PostItemBasicInfo = ({ formData, errors, onFieldChange }: PostItemBasicInf
             </div>
           </div>
         ) : null}
-
-        <div>
-          <label htmlFor="post-description" className="block text-sm font-medium text-gray-700 mb-2">
-            Mô tả chi tiết <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            id="post-description"
-            value={formData.description}
-            onChange={(event) => onFieldChange('description', event.target.value)}
-            placeholder="Mô tả rõ tình trạng, thông số, phụ kiện đi kèm, lý do bán..."
-            rows={5}
-            maxLength={1200}
-            className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-          />
-          <div className="mt-1 flex items-center justify-between text-[11px] font-medium">
-            <span className="text-red-500">{errors.description}</span>
-            <span className={`px-2 py-0.5 rounded-full ${formData.description.length > 1000 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-400'}`}>
-              {formData.description.length}/1200
-            </span>
-          </div>
-        </div>
       </div>
     </PostItemSection>
   );
