@@ -65,8 +65,10 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
   const conditions: { value: ConditionFilter; label: string }[] = [
     { value: 'all', label: 'Tất cả' },
     { value: 'new', label: 'Mới 100%' },
-    { value: 'like-new', label: 'Như mới' },
+    { value: 'like_new', label: 'Như mới' },
     { value: 'used', label: 'Đã qua sử dụng' },
+    { value: 'old', label: 'Cũ' },
+    { value: 'broken', label: 'Hỏng' },
   ];
 
   const priceRanges = [

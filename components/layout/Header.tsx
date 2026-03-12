@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { 
   Menu, Search, Bell, MessageCircle,
   Heart, User, PlusCircle, BookOpen, X, Settings
@@ -37,6 +38,22 @@ const Header = () => {
   // State cho Trường và Cơ sở
   const [selectedSchool, setSelectedSchool] = useState("HUTECH");
   const [selectedCampus, setSelectedCampus] = useState("");
+
+  // Kiểm tra query param require_login từ middleware
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('require_login') === 'true' && !isAuthenticated) {
+      setIsAuthModalOpen(true);
+      toast.info('Vui lòng đăng nhập để tiếp tục.');
+      
+      // Xóa query param để tránh hiện lại khi reload
+      const newParams = new URLSearchParams(window.location.search);
+      newParams.delete('require_login');
+      const search = newParams.toString();
+      const query = search ? `?${search}` : "";
+      window.history.replaceState({}, '', `${window.location.pathname}${query}`);
+    }
+  }, [isAuthenticated]);
 
   // Kiểm tra xem có đang ở trang chủ không
   const isHomePage = pathname === "/";
@@ -229,7 +246,7 @@ const Header = () => {
                         )}
                       </div>
 
-                      <button className="hidden sm:flex h-8 w-8 mr-1 rounded-md bg-[#FFBA00] hover:bg-[#ffc82a] items-center justify-center text-black transition-colors shrink-0">
+                      <button className="hidden sm:flex h-8 w-8 mr-1 rounded-md bg-[#FFBA00] hover:bg-[#ffc82a] items-center justify-center text-black transition-colors shrink-0 cursor-pointer">
                         <Search size={18} strokeWidth={2.5} />
                       </button>
                   </div>

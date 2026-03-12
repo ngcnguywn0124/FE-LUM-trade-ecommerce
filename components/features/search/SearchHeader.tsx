@@ -43,7 +43,7 @@ const SearchHeader = ({
             ) : category ? (
               category
             ) : (
-              'Tất cả sản phẩm'
+              'Tất cả bài đăng'
             )}
           </h1>
           <p className="text-sm text-gray-600">

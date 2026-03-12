@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { AxiosError } from 'axios';
-import { FolderTree, ImagePlus, Loader2, X } from 'lucide-react';
+import { FolderTree, ImagePlus, Loader2, X, LucideIcon } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { toast } from 'sonner';
 import type { CategoryRequest, CategoryResponse } from '@/types/admin';
 import * as categoryService from '@/services/categoryService';
@@ -48,11 +49,19 @@ function collectDescendantIds(node: CategoryResponse): Set<string> {
   return ids;
 }
 
+// ── Helper ─────────────────────────────────────────────────
+function IconPreview({ iconName }: { iconName: string }) {
+  const Icon = (LucideIcons as any)[iconName] as LucideIcon;
+  if (!Icon) return null;
+  return <Icon size={20} className="text-gray-600" />;
+}
+
 export default function CategoryFormModal({ initial, categories, onClose, onSaved }: CategoryFormModalProps) {
   const [form, setForm] = useState<CategoryRequest>({
     categoryName: initial?.categoryName ?? '',
     parentCategoryId: initial?.parentCategoryId ?? null,
     description: initial?.description ?? '',
+    iconName: initial?.iconName ?? '',
     displayOrder: initial?.displayOrder ?? 0,
     isActive: initial?.isActive ?? true,
   });
@@ -160,6 +169,21 @@ export default function CategoryFormModal({ initial, categories, onClose, onSave
                 }))
               }
             />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+            <FormInput
+              label="Lucide Icon Name"
+              placeholder="Vd: Laptop, Home, ShoppingBag..."
+              value={form.iconName ?? ''}
+              onChange={(e) => setForm((prev) => ({ ...prev, iconName: e.target.value }))}
+            />
+            {form.iconName && (
+              <div className="flex items-center gap-3 p-2.5 border border-gray-100 rounded-lg bg-gray-50 h-[42px]">
+                <span className="text-xs text-gray-500">Xem trước:</span>
+                <IconPreview iconName={form.iconName} />
+              </div>
+            )}
           </div>
 
           <div>

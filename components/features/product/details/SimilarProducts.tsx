@@ -6,7 +6,7 @@ import ProductCard from "@/components/features/product/ProductCard";
 
 interface SimilarProductsProps {
   products: Product[];
-  currentProductId: number;
+  currentProductId: string | number;
   category?: string;
 }
 

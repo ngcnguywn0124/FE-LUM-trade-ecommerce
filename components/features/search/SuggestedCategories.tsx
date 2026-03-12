@@ -24,7 +24,7 @@ const SuggestedCategories = () => {
           return (
             <Link
               key={category.name}
-              href={`/search?category=${encodeURIComponent(category.name)}`}
+              href={`/tim-kiem?category=${encodeURIComponent(category.name)}`}
               className="group flex flex-col items-center gap-3 p-4 bg-gray-50 hover:bg-emerald-50 rounded-lg transition-all hover:shadow-md"
             >
               <div className="relative w-12 h-12 group-hover:scale-110 transition-transform">

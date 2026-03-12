@@ -34,6 +34,10 @@ const MESSAGES: Record<PostStatus | 'all', { title: string; desc: string }> = {
     title: 'Chưa có tin nào được đánh dấu đã bán',
     desc: 'Sau khi giao dịch thành công, hãy đánh dấu tin là "Đã bán" để lưu lại lịch sử.',
   },
+  admin_hidden: {
+    title: 'Không có tin nào bị vi phạm',
+    desc: 'Nếu tin của bạn vi phạm quy định, Admin sẽ ẩn tin và thông báo lý do tại đây.',
+  }
 };
 
 const EmptyPostState: React.FC<EmptyPostStateProps> = ({ activeFilter }) => {

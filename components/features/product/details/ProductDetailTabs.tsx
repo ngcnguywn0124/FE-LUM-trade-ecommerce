@@ -58,7 +58,64 @@ const ProductDetailTabs = ({ description, specs }: ProductDetailTabsProps) => {
         style={{ maxHeight: isExpanded ? "none" : `${maxHeight}px` }}
       >
         {activeTab === "description" ? (
-          <p className="whitespace-pre-line text-sm leading-7 text-gray-700">{description}</p>
+          <div className="prose prose-slate prose-sm max-w-none text-gray-700">
+             <div 
+                className="rich-text-content"
+                dangerouslySetInnerHTML={{ __html: description }} 
+             />
+             <style jsx>{`
+                .rich-text-content :global(ul) {
+                  list-style-type: disc !important;
+                  margin-left: 1.5rem !important;
+                  margin-top: 0.5rem !important;
+                  margin-bottom: 0.5rem !important;
+                }
+                .rich-text-content :global(ol) {
+                  list-style-type: decimal !important;
+                  margin-left: 1.5rem !important;
+                  margin-top: 0.5rem !important;
+                  margin-bottom: 0.5rem !important;
+                }
+                .rich-text-content :global(li) {
+                  margin-bottom: 0.25rem !important;
+                  display: list-item !important;
+                }
+                .rich-text-content :global(h1) {
+                  font-size: 1.875rem !important;
+                  font-weight: 800 !important;
+                  margin-top: 1.5rem !important;
+                  margin-bottom: 0.75rem !important;
+                  color: #111827 !important;
+                  line-height: 1.2 !important;
+                }
+                .rich-text-content :global(h2) {
+                  font-size: 1.5rem !important;
+                  font-weight: 700 !important;
+                  margin-top: 1.25rem !important;
+                  margin-bottom: 0.6rem !important;
+                  color: #111827 !important;
+                  line-height: 1.3 !important;
+                }
+                .rich-text-content :global(h3) {
+                  font-size: 1.25rem !important;
+                  font-weight: 700 !important;
+                  margin-top: 1rem !important;
+                  margin-bottom: 0.5rem !important;
+                  color: #111827 !important;
+                }
+                .rich-text-content :global(p) {
+                  margin-bottom: 0.75rem !important;
+                  line-height: 1.7 !important;
+                }
+                .rich-text-content :global(.ql-indent-1) { padding-left: 3em !important; }
+                .rich-text-content :global(.ql-indent-2) { padding-left: 6em !important; }
+                .rich-text-content :global(.ql-indent-3) { padding-left: 9em !important; }
+                .rich-text-content :global(strong) {
+                  font-weight: 700 !important;
+                  color: #111827 !important;
+                }
+             `}</style>
+          </div>
         ) : (
           <div className="overflow-hidden">
             <table className="w-full border-collapse">

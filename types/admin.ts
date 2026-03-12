@@ -52,6 +52,7 @@ export interface CategoryResponse {
   description: string | null;
   imageUrl: string | null;
   imageCloudId: string | null;
+  iconName: string | null;
   displayOrder: number;
   isActive: boolean;
   createdAt: string;
@@ -64,6 +65,7 @@ export interface CategoryRequest {
   categoryName: string;
   parentCategoryId: string | null;
   description?: string;
+  iconName?: string;
   displayOrder?: number;
   isActive?: boolean;
 }

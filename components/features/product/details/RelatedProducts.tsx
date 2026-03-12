@@ -12,6 +12,7 @@ interface RelatedProductsProps {
 }
 
 const RelatedProducts = ({ products, sellerName }: RelatedProductsProps) => {
+  const sectionRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showPrev, setShowPrev] = useState(false);
   const [showNext, setShowNext] = useState(false);
@@ -51,7 +52,7 @@ const RelatedProducts = ({ products, sellerName }: RelatedProductsProps) => {
   }
 
   return (
-    <section className="mt-10 relative group/section">
+    <section id="seller-other-posts" className="mt-10 relative group/section">
       <div className="mb-5">
         <h2 className="text-lg md:text-xl font-bold text-gray-900 uppercase tracking-tight">
           Tin rao khác của <span className="text-emerald-600">{sellerName || "NGƯỜI BÁN"}</span>
@@ -100,12 +101,14 @@ const RelatedProducts = ({ products, sellerName }: RelatedProductsProps) => {
         </div>
       </div>
 
-      {/* Nút Xem thêm ở dưới */}
-      <div className="mt-2 text-center">
-        <button className="px-10 py-3 rounded-full border-2 border-slate-100 font-bold text-gray-700 hover:bg-slate-50 transition-all hover:border-emerald-500 hover:text-emerald-600 cursor-pointer">
-          Xem Thêm
-        </button>
-      </div>
+      {/* Nút Xem thêm ở dưới - Chỉ hiện nếu có nhiều hơn 5 sản phẩm */}
+      {displayProducts.length > 5 && (
+        <div className="mt-2 text-center">
+          <button className="px-10 py-3 rounded-full border-2 border-slate-100 font-bold text-gray-700 hover:bg-slate-50 transition-all hover:border-emerald-500 hover:text-emerald-600 cursor-pointer">
+            Xem Thêm
+          </button>
+        </div>
+      )}
     </section>
   );
 };

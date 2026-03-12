@@ -5,7 +5,8 @@ import { Heart, Image as ImageIcon, MapPin } from "lucide-react";
 
 interface ProductProps {
   product: {
-    id: number;
+    id: string | number;
+    slug?: string;
     name: string;
     price: string;
     school: string;
@@ -22,7 +23,7 @@ const ProductCard = ({ product, isWishlist = false }: ProductProps) => {
   const [isLiked, setIsLiked] = useState(isWishlist);
 
   return (
-    <Link href={`/bai-dang/${product.id}`} className="block group cursor-pointer">
+    <Link href={`/bai-dang/${product.slug || product.id}`} className="block group cursor-pointer">
       {/* Image Container */}
       <div className="relative aspect-5/6 bg-gray-100 rounded-xl overflow-hidden shadow-sm transition-all duration-300">
         <Image

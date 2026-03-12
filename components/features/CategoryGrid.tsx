@@ -65,7 +65,7 @@ const CategoryGrid = () => {
                 </button>
               </div>
             )}
-            <Link href="/search" className="group flex items-center gap-2 text-emerald-600 font-bold text-lg hover:text-emerald-700 transition-all">
+            <Link href="/tim-kiem" className="group flex items-center gap-2 text-emerald-600 font-bold text-lg hover:text-emerald-700 transition-all">
               Xem tất cả <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -75,7 +75,7 @@ const CategoryGrid = () => {
           {heroCategories.slice(startIndex, startIndex + itemsPerPage).map((cat) => (
             <Link
               key={cat.id}
-              href={`/search?category=${cat.id}`}
+              href={`/tim-kiem?category=${cat.id}`}
               className="group flex flex-col items-center"
             >
               <div className="relative w-full aspect-square bg-white flex items-center justify-center mb-0 transition-all duration-500 group-hover:-translate-y-2 overflow-hidden">

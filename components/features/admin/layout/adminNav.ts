@@ -4,6 +4,7 @@ import {
   School,
   ShieldCheck,
   SlidersHorizontal,
+  FileText,
 } from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
 
@@ -18,6 +19,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     href: '/admin',
     label: 'Dashboard',
     icon: LayoutDashboard,
+  },
+  {
+    href: '/admin/tin-dang',
+    label: 'Tin đăng',
+    icon: FileText,
   },
   {
     href: '/admin/truong-dai-hoc',
