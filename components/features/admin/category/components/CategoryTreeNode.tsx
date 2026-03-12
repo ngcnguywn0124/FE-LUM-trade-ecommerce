@@ -1,6 +1,8 @@
 'use client';
 
-import { ChevronDown, ChevronRight, Pencil, Trash2 } from 'lucide-react';
+import React from 'react';
+import { ChevronDown, ChevronRight, Pencil, Trash2, LucideIcon } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import type { CategoryResponse } from '@/types/admin';
 
 interface CategoryTreeNodeProps {
@@ -50,8 +52,14 @@ export default function CategoryTreeNode({
                 alt={node.categoryName}
                 className="w-11 h-11 rounded-lg object-cover border border-gray-200"
               />
+            ) : node.iconName && (LucideIcons as any)[node.iconName] ? (
+              <div className="w-11 h-11 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-500">
+                {React.createElement((LucideIcons as any)[node.iconName] as LucideIcon, { size: 22 })}
+              </div>
             ) : (
-              <div className="w-11 h-11 rounded-lg border border-dashed border-gray-300 bg-gray-50" />
+              <div className="w-11 h-11 rounded-lg border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
+                <div className="w-1 h-1 rounded-full bg-gray-300" />
+              </div>
             )}
 
             <div className="min-w-0">

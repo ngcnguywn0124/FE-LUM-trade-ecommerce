@@ -5,7 +5,7 @@ import type { NextRequest } from 'next/server';
  * Middleware để bảo vệ các trang yêu cầu đăng nhập
  * Note: accessToken là httpOnly cookie được backend đặt
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. Danh sách các đường dẫn cần bảo vệ (private routes)
