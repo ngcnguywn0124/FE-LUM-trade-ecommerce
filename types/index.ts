@@ -12,6 +12,9 @@ export interface Product {
   imageCount?: number;
   condition?: 'new' | 'like_new' | 'used' | 'old' | 'broken' | 'for-parts';
   category?: string;
+  categorySlug?: string;
+  parentCategory?: string;
+  parentCategorySlug?: string;
   seller?: {
     id: string | number;
     name: string;

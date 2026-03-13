@@ -31,6 +31,7 @@ export interface ProductSummaryDto {
   thumbnailUrl: string | null;
   categoryId: string | null;
   categoryName: string | null;
+  categorySlug: string | null;
   universityShortName: string | null;
   campusName: string | null;
   sellerId: string | null;

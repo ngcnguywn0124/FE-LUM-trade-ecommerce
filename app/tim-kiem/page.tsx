@@ -12,6 +12,8 @@ import SuggestedCategories from "@/components/features/search/SuggestedCategorie
 import Breadcrumb from "@/components/shared/Breadcrumb";
 import { Product, SearchFilters, SortOption } from "@/types";
 import { getProducts, mapSummaryToCardProduct, searchProducts } from "@/services/productService";
+import { getCategories } from "@/services/categoryService";
+import { CategoryResponse } from "@/types/admin";
 
 const SearchContent = () => {
   const searchParams = useSearchParams();
@@ -20,11 +22,32 @@ const SearchContent = () => {
   const categoryParam = searchParams.get("category") || "";
 
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [filters, setFilters] = useState<SearchFilters>({
     category: categoryParam || undefined,
     condition: "all",
     sortBy: "newest",
   });
+
+  // Fetch categories to get display names
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const data = await getCategories();
+        setCategories(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchCats();
+  }, []);
+
+  const displayCategoryName = useMemo(() => {
+    if (!filters.category) return "";
+    const cat = categories.find(c => c.slug === filters.category || c.categoryName === filters.category);
+    return cat ? cat.categoryName : filters.category;
+  }, [filters.category, categories]);
+
   const [viewMode, setViewMode] = useState<"grid-4" | "list">("grid-4");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -72,7 +95,7 @@ const SearchContent = () => {
         return false;
       }
 
-      if (filters.category && product.category !== filters.category) {
+      if (filters.category && product.category !== filters.category && product.categorySlug !== filters.category) {
         return false;
       }
 
@@ -197,9 +220,9 @@ const SearchContent = () => {
       label: keyword
         ? `Kết quả tìm kiếm "${keyword}"`
         : filters.subcategory
-          ? `${filters.category} > ${filters.subcategory}`
+          ? `${displayCategoryName} > ${filters.subcategory}`
           : filters.category
-            ? filters.category
+            ? displayCategoryName
             : "Tất cả bài đăng",
     },
   ];
@@ -269,14 +292,17 @@ const SearchContent = () => {
             <SearchHeader
               resultCount={sortedProducts.length}
               keyword={keyword}
-              category={filters.category}
+              category={displayCategoryName}
               sortBy={filters.sortBy || "newest"}
               onSortChange={handleSortChange}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
             />
 
-            <ActiveFilters filters={filters} onRemoveFilter={handleRemoveFilter} />
+            <ActiveFilters 
+              filters={{...filters, category: displayCategoryName}} 
+              onRemoveFilter={handleRemoveFilter} 
+            />
 
             {showSuggestedCategories && <SuggestedCategories />}
 

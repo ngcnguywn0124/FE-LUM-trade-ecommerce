@@ -34,8 +34,8 @@ const ActiveFilters = ({ filters, onRemoveFilter }: ActiveFiltersProps) => {
       new: 'Mới 100%',
           'like_new': 'Như mới',
       used: 'Đã qua sử dụng',
-          old: 'Cũ',
-          broken: 'Hỏng',
+          old: 'Cũ/Vẫn dùng tốt',
+          broken: 'Hỏng/Lấy linh kiện',
     };
     activeFilters.push({
       key: 'condition',

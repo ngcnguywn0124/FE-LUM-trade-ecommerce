@@ -91,6 +91,7 @@ export const mapSummaryToCardProduct = (item: ProductSummaryDto): Product => ({
   imageCount: item.imageCount || 1,
   condition: conditionToUi(item.condition),
   category: item.categoryName || undefined,
+  categorySlug: item.categorySlug || undefined,
   seller: {
     id: item.sellerId || 'unknown-seller',
     name: item.sellerName || 'Người bán ẩn danh',
@@ -111,6 +112,7 @@ export const mapDetailToCardProduct = (item: ProductDetailDto): Product => ({
   imageCount: Math.max(item.images.length, 1),
   condition: conditionToUi(item.condition),
   category: item.categoryName || undefined,
+  categorySlug: item.categorySlug || undefined,
   seller: {
     id: item.sellerId || 'unknown-seller',
     name: item.sellerName || 'Người bán ẩn danh',

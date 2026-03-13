@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { 
   SlidersHorizontal, X, ChevronDown, ChevronRight,
-  Laptop, BookOpen, Shirt, Bike, Smartphone, Headphones, PenTool, Layers,
   MapPin, Search
 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { SearchFilters, ConditionFilter } from "@/types";
-import { mockCategories, mockSchools, getCampusesBySchool, getSubcategoriesByCategory } from "@/lib/categoriesData";
+import { mockSchools, getCampusesBySchool } from "@/lib/categoriesData";
+import { getCategoryTree } from "@/services/categoryService";
+import { CategoryResponse } from "@/types/admin";
 
 interface FilterSidebarProps {
   filters: SearchFilters;
@@ -18,12 +20,28 @@ interface FilterSidebarProps {
 }
 
 const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategories = false }: FilterSidebarProps) => {
+  // State cho categories từ API
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  
   // State cho expanded sections
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [expandedSchool, setExpandedSchool] = useState<string | null>(null);
 
   // State cho tìm kiếm trường học
   const [schoolSearchQuery, setSchoolSearchQuery] = useState("");
+
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getCategoryTree();
+        setCategories(data);
+      } catch (error) {
+        console.error("Failed to fetch category tree:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // Local state cho custom price inputs để tránh lọc ngay lập tức
   const [localMinPrice, setLocalMinPrice] = useState<string>(filters.priceRange?.min?.toString() || '');
@@ -44,22 +62,17 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
     ? getCampusesBySchool(mockSchools.find(s => s.name === filters.school)?.id || '')
     : [];
   
-  // Get available subcategories based on selected category
-  const availableSubcategories = filters.category
-    ? getSubcategoriesByCategory(mockCategories.find(c => c.name === filters.category)?.id || '')
-    : [];
+  // Get available subcategories based on selected category (slug)
+  const availableSubcategories = useMemo(() => {
+    if (!filters.category) return [];
+    const parent = categories.find(c => c.slug === filters.category);
+    return parent?.children || [];
+  }, [filters.category, categories]);
 
-  const getCategoryIcon = (id: string) => {
-    switch (id) {
-      case 'laptop': return <Laptop size={18} />;
-      case 'sach': return <BookOpen size={18} />;
-      case 'thoi-trang': return <Shirt size={18} />;
-      case 'xe-co': return <Bike size={18} />;
-      case 'dien-thoai': return <Smartphone size={18} />;
-      case 'phu-kien': return <Headphones size={18} />;
-      case 'do-dung-hoc-tap': return <PenTool size={18} />;
-      default: return <Layers size={18} />;
-    }
+  const CategoryIcon = ({ iconName }: { iconName: string | null }) => {
+    if (!iconName) return <LucideIcons.Layers size={18} />;
+    const IconComponent = (LucideIcons as any)[iconName];
+    return IconComponent ? <IconComponent size={18} /> : <LucideIcons.Layers size={18} />;
   };
 
   const conditions: { value: ConditionFilter; label: string }[] = [
@@ -67,8 +80,8 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
     { value: 'new', label: 'Mới 100%' },
     { value: 'like_new', label: 'Như mới' },
     { value: 'used', label: 'Đã qua sử dụng' },
-    { value: 'old', label: 'Cũ' },
-    { value: 'broken', label: 'Hỏng' },
+    { value: 'old', label: 'Cũ/Vẫn dùng tốt' },
+    { value: 'broken', label: 'Hỏng/Lấy linh kiện' },
   ];
 
   const priceRanges = [
@@ -82,19 +95,30 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
   // Handlers
   const handleCategoryChange = (categoryName: string) => {
     const isSameCategory = categoryName === filters.category;
+    const isSubcategorySelected = !!filters.subcategory;
     
+    // TRƯỜNG HỢP: Click vào danh mục cha đang ĐƯỢC CHỌN
+    if (isSameCategory) {
+      // Nếu đang có lọc danh mục con -> Bỏ lọc con, giữ lại lọc cha
+      if (isSubcategorySelected) {
+        onFiltersChange({ 
+          ...filters, 
+          subcategory: undefined,
+        });
+        setExpandedCategory(categoryName); // Vẫn mở rộng
+      } 
+      // Nếu KHÔNG có lọc danh mục con -> Không làm gì (giữ nguyên lọc cha)
+      // Để giống bộ lọc Trường/Cơ sở (click lại vào trường đang chọn thì không mất lọc)
+      return;
+    }
+
+    // TRƯỜNG HỢP: Chọn một danh mục cha MỚI
     onFiltersChange({ 
       ...filters, 
-      category: isSameCategory ? undefined : categoryName,
-      subcategory: undefined, // Reset subcategory khi đổi category
+      category: categoryName,
+      subcategory: undefined,
     });
-    
-    // Auto-expand khi select category mới, collapse khi deselect
-    if (isSameCategory) {
-      setExpandedCategory(null);
-    } else {
-      setExpandedCategory(categoryName);
-    }
+    setExpandedCategory(categoryName);
   };
 
   const handleSubcategoryChange = (subcategoryName: string) => {
@@ -225,32 +249,32 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
         <div className="mb-8">
           <h3 className="font-semibold text-gray-900 mb-3 text-sm">Danh mục</h3>
           <div className="space-y-1">
-            {mockCategories.map((category) => {
-              const hasSubcategories = category.subcategories && category.subcategories.length > 0;
-              const isSelected = filters.category === category.name;
-              const isExpanded = expandedCategory === category.name;
+            {categories.map((category) => {
+              const hasSubcategories = category.children && category.children.length > 0;
+              const isSelected = filters.category === category.slug;
+              const isExpanded = expandedCategory === category.slug;
               
               return (
-                <div key={category.id}>
+                <div key={category.categoryId}>
                   {/* Main Category */}
                   <div
                     className={`flex items-center justify-between py-2 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group ${isSelected ? 'bg-emerald-50/50' : ''}`}
-                    onClick={() => handleCategoryChange(category.name)}
+                    onClick={() => handleCategoryChange(category.slug || "")}
                   >
                     <label className="flex items-center gap-3 cursor-pointer flex-1">
                       <input
                         type="radio"
                         name="category"
                         checked={isSelected}
-                        onChange={() => handleCategoryChange(category.name)}
+                        onChange={() => handleCategoryChange(category.slug || "")}
                         className="hidden" // Hidden radio
                         onClick={(e) => e.stopPropagation()}
                       />
                       <span className={`${isSelected ? 'text-emerald-600' : 'text-gray-500 group-hover:text-gray-700'}`}>
-                        {getCategoryIcon(category.id)}
+                        <CategoryIcon iconName={category.iconName} />
                       </span>
                       <span className={`text-sm group-hover:text-gray-900 ${isSelected ? 'text-emerald-600 font-medium' : 'text-gray-700'}`}>
-                        {category.name}
+                        {category.categoryName}
                       </span>
                     </label>
                     {hasSubcategories && (
@@ -258,7 +282,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                         onClick={(e) => {
                           e.stopPropagation();
                           if (isSelected) {
-                            setExpandedCategory(isExpanded ? null : category.name);
+                            setExpandedCategory(isExpanded ? null : (category.slug || ""));
                           }
                         }}
                         className={`p-1 rounded transition-colors ${
@@ -282,10 +306,10 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                   {isSelected && isExpanded && availableSubcategories.length > 0 && (
                     <div className="ml-7 mt-1 space-y-1 pb-2">
                       {availableSubcategories.map((subcategory) => {
-                        const isSubSelected = filters.subcategory === subcategory.name;
+                        const isSubSelected = filters.subcategory === subcategory.slug;
                         return (
                           <label
-                            key={subcategory.id}
+                            key={subcategory.categoryId}
                             className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
                           >
                             <div className="relative flex items-center justify-center">
@@ -293,7 +317,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                                 type="radio"
                                 name="subcategory"
                                 checked={isSubSelected}
-                                onChange={() => handleSubcategoryChange(subcategory.name)}
+                                onChange={() => handleSubcategoryChange(subcategory.slug || "")}
                                 className="sr-only"
                               />
                               <div className={`w-3.5 h-3.5 rounded-full border transition-all ${
@@ -305,10 +329,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                             <span className={`text-sm transition-colors ${
                               isSubSelected ? 'text-emerald-700 font-medium' : 'text-gray-600 group-hover:text-gray-900'
                             }`}>
-                              {subcategory.name}
-                              {subcategory.count && (
-                                <span className="text-xs text-gray-400 ml-1">({subcategory.count})</span>
-                              )}
+                              {subcategory.categoryName}
                             </span>
                           </label>
                         );
