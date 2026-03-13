@@ -1,27 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MapPin, ChevronDown, Search, ArrowLeft } from "lucide-react";
-
-interface School {
-  name: string;
-  campuses: string[];
-}
-
-const schoolsData: School[] = [
-  { 
-    name: "HUTECH", 
-    campuses: ["475 Điện Biên Phủ", "Ung Văn Khiêm", "E3 (Quận 9)", "Viện Công nghệ cao"] 
-  },
-  { 
-    name: "UEH", 
-    campuses: ["Cơ sở A", "Cơ sở B", "Cơ sở N"] 
-  },
-  {
-    name: "UEMHC",
-    campuses: ["Cơ sở chính"]
-  }
-];
+import { getUniversities } from "@/services/universityService";
+import { UniversityResponse } from "@/types/admin";
 
 interface LocationSelectorProps {
   selectedSchool: string;
@@ -38,9 +20,23 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
   setSelectedCampus,
   variant 
 }) => {
+  const [universities, setUniversities] = useState<UniversityResponse[]>([]);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [locationView, setLocationView] = useState<"main" | "school" | "campus">("main");
   const [locationSearch, setLocationSearch] = useState("");
+
+  // Fetch universities from API
+  useEffect(() => {
+    const fetchUniversities = async () => {
+      try {
+        const data = await getUniversities();
+        setUniversities(data);
+      } catch (error) {
+        console.error("Failed to fetch universities:", error);
+      }
+    };
+    fetchUniversities();
+  }, []);
 
   const isHero = variant === "hero";
 
@@ -60,10 +56,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
       >
         <MapPin size={isHero ? 16 : 16} className={!isHero ? "text-emerald-600 group-hover:scale-110 transition-transform" : ""} />
         <span className={isHero ? "max-w-37.5 truncate" : "text-sm font-heading font-bold text-gray-700 whitespace-nowrap max-w-30 truncate"}>
-          {isHero 
-            ? (selectedCampus ? `${selectedSchool} - ${selectedCampus}` : selectedSchool)
-            : (selectedCampus || selectedSchool)
-          }
+          {selectedCampus || selectedSchool}
         </span>
         <ChevronDown size={14} className={`text-gray-400 transition-transform ${isLocationOpen ? "rotate-180" : ""}`} />
       </button>
@@ -173,31 +166,34 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
 
                 <div className={`overflow-y-auto px-2 pb-2 ${isHero ? "max-h-87.5" : "max-h-64"}`}>
                   {locationView === "school" ? (
-                    schoolsData
-                      .filter(s => s.name.toLowerCase().includes(locationSearch.toLowerCase()))
-                      .map(school => (
-                        <button
-                          key={school.name}
-                          onClick={() => {
-                            setSelectedSchool(school.name);
-                            setSelectedCampus("");
-                            setLocationView("main");
-                            setLocationSearch("");
-                          }}
-                          className={`w-full flex items-center justify-between hover:bg-[#b8f3d7]/20 rounded-lg transition-colors group cursor-pointer ${isHero ? "p-3" : "p-2.5"}`}
-                        >
-                          <span className={`font-semibold ${isHero ? "text-sm" : "text-xs"} ${selectedSchool === school.name ? "text-emerald-600" : "text-gray-700"}`}>
-                            {school.name}
-                          </span>
-                          <div className={`rounded-full border-2 flex items-center justify-center transition-all ${
-                            isHero ? "w-5 h-5" : "w-4 h-4"
-                          } ${
-                            selectedSchool === school.name ? "border-emerald-500 bg-emerald-500" : "border-gray-200"
-                          }`}>
-                            {selectedSchool === school.name && <div className={`bg-white rounded-full ${isHero ? "w-2 h-2" : "w-1.5 h-1.5"}`}></div>}
-                          </div>
-                        </button>
-                      ))
+                    universities
+                      .filter(s => (s.shortName || s.universityName).toLowerCase().includes(locationSearch.toLowerCase()))
+                      .map(school => {
+                        const displayName = school.shortName || school.universityName;
+                        return (
+                          <button
+                            key={school.universityId}
+                            onClick={() => {
+                              setSelectedSchool(displayName);
+                              setSelectedCampus("");
+                              setLocationView("main");
+                              setLocationSearch("");
+                            }}
+                            className={`w-full flex items-center justify-between hover:bg-[#b8f3d7]/20 rounded-lg transition-colors group cursor-pointer ${isHero ? "p-3" : "p-2.5"}`}
+                          >
+                            <span className={`font-semibold ${isHero ? "text-sm" : "text-xs"} ${selectedSchool === displayName ? "text-emerald-600" : "text-gray-700"}`}>
+                              {displayName}
+                            </span>
+                            <div className={`rounded-full border-2 flex items-center justify-center transition-all ${
+                              isHero ? "w-5 h-5" : "w-4 h-4"
+                            } ${
+                              selectedSchool === displayName ? "border-emerald-500 bg-emerald-500" : "border-gray-200"
+                            }`}>
+                              {selectedSchool === displayName && <div className={`bg-white rounded-full ${isHero ? "w-2 h-2" : "w-1.5 h-1.5"}`}></div>}
+                            </div>
+                          </button>
+                        );
+                      })
                   ) : (
                     <div className="space-y-1">
                       <button
@@ -217,29 +213,29 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({
                         )}
                       </button>
                       <div className="h-px bg-gray-100 my-2 mx-2"></div>
-                      {schoolsData
-                        .find(s => s.name === selectedSchool)
+                      {universities
+                        .find(s => (s.shortName || s.universityName) === selectedSchool)
                         ?.campuses
-                        .filter(c => c.toLowerCase().includes(locationSearch.toLowerCase()))
+                        .filter(c => c.campusName.toLowerCase().includes(locationSearch.toLowerCase()))
                         .map(campus => (
                           <button
-                            key={campus}
+                            key={campus.campusId}
                             onClick={() => {
-                              setSelectedCampus(campus);
+                              setSelectedCampus(campus.campusName);
                               setLocationView("main");
                               setLocationSearch("");
                             }}
                             className={`w-full flex items-center justify-between hover:bg-[#b8f3d7]/20 rounded-lg transition-colors group cursor-pointer ${isHero ? "p-3" : "p-2.5"}`}
                           >
-                            <span className={`font-semibold ${isHero ? "text-sm" : "text-xs"} ${selectedCampus === campus ? "text-emerald-600" : "text-gray-700"}`}>
-                              {campus}
+                            <span className={`font-semibold ${isHero ? "text-sm" : "text-xs"} ${selectedCampus === campus.campusName ? "text-emerald-600" : "text-gray-700"}`}>
+                              {campus.campusName}
                             </span>
                             <div className={`rounded-full border-2 flex items-center justify-center transition-all ${
                               isHero ? "w-5 h-5" : "w-4 h-4"
                             } ${
-                              selectedCampus === campus ? "border-emerald-500 bg-emerald-500" : "border-gray-200"
+                              selectedCampus === campus.campusName ? "border-emerald-500 bg-emerald-500" : "border-gray-200"
                             }`}>
-                              {selectedCampus === campus && <div className={`bg-white rounded-full ${isHero ? "w-2 h-2" : "w-1.5 h-1.5"}`}></div>}
+                              {selectedCampus === campus.campusName && <div className={`bg-white rounded-full ${isHero ? "w-2 h-2" : "w-1.5 h-1.5"}`}></div>}
                             </div>
                           </button>
                         ))}

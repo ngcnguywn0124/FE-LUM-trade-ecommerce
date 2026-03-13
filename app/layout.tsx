@@ -4,6 +4,7 @@ import "./globals.css";
 import AppShell from "@/components/layout/AppShell";
 import { Toaster } from "sonner";
 import AuthProvider from "@/providers/AuthProvider";
+import { LocationProvider } from "@/providers/LocationProvider";
 
 const comfortaa = Comfortaa({
   variable: "--font-comfortaa",
@@ -39,10 +40,12 @@ export default function RootLayout({
         className={`${comfortaa.variable} ${beVietnamPro.variable} antialiased font-content`}
       >
         <AuthProvider>
-          <AppShell>
-            {children}
-          </AppShell>
-          <Toaster position="bottom-right" richColors />
+          <LocationProvider>
+            <AppShell>
+              {children}
+            </AppShell>
+            <Toaster position="bottom-right" richColors />
+          </LocationProvider>
         </AuthProvider>
       </body>
     </html>

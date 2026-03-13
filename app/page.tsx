@@ -9,11 +9,11 @@ import LocationSelector from "@/components/shared/LocationSelector";
 import CategoryGrid from "@/components/features/CategoryGrid";
 import PromoBanner from "@/components/features/PromoBanner";
 import PopularKeywords from "@/components/features/PopularKeywords"; 
+import { useLocation } from "@/providers/LocationProvider";
 
 export default function Home() {
+   const { selectedSchool, setSelectedSchool, selectedCampus, setSelectedCampus } = useLocation();
    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-   const [selectedSchool, setSelectedSchool] = useState("HUTECH");
-   const [selectedCampus, setSelectedCampus] = useState("");
 
    return (
       <main className="min-h-screen font-sans">

@@ -7,9 +7,9 @@ import {
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { SearchFilters, ConditionFilter } from "@/types";
-import { mockSchools, getCampusesBySchool } from "@/lib/categoriesData";
 import { getCategoryTree } from "@/services/categoryService";
-import { CategoryResponse } from "@/types/admin";
+import { getUniversities } from "@/services/universityService";
+import { CategoryResponse, UniversityResponse } from "@/types/admin";
 
 interface FilterSidebarProps {
   filters: SearchFilters;
@@ -20,8 +20,9 @@ interface FilterSidebarProps {
 }
 
 const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategories = false }: FilterSidebarProps) => {
-  // State cho categories từ API
+  // State từ API
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [universities, setUniversities] = useState<UniversityResponse[]>([]);
   
   // State cho expanded sections
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
@@ -30,17 +31,21 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
   // State cho tìm kiếm trường học
   const [schoolSearchQuery, setSchoolSearchQuery] = useState("");
 
-  // Fetch categories from API
+  // Fetch data từ API
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getCategoryTree();
-        setCategories(data);
+        const [catData, uniData] = await Promise.all([
+          getCategoryTree(),
+          getUniversities()
+        ]);
+        setCategories(catData);
+        setUniversities(uniData);
       } catch (error) {
-        console.error("Failed to fetch category tree:", error);
+        console.error("Failed to fetch sidebar data:", error);
       }
     };
-    fetchCategories();
+    fetchData();
   }, []);
 
   // Local state cho custom price inputs để tránh lọc ngay lập tức
@@ -57,10 +62,12 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
     );
   }, [filters.priceRange]);
   
-  // Get available campuses based on selected school
-  const availableCampuses = filters.school 
-    ? getCampusesBySchool(mockSchools.find(s => s.name === filters.school)?.id || '')
-    : [];
+  // Get available campuses based on selected university
+  const availableCampuses = useMemo(() => {
+    if (!filters.school) return [];
+    const uni = universities.find(u => u.universityName === filters.school);
+    return uni?.campuses || [];
+  }, [filters.school, universities]);
   
   // Get available subcategories based on selected category (slug)
   const availableSubcategories = useMemo(() => {
@@ -176,8 +183,8 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
   };
 
   // Filter trường học dựa trên search query
-  const filteredSchools = mockSchools.filter(school => 
-    school.name.toLowerCase().includes(schoolSearchQuery.toLowerCase())
+  const filteredSchools = universities.filter(school => 
+    school.universityName.toLowerCase().includes(schoolSearchQuery.toLowerCase())
   );
 
   // Chỉ hiển thị tối đa 6 trường để giao diện gọn gàng
@@ -451,12 +458,12 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-gray-900 text-sm">Trường học</h3>
             <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">
-              {mockSchools.length} trường
+              {universities.length} trường
             </span>
           </div>
 
           {/* Search bar for schools - Show if more than 6 schools */}
-          {mockSchools.length > 6 && (
+          {universities.length > 6 && (
             <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
               <input
@@ -481,22 +488,22 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
             {displayedSchools.length > 0 ? (
               displayedSchools.map((school) => {
                 const hasCampuses = school.campuses && school.campuses.length > 0;
-                const isSelected = filters.school === school.name;
-                const isExpanded = expandedSchool === school.name;
+                const isSelected = filters.school === school.universityName;
+                const isExpanded = expandedSchool === school.universityName;
                 
                 return (
-                  <div key={school.id}>
+                  <div key={school.universityId}>
                     {/* Main School */}
                     <div
                       className={`flex items-center justify-between py-2 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group ${isSelected ? 'bg-emerald-50/50' : ''}`}
-                      onClick={() => handleSchoolChange(school.name)}
+                      onClick={() => handleSchoolChange(school.universityName)}
                     >
                       <label className="flex items-center gap-3 cursor-pointer flex-1">
                         <input
                           type="radio"
                           name="school"
                           checked={isSelected}
-                          onChange={() => handleSchoolChange(school.name)}
+                          onChange={() => handleSchoolChange(school.universityName)}
                           className="hidden" // Hidden radio
                           onClick={(e) => e.stopPropagation()}
                         />
@@ -504,7 +511,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                           <MapPin size={18} />
                         </span>
                         <span className={`text-sm group-hover:text-gray-900 ${isSelected ? 'text-emerald-600 font-medium' : 'text-gray-700'}`}>
-                          {school.name}
+                          {school.shortName || school.universityName}
                         </span>
                       </label>
                       {hasCampuses && (
@@ -512,7 +519,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                           onClick={(e) => {
                             e.stopPropagation();
                             if (isSelected) {
-                              setExpandedSchool(isExpanded ? null : school.name);
+                              setExpandedSchool(isExpanded ? null : school.universityName);
                             }
                           }}
                           className={`p-1 rounded transition-colors ${
@@ -536,10 +543,10 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                     {isSelected && isExpanded && availableCampuses.length > 0 && (
                       <div className="ml-7 mt-1 space-y-1 pb-2">
                         {availableCampuses.map((campus) => {
-                          const isCampusSelected = filters.campus === campus.name;
+                          const isCampusSelected = filters.campus === campus.campusName;
                           return (
                             <label
-                              key={campus.id}
+                              key={campus.campusId}
                               className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
                             >
                               <div className="relative flex items-center justify-center">
@@ -547,7 +554,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                                   type="radio"
                                   name="campus"
                                   checked={isCampusSelected}
-                                  onChange={() => handleCampusChange(campus.name)}
+                                  onChange={() => handleCampusChange(campus.campusName)}
                                   className="sr-only"
                                 />
                                 <div className={`w-3.5 h-3.5 rounded-full border transition-all ${
@@ -559,7 +566,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                               <span className={`text-sm transition-colors ${
                                 isCampusSelected ? 'text-emerald-700 font-medium' : 'text-gray-600 group-hover:text-gray-900'
                               }`}>
-                                {campus.name}
+                                {campus.campusName}
                               </span>
                             </label>
                           );

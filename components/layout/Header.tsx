@@ -18,11 +18,14 @@ import NotificationsDropdown from "../features/notifications/NotificationsDropdo
 import { mockNotifications } from "@/lib/mockNotifications";
 import { NotificationItemData } from "@/types/notifications";
 import { useAuthStore } from "@/stores/authStore";
+import { useLocation } from "@/providers/LocationProvider";
 
 const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, user, logout } = useAuthStore();
+  const { selectedSchool, setSelectedSchool, selectedCampus, setSelectedCampus } = useLocation();
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -34,10 +37,6 @@ const Header = () => {
   const notificationsRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  
-  // State cho Trường và Cơ sở
-  const [selectedSchool, setSelectedSchool] = useState("HUTECH");
-  const [selectedCampus, setSelectedCampus] = useState("");
 
   // Kiểm tra query param require_login từ middleware
   useEffect(() => {
