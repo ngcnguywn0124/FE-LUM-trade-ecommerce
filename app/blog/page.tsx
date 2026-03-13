@@ -10,176 +10,98 @@ import {
   Tag,
   TrendingUp,
   BookOpen,
-  MessageCircle,
   Heart,
   Search,
   ChevronRight
 } from "lucide-react";
+import {
+  BLOG_CATEGORY_FILTERS,
+  BLOG_POSTS,
+  TRENDING_TOPICS,
+  getBlogListingPosts,
+  getFeaturedBlogPost,
+} from "@/lib/blogData";
 
 const BlogPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000";
+  const featuredPost = getFeaturedBlogPost();
+  const blogPosts = getBlogListingPosts();
 
-  const categories = [
-    { id: "all", name: "Tất cả", count: 24 },
-    { id: "tips", name: "Mẹo sinh viên", count: 8 },
-    { id: "story", name: "Câu chuyện", count: 6 },
-    { id: "guide", name: "Hướng dẫn", count: 5 },
-    { id: "campus", name: "Đời sống campus", count: 5 }
-  ];
-
-  const featuredPost = {
-    id: 1,
-    title: "10 Mẹo Mua Bán Đồ Cũ An Toàn Cho Sinh Viên",
-    excerpt: "Chia sẻ kinh nghiệm và những lưu ý quan trọng khi tham gia mua bán đồ cũ trên các nền tảng trực tuyến để tránh rủi ro và có giao dịch thành công.",
-    image: "/banners/blog-featured.jpg",
-    category: "Mẹo sinh viên",
-    author: "Admin Lụm",
-    date: "15 Tháng 2, 2026",
-    readTime: "5 phút đọc",
-    views: 1234,
-    likes: 89
-  };
-
-  const blogPosts = [
-    {
-      id: 2,
-      title: "Cách Tái Sử Dụng Sách Giáo Khoa Hiệu Quả",
-      excerpt: "Những cách thông minh để tận dụng sách giáo khoa cũ, giúp tiết kiệm chi phí và bảo vệ môi trường.",
-      image: "/product/product-1.jpg",
-      category: "Hướng dẫn",
-      author: "Nguyễn Văn A",
-      date: "12 Tháng 2, 2026",
-      readTime: "4 phút đọc",
-      views: 856,
-      likes: 45
-    },
-    {
-      id: 3,
-      title: "Kinh Nghiệm Mua Laptop Cũ Cho Sinh Viên",
-      excerpt: "Những điều cần kiểm tra khi mua laptop second-hand để có sản phẩm chất lượng với giá tốt nhất.",
-      image: "/product/product-2.jpg",
-      category: "Mẹo sinh viên",
-      author: "Trần Thị B",
-      date: "10 Tháng 2, 2026",
-      readTime: "6 phút đọc",
-      views: 1102,
-      likes: 67
-    },
-    {
-      id: 4,
-      title: "Câu Chuyện Từ Cộng Đồng Lụm",
-      excerpt: "Những câu chuyện ý nghĩa về sự chia sẻ và giúp đỡ lẫn nhau trong cộng đồng sinh viên.",
-      image: "/product/product-3.jpg",
-      category: "Câu chuyện",
-      author: "Lê Văn C",
-      date: "8 Tháng 2, 2026",
-      readTime: "3 phút đọc",
-      views: 645,
-      likes: 34
-    },
-    {
-      id: 5,
-      title: "Xu Hướng Mua Sắm Bền Vững Trong Sinh Viên",
-      excerpt: "Tại sao ngày càng nhiều sinh viên chọn mua đồ cũ và tham gia vào nền kinh tế tuần hoàn.",
-      image: "/product/product-4.jpg",
-      category: "Đời sống campus",
-      author: "Phạm Thị D",
-      date: "5 Tháng 2, 2026",
-      readTime: "5 phút đọc",
-      views: 923,
-      likes: 56
-    },
-    {
-      id: 6,
-      title: "Top 5 Món Đồ Sinh Viên Cần Nhất",
-      excerpt: "Danh sách những món đồ thiết yếu mà mọi sinh viên nên có và cách mua chúng với giá hợp lý.",
-      image: "/product/product-5.jpg",
-      category: "Mẹo sinh viên",
-      author: "Hoàng Văn E",
-      date: "2 Tháng 2, 2026",
-      readTime: "4 phút đọc",
-      views: 1345,
-      likes: 78
-    },
-    {
-      id: 7,
-      title: "Hướng Dẫn Chụp Ảnh Sản Phẩm Đẹp",
-      excerpt: "Mẹo nhỏ để chụp ảnh sản phẩm thu hút, giúp bán hàng nhanh hơn trên Lụm.",
-      image: "/product/product-6.jpg",
-      category: "Hướng dẫn",
-      author: "Vũ Thị F",
-      date: "30 Tháng 1, 2026",
-      readTime: "5 phút đọc",
-      views: 767,
-      likes: 41
-    },
-    {
-      id: 8,
-      title: "Chuyện Đời Sống Ký Túc Xá",
-      excerpt: "Những câu chuyện vui buồn lẫn lộn trong cuộc sống ký túc xá của sinh viên.",
-      image: "/product/product-7.jpg",
-      category: "Đời sống campus",
-      author: "Đỗ Văn G",
-      date: "28 Tháng 1, 2026",
-      readTime: "4 phút đọc",
-      views: 534,
-      likes: 29
-    },
-    {
-      id: 9,
-      title: "Làm Thế Nào Để Bán Đồ Nhanh Trên Lụm",
-      excerpt: "Chiến lược đăng tin hiệu quả để sản phẩm của bạn được nhiều người quan tâm.",
-      image: "/product/product-8.jpg",
-      category: "Hướng dẫn",
-      author: "Bùi Thị H",
-      date: "25 Tháng 1, 2026",
-      readTime: "6 phút đọc",
-      views: 1876,
-      likes: 92
+  const categories = BLOG_CATEGORY_FILTERS.map((category) => {
+    if (category.id === "all") {
+      return {
+        ...category,
+        count: BLOG_POSTS.length,
+      };
     }
-  ];
 
-  const trendingTopics = [
-    "Mua bán đồ cũ",
-    "Laptop sinh viên",
-    "Sách giáo khoa",
-    "Đồ điện tử",
-    "Đời sống ký túc xá",
-    "Tiết kiệm chi phí",
-    "Kinh tế tuần hoàn",
-    "Môi trường xanh"
-  ];
+    return {
+      ...category,
+      count: BLOG_POSTS.filter((post) => post.category === category.name).length,
+    };
+  });
 
   const filteredPosts = blogPosts.filter(post => {
-    const matchesCategory = selectedCategory === "all" || post.category.toLowerCase().includes(selectedCategory);
+    const selectedCategoryName = categories.find((category) => category.id === selectedCategory)?.name;
+    const matchesCategory =
+      selectedCategory === "all" || post.category === selectedCategoryName;
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
+  const blogListSchema = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: "Blog Sinh Viên Lụm",
+    description: "Chia sẻ kiến thức, kinh nghiệm và câu chuyện từ cộng đồng sinh viên.",
+    inLanguage: "vi-VN",
+    blogPost: BLOG_POSTS.map((post) => ({
+      "@type": "BlogPosting",
+      headline: post.title,
+      description: post.excerpt,
+      image: `${siteUrl}${post.image}`,
+      author: {
+        "@type": "Person",
+        name: post.author,
+      },
+      url: `${siteUrl}/blog/${post.id}`,
+    })),
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f0fdf7] to-white pt-24 pb-16">
+    <main className="min-h-screen bg-gradient-to-b from-[#f0fdf7] to-white pt-24 pb-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogListSchema) }}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
-        <div className="text-center mb-12">
+        <header className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
             Blog Sinh Viên
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Chia sẻ kiến thức, kinh nghiệm và câu chuyện từ cộng đồng sinh viên
           </p>
-        </div>
+        </header>
 
         {/* Search Bar - Enhanced */}
-        <div className="max-w-3xl mx-auto mb-12">
+        <section className="max-w-3xl mx-auto mb-12" aria-labelledby="blog-search-heading">
+          <h2 id="blog-search-heading" className="sr-only">Tìm kiếm bài viết blog</h2>
           <div className="relative group">
             <div className="absolute inset-0 bg-gradient-to-r from-[#8cceae] to-[#FFBA00] rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity"></div>
             <div className="relative bg-white rounded-2xl shadow-xl border-2 border-transparent hover:border-[#8cceae] transition-all">
-              <div className="flex items-center px-6 py-4">
+              <form className="flex items-center px-6 py-4" role="search" onSubmit={(event) => event.preventDefault()}>
                 <Search className="text-[#8cceae] flex-shrink-0" size={24} strokeWidth={2.5} />
+                <label htmlFor="blog-search-input" className="sr-only">
+                  Tìm kiếm bài viết theo tiêu đề hoặc nội dung
+                </label>
                 <input
+                  id="blog-search-input"
                   type="text"
                   placeholder="Tìm kiếm bài viết theo tiêu đề hoặc nội dung..."
                   value={searchQuery}
@@ -188,16 +110,20 @@ const BlogPage = () => {
                 />
                 {searchQuery && (
                   <button
+                    type="button"
                     onClick={() => setSearchQuery("")}
                     className="ml-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
                   >
                     Xóa
                   </button>
                 )}
-                <button className="ml-3 px-6 py-2 bg-gradient-to-r from-[#8cceae] to-[#6fb896] text-white rounded-lg font-bold hover:shadow-lg transition-all hover:scale-105">
+                <button
+                  type="submit"
+                  className="ml-3 px-6 py-2 bg-gradient-to-r from-[#8cceae] to-[#6fb896] text-white rounded-lg font-bold hover:shadow-lg transition-all hover:scale-105"
+                >
                   Tìm kiếm
                 </button>
-              </div>
+              </form>
             </div>
           </div>
           {searchQuery && (
@@ -207,14 +133,15 @@ const BlogPage = () => {
               </p>
             </div>
           )}
-        </div>
+        </section>
 
         {/* Categories */}
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
+        <nav className="flex flex-wrap justify-center gap-3 mb-12" aria-label="Danh mục bài viết">
           {categories.map((category) => (
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
+              aria-pressed={selectedCategory === category.id}
               className={`px-6 py-2 rounded-full font-medium transition-all transform hover:scale-105 ${
                 selectedCategory === category.id
                   ? "bg-[#8cceae] text-white shadow-lg"
@@ -225,7 +152,7 @@ const BlogPage = () => {
               <span className="ml-2 text-sm opacity-75">({category.count})</span>
             </button>
           ))}
-        </div>
+        </nav>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
@@ -238,9 +165,16 @@ const BlogPage = () => {
                 <h2 className="text-2xl font-bold text-gray-900">Bài viết nổi bật</h2>
               </div>
               
-              <div className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 group">
+              <article className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 group">
                 <div className="relative h-64 sm:h-80 bg-gradient-to-br from-[#8cceae]/20 to-[#FFBA00]/20 flex items-center justify-center">
-                  <BookOpen size={80} className="text-gray-300" />
+                  <Image
+                    src={featuredPost.image}
+                    alt={featuredPost.title}
+                    fill
+                    className="object-cover"
+                    priority
+                    sizes="(max-width: 640px) 100vw, 66vw"
+                  />
                   <div className="absolute top-4 left-4">
                     <span className="px-4 py-1.5 bg-[#FFBA00] text-gray-900 rounded-full text-sm font-bold">
                       {featuredPost.category}
@@ -283,6 +217,7 @@ const BlogPage = () => {
                     </div>
                     <Link
                       href={`/blog/${featuredPost.id}`}
+                      aria-label={`Đọc bài viết ${featuredPost.title}`}
                       className="flex items-center gap-2 px-6 py-2 bg-gray-900 text-[#FFBA00] rounded-lg font-bold hover:bg-gray-800 transition-colors"
                     >
                       Đọc ngay
@@ -290,7 +225,7 @@ const BlogPage = () => {
                     </Link>
                   </div>
                 </div>
-              </div>
+              </article>
             </div>
 
             {/* Blog Posts Grid */}
@@ -307,12 +242,18 @@ const BlogPage = () => {
               ) : (
                 <div className="grid sm:grid-cols-2 gap-6">
                   {filteredPosts.map((post) => (
-                    <div
+                    <article
                       key={post.id}
                       className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group"
                     >
                       <div className="relative h-48 bg-gradient-to-br from-[#8cceae]/20 to-[#FFBA00]/20 flex items-center justify-center">
-                        <BookOpen size={48} className="text-gray-300" />
+                        <Image
+                          src={post.image}
+                          alt={post.title}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 100vw, 50vw"
+                        />
                         <div className="absolute top-3 left-3">
                           <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-gray-900 rounded-full text-xs font-bold">
                             {post.category}
@@ -349,6 +290,7 @@ const BlogPage = () => {
                           </div>
                           <Link
                             href={`/blog/${post.id}`}
+                            aria-label={`Đọc thêm bài viết ${post.title}`}
                             className="text-[#8cceae] font-bold text-sm hover:text-[#6fb896] transition-colors flex items-center gap-1"
                           >
                             Đọc thêm
@@ -356,7 +298,7 @@ const BlogPage = () => {
                           </Link>
                         </div>
                       </div>
-                    </div>
+                    </article>
                   ))}
                 </div>
               )}
@@ -373,9 +315,11 @@ const BlogPage = () => {
                 Chủ đề phổ biến
               </h3>
               <div className="flex flex-wrap gap-2">
-                {trendingTopics.map((topic, index) => (
+                {TRENDING_TOPICS.map((topic, index) => (
                   <button
                     key={index}
+                    type="button"
+                    aria-label={`Xem chủ đề ${topic}`}
                     className="px-3 py-1.5 bg-gray-100 hover:bg-[#8cceae] hover:text-white text-gray-700 rounded-full text-sm font-medium transition-colors"
                   >
                     #{topic}
@@ -425,7 +369,7 @@ const BlogPage = () => {
         </div>
 
       </div>
-    </div>
+    </main>
   );
 };
 

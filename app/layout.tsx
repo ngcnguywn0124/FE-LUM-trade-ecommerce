@@ -33,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="vi">
       <body
         className={`${comfortaa.variable} ${beVietnamPro.variable} antialiased font-content`}
       >

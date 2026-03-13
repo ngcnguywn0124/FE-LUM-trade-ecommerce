@@ -13,130 +13,26 @@ import {
   Share2,
   BookOpen,
   ChevronLeft,
-  ChevronRight,
   MessageCircle,
   Eye
 } from "lucide-react";
+import {
+  FEATURED_BLOG_ID,
+  getBlogPostDetailById,
+  getRelatedBlogPosts,
+} from "@/lib/blogData";
 
 const BlogDetailPage = () => {
-  const params = useParams();
-  const blogId = params.id;
+  const params = useParams<{ id: string }>();
+  const blogId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const blogPost =
+    getBlogPostDetailById(blogId ?? FEATURED_BLOG_ID) ||
+    getBlogPostDetailById(FEATURED_BLOG_ID)!;
+  const relatedPosts = getRelatedBlogPosts(blogPost.id, 3);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000";
+  const currentUrl = `${siteUrl}/blog/${String(blogPost.id)}`;
   const [isLiked, setIsLiked] = useState(false);
-  const [likes, setLikes] = useState(89);
-
-  // Mock data - Trong thực tế sẽ fetch từ API
-  const blogPost = {
-    id: 1,
-    title: "10 Mẹo Mua Bán Đồ Cũ An Toàn Cho Sinh Viên",
-    excerpt: "Chia sẻ kinh nghiệm và những lưu ý quan trọng khi tham gia mua bán đồ cũ trên các nền tảng trực tuyến.",
-    content: `
-      <h2>Giới thiệu</h2>
-      <p>Trong thời đại kinh tế chia sẻ ngày càng phát triển, việc mua bán đồ cũ đã trở thành xu hướng phổ biến, đặc biệt trong cộng đồng sinh viên. Tuy nhiên, để có những giao dịch an toàn và hiệu quả, bạn cần nắm rõ một số nguyên tắc cơ bản.</p>
-
-      <h2>1. Kiểm tra kỹ thông tin người bán/mua</h2>
-      <p>Trước khi quyết định giao dịch, hãy dành thời gian tìm hiểu về người bán hoặc người mua. Kiểm tra:</p>
-      <ul>
-        <li>Tài khoản đã được xác thực chưa</li>
-        <li>Số lượng giao dịch trước đó</li>
-        <li>Đánh giá từ những người dùng khác</li>
-        <li>Thời gian tham gia nền tảng</li>
-      </ul>
-
-      <h2>2. Gặp mặt tại địa điểm công cộng</h2>
-      <p>Luôn ưu tiên gặp gỡ trực tiếp tại những nơi đông người như:</p>
-      <ul>
-        <li>Khuôn viên trường học</li>
-        <li>Quán cà phê</li>
-        <li>Trung tâm thương mại</li>
-        <li>Cổng ký túc xá</li>
-      </ul>
-      <p>Tránh hẹn gặp tại những nơi vắng vẻ hoặc địa điểm riêng tư.</p>
-
-      <h2>3. Kiểm tra kỹ sản phẩm trước khi thanh toán</h2>
-      <p>Đối với đồ điện tử, hãy:</p>
-      <ul>
-        <li>Yêu cầu người bán demo sản phẩm</li>
-        <li>Kiểm tra các tính năng chính</li>
-        <li>Xem xét tình trạng ngoại quan</li>
-        <li>Chụp ảnh làm bằng chứng</li>
-      </ul>
-
-      <h2>4. Sử dụng phương thức thanh toán an toàn</h2>
-      <p>Ưu tiên các hình thức thanh toán có thể tra cứu được như:</p>
-      <ul>
-        <li>Chuyển khoản ngân hàng</li>
-        <li>Ví điện tử có uy tín</li>
-        <li>Thanh toán trực tiếp bằng tiền mặt (khi gặp mặt)</li>
-      </ul>
-      <p>Tránh các hình thức thanh toán không rõ ràng hoặc không thể truy vết.</p>
-
-      <h2>5. Giữ bằng chứng giao dịch</h2>
-      <p>Lưu trữ đầy đủ:</p>
-      <ul>
-        <li>Tin nhắn trao đổi</li>
-        <li>Hình ảnh sản phẩm</li>
-        <li>Biên lai chuyển khoản</li>
-        <li>Thông tin liên lạc</li>
-      </ul>
-
-      <h2>6. Đặt câu hỏi chi tiết</h2>
-      <p>Đừng ngại hỏi người bán về:</p>
-      <ul>
-        <li>Lý do bán sản phẩm</li>
-        <li>Thời gian sử dụng</li>
-        <li>Tình trạng bảo hành</li>
-        <li>Lịch sử sửa chữa (nếu có)</li>
-      </ul>
-
-      <h2>7. Thương lượng giá cả hợp lý</h2>
-      <p>Nghiên cứu giá thị trường trước khi đàm phán. Đưa ra mức giá công bằng cho cả hai bên và không quá ép giá gây khó chịu cho người bán.</p>
-
-      <h2>8. Tin tưởng trực giác của bạn</h2>
-      <p>Nếu bạn cảm thấy có gì đó không ổn về giao dịch, đừng ngần ngại từ chối. An toàn luôn là ưu tiên hàng đầu.</p>
-
-      <h2>9. Tham khảo ý kiến bạn bè</h2>
-      <p>Đưa theo một người bạn khi gặp gỡ người lạ. Họ có thể giúp bạn đánh giá sản phẩm và đảm bảo an toàn.</p>
-
-      <h2>10. Báo cáo hành vi đáng ngờ</h2>
-      <p>Nếu phát hiện dấu hiệu lừa đảo hoặc hành vi không phù hợp, hãy báo cáo ngay cho nền tảng và cơ quan chức năng.</p>
-
-      <h2>Kết luận</h2>
-      <p>Mua bán đồ cũ không chỉ giúp tiết kiệm chi phí mà còn góp phần bảo vệ môi trường. Tuy nhiên, hãy luôn đặt an toàn lên hàng đầu. Hy vọng 10 mẹo trên sẽ giúp bạn có những giao dịch thành công và an toàn trên Lụm!</p>
-    `,
-    category: "Mẹo sinh viên",
-    author: {
-      name: "Admin Lụm",
-      avatar: "/user/avatar-1.jpg",
-      role: "Content Manager"
-    },
-    date: "15 Tháng 2, 2026",
-    readTime: "5 phút đọc",
-    views: 1234,
-    likes: 89,
-    comments: 23,
-    tags: ["Mua bán", "An toàn", "Mẹo hay", "Sinh viên"]
-  };
-
-  const relatedPosts = [
-    {
-      id: 2,
-      title: "Cách Tái Sử Dụng Sách Giáo Khoa Hiệu Quả",
-      image: "/product/product-1.jpg",
-      category: "Hướng dẫn"
-    },
-    {
-      id: 3,
-      title: "Kinh Nghiệm Mua Laptop Cũ Cho Sinh Viên",
-      image: "/product/product-2.jpg",
-      category: "Mẹo sinh viên"
-    },
-    {
-      id: 4,
-      title: "Câu Chuyện Từ Cộng Đồng Lụm",
-      image: "/product/product-3.jpg",
-      category: "Câu chuyện"
-    }
-  ];
+  const [likes, setLikes] = useState(blogPost.likes);
 
   const handleLike = () => {
     if (isLiked) {
@@ -161,24 +57,113 @@ const BlogDetailPage = () => {
     }
   };
 
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: blogPost.title,
+    description: blogPost.excerpt,
+    image: `${siteUrl}${blogPost.image}`,
+    articleSection: blogPost.category,
+    author: {
+      "@type": "Person",
+      name: blogPost.authorProfile.name,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Lụm",
+    },
+    mainEntityOfPage: currentUrl,
+    interactionStatistic: [
+      {
+        "@type": "InteractionCounter",
+        interactionType: "https://schema.org/LikeAction",
+        userInteractionCount: likes,
+      },
+      {
+        "@type": "InteractionCounter",
+        interactionType: "https://schema.org/CommentAction",
+        userInteractionCount: blogPost.comments,
+      },
+    ],
+    url: currentUrl,
+    inLanguage: "vi-VN",
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Trang chủ",
+        item: siteUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Blog",
+        item: `${siteUrl}/blog`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: blogPost.title,
+        item: currentUrl,
+      },
+    ],
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f0fdf7] to-white pt-24 pb-16">
+    <main className="min-h-screen bg-gradient-to-b from-[#f0fdf7] to-white pt-24 pb-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Back Button */}
-        <Link 
-          href="/blog"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-[#8cceae] mb-6 transition-colors group"
-        >
-          <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-          <span className="font-medium">Quay lại Blog</span>
-        </Link>
+        <nav aria-label="Điều hướng bài viết">
+          <ol className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+            <li>
+              <Link href="/" className="hover:text-[#8cceae] transition-colors">
+                Trang chủ
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li>
+              <Link href="/blog" className="hover:text-[#8cceae] transition-colors">
+                Blog
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li className="text-gray-700 line-clamp-1">{blogPost.title}</li>
+          </ol>
+          <Link
+            href="/blog"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-[#8cceae] mb-6 transition-colors group"
+          >
+            <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Quay lại Blog</span>
+          </Link>
+        </nav>
 
         {/* Article Header */}
-        <article className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+        <article className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8" aria-labelledby="blog-detail-title">
           {/* Featured Image */}
           <div className="relative h-64 sm:h-96 bg-gradient-to-br from-[#8cceae]/20 to-[#FFBA00]/20 flex items-center justify-center">
-            <BookOpen size={100} className="text-gray-300" />
+            <Image
+              src={blogPost.image}
+              alt={blogPost.title}
+              fill
+              className="object-cover"
+              priority
+              sizes="(max-width: 640px) 100vw, 1024px"
+            />
             <div className="absolute top-6 left-6">
               <span className="px-4 py-2 bg-[#8cceae] text-white rounded-full text-sm font-bold shadow-lg">
                 {blogPost.category}
@@ -188,7 +173,7 @@ const BlogDetailPage = () => {
 
           <div className="p-6 sm:p-10">
             {/* Title */}
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6 leading-tight">
+            <h1 id="blog-detail-title" className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6 leading-tight">
               {blogPost.title}
             </h1>
 
@@ -199,8 +184,8 @@ const BlogDetailPage = () => {
                   <User size={24} className="text-white" />
                 </div>
                 <div>
-                  <div className="font-bold text-gray-900">{blogPost.author.name}</div>
-                  <div className="text-sm text-gray-500">{blogPost.author.role}</div>
+                  <div className="font-bold text-gray-900">{blogPost.authorProfile.name}</div>
+                  <div className="text-sm text-gray-500">{blogPost.authorProfile.role}</div>
                 </div>
               </div>
               
@@ -275,27 +260,27 @@ const BlogDetailPage = () => {
         </article>
 
         {/* Author Bio */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-8">
+        <section className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-8" aria-labelledby="author-bio-title">
           <div className="flex items-start gap-4">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#8cceae] to-[#6fb896] flex items-center justify-center flex-shrink-0">
               <User size={40} className="text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="text-xl font-bold text-gray-900 mb-1">
-                {blogPost.author.name}
-              </h3>
-              <p className="text-[#8cceae] font-medium mb-2">{blogPost.author.role}</p>
+              <h2 id="author-bio-title" className="text-xl font-bold text-gray-900 mb-1">
+                {blogPost.authorProfile.name}
+              </h2>
+              <p className="text-[#8cceae] font-medium mb-2">{blogPost.authorProfile.role}</p>
               <p className="text-gray-600 leading-relaxed">
                 Chuyên viên nội dung tại Lụm, đam mê chia sẻ kiến thức và kinh nghiệm 
                 về mua bán đồ cũ an toàn cho cộng đồng sinh viên.
               </p>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Related Posts */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <section className="bg-white rounded-2xl shadow-lg p-6 sm:p-8" aria-labelledby="related-posts-title">
+          <h2 id="related-posts-title" className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <BookOpen size={28} className="text-[#8cceae]" />
             Bài viết liên quan
           </h2>
@@ -308,7 +293,13 @@ const BlogDetailPage = () => {
               >
                 <div className="bg-gray-50 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300">
                   <div className="relative h-40 bg-gradient-to-br from-[#8cceae]/20 to-[#FFBA00]/20 flex items-center justify-center">
-                    <BookOpen size={40} className="text-gray-300" />
+                    <Image
+                      src={post.image}
+                      alt={post.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, 33vw"
+                    />
                     <div className="absolute top-2 left-2">
                       <span className="px-2 py-1 bg-white/90 text-gray-900 rounded-full text-xs font-bold">
                         {post.category}
@@ -324,11 +315,11 @@ const BlogDetailPage = () => {
               </Link>
             ))}
           </div>
-        </div>
+        </section>
 
         {/* Comments Section */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mt-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <section className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mt-8" aria-labelledby="comments-title">
+          <h2 id="comments-title" className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <MessageCircle size={28} className="text-[#8cceae]" />
             Bình luận ({blogPost.comments})
           </h2>
@@ -387,7 +378,7 @@ const BlogDetailPage = () => {
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
       </div>
 
@@ -414,7 +405,7 @@ const BlogDetailPage = () => {
           margin-bottom: 0.5rem;
         }
       `}</style>
-    </div>
+    </main>
   );
 };
 
