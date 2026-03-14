@@ -282,9 +282,20 @@ const SearchPageClient = ({ combinedSlug }: SearchPageClientProps) => {
     const loadProducts = async () => {
       setIsLoading(true);
       try {
+        const catId = filters.subcategory
+          ? categoryBySlug.get(filters.subcategory)?.categoryId
+          : filters.category
+            ? categoryBySlug.get(filters.category)?.categoryId
+            : undefined;
+
         const page = keyword
           ? await searchProducts(keyword, 0, 120)
-          : await getProducts({ page: 0, size: 120, sort: "createdAt,desc" });
+          : await getProducts({
+              categoryId: catId,
+              page: 0,
+              size: 120,
+              sort: "createdAt,desc",
+            });
 
         setAllProducts(page.content.map(mapSummaryToCardProduct));
       } catch {
@@ -295,7 +306,7 @@ const SearchPageClient = ({ combinedSlug }: SearchPageClientProps) => {
     };
 
     loadProducts();
-  }, [keyword]);
+  }, [keyword, filters.category, filters.subcategory, categoryBySlug]);
 
   const filteredProducts = useMemo(() => {
     return allProducts.filter((product) => {
@@ -304,8 +315,12 @@ const SearchPageClient = ({ combinedSlug }: SearchPageClientProps) => {
       }
 
       if (filters.subcategory) {
-        if (product.categorySlug !== filters.subcategory) {
-          return false;
+        const matchesSubcategorySlug = product.categorySlug === filters.subcategory;
+        if (!matchesSubcategorySlug) {
+          const subcategoryName = categoryBySlug.get(filters.subcategory)?.categoryName;
+          if (!subcategoryName || product.category !== subcategoryName) {
+            return false;
+          }
         }
       } else if (filters.category) {
         const allowedSlugs = categoryDescendantSlugs.get(filters.category) || new Set([filters.category]);
