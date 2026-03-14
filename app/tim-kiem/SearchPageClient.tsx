@@ -517,13 +517,26 @@ const SearchPageClient = ({ combinedSlug }: SearchPageClientProps) => {
             <div className="lg:hidden flex items-center gap-2 mb-4">
               <button
                 onClick={() => setIsFilterOpen(true)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+                className="flex shrink-0 items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <SlidersHorizontal size={18} className="text-gray-600" />
-                <span className="font-medium text-sm text-gray-700">Bộ lọc & Sắp xếp</span>
+                <span className="font-medium text-sm text-gray-700">Bộ lọc</span>
               </button>
 
-              <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200 shadow-sm">
+              <div className="flex-1 min-w-0">
+                <SearchHeader
+                  resultCount={sortedProducts.length}
+                  keyword={keyword}
+                  category={displayCategoryName}
+                  sortBy={filters.sortBy || "newest"}
+                  onSortChange={handleSortChange}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                  minimal={true}
+                />
+              </div>
+
+              <div className="flex items-center shrink-0 bg-gray-100 p-1 rounded-lg border border-gray-200">
                 <button
                   onClick={() => setViewMode("grid-4")}
                   className={`p-1.5 rounded-md transition-all ${
@@ -557,22 +570,28 @@ const SearchPageClient = ({ combinedSlug }: SearchPageClientProps) => {
               />
             </div>
 
-            <SearchHeader
-              resultCount={sortedProducts.length}
-              keyword={keyword}
-              category={displayCategoryName}
-              sortBy={filters.sortBy || "newest"}
-              onSortChange={handleSortChange}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-            />
+            <div className="hidden lg:block">
+              <SearchHeader
+                resultCount={sortedProducts.length}
+                keyword={keyword}
+                category={displayCategoryName}
+                sortBy={filters.sortBy || "newest"}
+                onSortChange={handleSortChange}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+              />
+            </div>
 
             <ActiveFilters
               filters={displayFilters}
               onRemoveFilter={handleRemoveFilter}
             />
 
-            {showSuggestedCategories && <SuggestedCategories filters={filters} />}
+            {showSuggestedCategories && (
+              <div className="hidden lg:block">
+                <SuggestedCategories filters={filters} />
+              </div>
+            )}
 
             <SearchResultsGrid
               products={paginatedProducts}

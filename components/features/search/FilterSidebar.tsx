@@ -78,12 +78,12 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
     return uni?.campuses || [];
   }, [filters.school, universities]);
   
-  // Get available subcategories based on selected category (slug)
-  const availableSubcategories = useMemo(() => {
-    if (!filters.category) return [];
-    const parent = categories.find(c => c.slug === filters.category);
+  // Get available subcategories based on a specific category slug
+  const getSubcategories = (parentSlug: string) => {
+    if (!parentSlug) return [];
+    const parent = categories.find(c => c.slug === parentSlug);
     return parent?.children || [];
-  }, [filters.category, categories]);
+  };
 
   const CategoryIcon = ({ iconName }: { iconName: string | null }) => {
     if (!iconName) return <LucideIcons.Layers size={18} />;
@@ -271,8 +271,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
         {/* Categories, etc. */}
 
         {/* Category Filter với Subcategories */}
-        {!hideCategories && (
-        <div className="mb-8">
+        <div className={`mb-8 ${hideCategories ? 'lg:hidden' : ''}`}>
           <h3 className="font-semibold text-gray-900 mb-3 text-sm">Danh mục</h3>
           <div className="space-y-1">
             {categories.map((category) => {
@@ -307,19 +306,12 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (isSelected) {
-                            setExpandedCategory(isExpanded ? null : (category.slug || ""));
-                          }
+                          setExpandedCategory(isExpanded ? null : (category.slug || ""));
                         }}
-                        className={`p-1 rounded transition-colors ${
-                          isSelected 
-                            ? 'hover:bg-gray-200' 
-                            : 'opacity-50'
-                        }`}
-                        disabled={!isSelected}
-                        title={!isSelected ? 'Chọn danh mục để xem danh mục con' : 'Xem danh mục con'}
+                        className="p-1 rounded transition-colors hover:bg-gray-200"
+                        title="Xem danh mục con"
                       >
-                        {isExpanded && isSelected ? (
+                        {isExpanded ? (
                           <ChevronDown size={16} className="text-gray-500" />
                         ) : (
                           <ChevronRight size={16} className="text-gray-500" />
@@ -329,9 +321,9 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                   </div>
 
                   {/* Subcategories */}
-                  {isSelected && isExpanded && availableSubcategories.length > 0 && (
+                  {isExpanded && getSubcategories(category.slug || "").length > 0 && (
                     <div className="ml-7 mt-1 space-y-1 pb-2">
-                      {availableSubcategories.map((subcategory) => {
+                      {getSubcategories(category.slug || "").map((subcategory) => {
                         const isSubSelected = filters.subcategory === subcategory.slug;
                         return (
                           <label
@@ -367,7 +359,6 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
             })}
           </div>
         </div>
-        )}
 
         {/* Condition Filter */}
         <div className="mb-8">
@@ -538,19 +529,12 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (isSelected) {
-                              setExpandedSchool(isExpanded ? null : schoolSlug);
-                            }
+                            setExpandedSchool(isExpanded ? null : schoolSlug);
                           }}
-                          className={`p-1 rounded transition-colors ${
-                            isSelected 
-                              ? 'hover:bg-gray-200' 
-                              : 'opacity-50'
-                          }`}
-                          disabled={!isSelected}
-                          title={!isSelected ? 'Chọn trường để xem cơ sở' : 'Xem cơ sở'}
+                          className="p-1 rounded transition-colors hover:bg-gray-200"
+                          title="Xem cơ sở"
                         >
-                          {isExpanded && isSelected ? (
+                          {isExpanded ? (
                             <ChevronDown size={16} className="text-gray-500" />
                           ) : (
                             <ChevronRight size={16} className="text-gray-500" />
@@ -560,9 +544,9 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                     </div>
 
                     {/* Campuses */}
-                    {isSelected && isExpanded && availableCampuses.length > 0 && (
+                    {isExpanded && (school.campuses || []).length > 0 && (
                       <div className="ml-7 mt-1 space-y-1 pb-2">
-                        {availableCampuses.map((campus) => {
+                        {(school.campuses || []).map((campus) => {
                           const campusSlug = campus.slug || "";
                           const isCampusSelected = filters.campus === campusSlug;
                           return (
