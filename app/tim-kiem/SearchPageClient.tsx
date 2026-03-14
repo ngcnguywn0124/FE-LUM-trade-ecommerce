@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { SlidersHorizontal, LayoutGrid, List } from "lucide-react";
 import FilterSidebar from "@/components/features/search/FilterSidebar";
@@ -288,6 +288,9 @@ const SearchPageClient = ({ combinedSlug }: SearchPageClientProps) => {
             ? categoryBySlug.get(filters.category)?.categoryId
             : undefined;
 
+        // Thêm độ trễ 0.5s để giảm nhấp nháy UI và cho cảm giác mượt mà
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         const page = keyword
           ? await searchProducts(keyword, 0, 120)
           : await getProducts({
@@ -306,7 +309,7 @@ const SearchPageClient = ({ combinedSlug }: SearchPageClientProps) => {
     };
 
     loadProducts();
-  }, [keyword, filters.category, filters.subcategory, categoryBySlug]);
+  }, [keyword, filters.category, filters.subcategory, filters.school, filters.campus, categoryBySlug]);
 
   const filteredProducts = useMemo(() => {
     return allProducts.filter((product) => {
@@ -429,43 +432,44 @@ const SearchPageClient = ({ combinedSlug }: SearchPageClientProps) => {
     return campusBySlug.get(filters.campus)?.campusName || filters.campus;
   }, [filters.campus, campusBySlug]);
 
-  const pushFiltersToUrl = (newFilters: SearchFilters) => {
-    const href = buildSearchHref({
-      itemSlug: newFilters.subcategory || newFilters.category,
-      universitySlug: newFilters.school,
-      campusSlug: newFilters.campus,
-      keyword,
-      minPrice: newFilters.priceRange?.min,
-      maxPrice: newFilters.priceRange?.max === 999999999 ? undefined : newFilters.priceRange?.max,
-      condition: newFilters.condition !== "all" ? newFilters.condition : undefined,
-    });
-    router.push(href, { scroll: false });
-  };
+  const handleFiltersChange = useCallback(
+    (newFilters: SearchFilters) => {
+      setFilters(newFilters);
+      setCurrentPage(1);
 
-  const handleFiltersChange = (newFilters: SearchFilters) => {
-    setFilters(newFilters);
-    setCurrentPage(1);
-    pushFiltersToUrl(newFilters);
-  };
+      const href = buildSearchHref({
+        itemSlug: newFilters.subcategory || newFilters.category,
+        universitySlug: newFilters.school,
+        campusSlug: newFilters.campus,
+        keyword,
+        minPrice: newFilters.priceRange?.min,
+        maxPrice: newFilters.priceRange?.max === 999999999 ? undefined : newFilters.priceRange?.max,
+        condition: newFilters.condition !== "all" ? newFilters.condition : undefined,
+      });
+      router.push(href, { scroll: false });
+    },
+    [keyword, router]
+  );
 
-  const handleRemoveFilter = (filterKey: keyof SearchFilters) => {
-    const newFilters = {
-      ...filters,
-      [filterKey]: filterKey === "condition" ? "all" : undefined,
-    };
+  const handleRemoveFilter = useCallback(
+    (filterKey: keyof SearchFilters) => {
+      const newFilters = {
+        ...filters,
+        [filterKey]: filterKey === "condition" ? "all" : undefined,
+      };
 
-    if (filterKey === "category") {
-      newFilters.subcategory = undefined;
-    }
+      if (filterKey === "category") {
+        newFilters.subcategory = undefined;
+      }
 
-    if (filterKey === "school") {
-      newFilters.campus = undefined;
-    }
+      if (filterKey === "school") {
+        newFilters.campus = undefined;
+      }
 
-    setFilters(newFilters);
-    setCurrentPage(1);
-    pushFiltersToUrl(newFilters);
-  };
+      handleFiltersChange(newFilters);
+    },
+    [filters, handleFiltersChange]
+  );
 
   const handleSortChange = (sortBy: SortOption) => {
     setFilters({ ...filters, sortBy });
@@ -488,8 +492,7 @@ const SearchPageClient = ({ combinedSlug }: SearchPageClientProps) => {
     };
 
     setFilters(resetFilters);
-    setCurrentPage(1);
-    pushFiltersToUrl(resetFilters);
+    handleFiltersChange(resetFilters);
   };
 
   const breadcrumbItems = [

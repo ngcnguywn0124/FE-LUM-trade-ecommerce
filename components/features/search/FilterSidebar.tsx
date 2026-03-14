@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, memo } from "react";
 import { 
   SlidersHorizontal, X, ChevronDown, ChevronRight,
   MapPin, Search
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { SearchFilters, ConditionFilter } from "@/types";
 import { getCategoryTree } from "@/services/categoryService";
 import { getUniversities } from "@/services/universityService";
@@ -20,7 +21,7 @@ interface FilterSidebarProps {
   hideCategories?: boolean;
 }
 
-const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategories = false }: FilterSidebarProps) => {
+const FilterSidebar = memo(({ filters, onFiltersChange, isOpen, onClose, hideCategories = false }: FilterSidebarProps) => {
   const { setSelectedSchool, setSelectedCampus } = useLocation();
 
   // State từ API
@@ -321,39 +322,47 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                   </div>
 
                   {/* Subcategories */}
-                  {isExpanded && getSubcategories(category.slug || "").length > 0 && (
-                    <div className="ml-7 mt-1 space-y-1 pb-2">
-                      {getSubcategories(category.slug || "").map((subcategory) => {
-                        const isSubSelected = filters.subcategory === subcategory.slug;
-                        return (
-                          <label
-                            key={subcategory.categoryId}
-                            className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
-                          >
-                            <div className="relative flex items-center justify-center">
-                              <input
-                                type="radio"
-                                name="subcategory"
-                                checked={isSubSelected}
-                                onChange={() => handleSubcategoryChange(subcategory.slug || "")}
-                                className="sr-only"
-                              />
-                              <div className={`w-3.5 h-3.5 rounded-full border transition-all ${
-                                isSubSelected 
-                                  ? 'border-emerald-600 border-[4.5px]' 
-                                  : 'border-gray-300 group-hover:border-emerald-500'
-                              }`} />
-                            </div>
-                            <span className={`text-sm transition-colors ${
-                              isSubSelected ? 'text-emerald-700 font-medium' : 'text-gray-600 group-hover:text-gray-900'
-                            }`}>
-                              {subcategory.categoryName}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <AnimatePresence>
+                    {isExpanded && getSubcategories(category.slug || "").length > 0 && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="ml-7 mt-1 space-y-1 pb-2 overflow-hidden"
+                      >
+                        {getSubcategories(category.slug || "").map((subcategory) => {
+                          const isSubSelected = filters.subcategory === subcategory.slug;
+                          return (
+                            <label
+                              key={subcategory.categoryId}
+                              className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
+                            >
+                              <div className="relative flex items-center justify-center">
+                                <input
+                                  type="radio"
+                                  name="subcategory"
+                                  checked={isSubSelected}
+                                  onChange={() => handleSubcategoryChange(subcategory.slug || "")}
+                                  className="sr-only"
+                                />
+                                <div className={`w-3.5 h-3.5 rounded-full border transition-all ${
+                                  isSubSelected 
+                                    ? 'border-emerald-600 border-[4.5px]' 
+                                    : 'border-gray-300 group-hover:border-emerald-500'
+                                }`} />
+                              </div>
+                              <span className={`text-sm transition-colors ${
+                                isSubSelected ? 'text-emerald-700 font-medium' : 'text-gray-600 group-hover:text-gray-900'
+                              }`}>
+                                {subcategory.categoryName}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
@@ -544,40 +553,48 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                     </div>
 
                     {/* Campuses */}
-                    {isExpanded && (school.campuses || []).length > 0 && (
-                      <div className="ml-7 mt-1 space-y-1 pb-2">
-                        {(school.campuses || []).map((campus) => {
-                          const campusSlug = campus.slug || "";
-                          const isCampusSelected = filters.campus === campusSlug;
-                          return (
-                            <label
-                              key={campus.campusId}
-                              className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
-                            >
-                              <div className="relative flex items-center justify-center">
-                                <input
-                                  type="radio"
-                                  name="campus"
-                                  checked={isCampusSelected}
-                                  onChange={() => handleCampusChange(campusSlug, campus.campusName)}
-                                  className="sr-only"
-                                />
-                                <div className={`w-3.5 h-3.5 rounded-full border transition-all ${
-                                  isCampusSelected 
-                                    ? 'border-emerald-600 border-[4.5px]' 
-                                    : 'border-gray-300 group-hover:border-emerald-500'
-                                }`} />
-                              </div>
-                              <span className={`text-sm transition-colors ${
-                                isCampusSelected ? 'text-emerald-700 font-medium' : 'text-gray-600 group-hover:text-gray-900'
-                              }`}>
-                                {campus.campusName}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    )}
+                    <AnimatePresence>
+                      {isExpanded && (school.campuses || []).length > 0 && (
+                        <motion.div 
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="ml-7 mt-1 space-y-1 pb-2 overflow-hidden"
+                        >
+                          {(school.campuses || []).map((campus) => {
+                            const campusSlug = campus.slug || "";
+                            const isCampusSelected = filters.campus === campusSlug;
+                            return (
+                              <label
+                                key={campus.campusId}
+                                className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
+                              >
+                                <div className="relative flex items-center justify-center">
+                                  <input
+                                    type="radio"
+                                    name="campus"
+                                    checked={isCampusSelected}
+                                    onChange={() => handleCampusChange(campusSlug, campus.campusName)}
+                                    className="sr-only"
+                                  />
+                                  <div className={`w-3.5 h-3.5 rounded-full border transition-all ${
+                                    isCampusSelected 
+                                      ? 'border-emerald-600 border-[4.5px]' 
+                                      : 'border-gray-300 group-hover:border-emerald-500'
+                                  }`} />
+                                </div>
+                                <span className={`text-sm transition-colors ${
+                                  isCampusSelected ? 'text-emerald-700 font-medium' : 'text-gray-600 group-hover:text-gray-900'
+                                }`}>
+                                  {campus.campusName}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 );
               })
@@ -597,6 +614,6 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
       </aside>
     </>
   );
-};
+});
 
 export default FilterSidebar;
