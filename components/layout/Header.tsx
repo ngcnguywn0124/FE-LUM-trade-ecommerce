@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import { usePathname } from "next/navigation";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -19,6 +19,9 @@ import { mockNotifications } from "@/lib/mockNotifications";
 import { NotificationItemData } from "@/types/notifications";
 import { useAuthStore } from "@/stores/authStore";
 import { useLocation } from "@/providers/LocationProvider";
+import { getUniversities } from "@/services/universityService";
+import { UniversityResponse } from "@/types/admin";
+import { buildSearchHref } from "@/lib/searchUrl";
 
 const Header = () => {
   const pathname = usePathname();
@@ -28,12 +31,26 @@ const Header = () => {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [keyword, setKeyword] = useState("");
+
+  // Sync keyword with URL search param 'q'
+  const searchParams = useSearchParams();
+  const q = searchParams.get("q");
+  
+  useEffect(() => {
+    if (q !== null) {
+      setKeyword(q);
+    } else {
+      setKeyword("");
+    }
+  }, [q]);
+
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItemData[]>(mockNotifications);
+  const [universities, setUniversities] = useState<UniversityResponse[]>([]);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -85,6 +102,19 @@ const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHomePage]);
+
+  useEffect(() => {
+    const loadSearchMeta = async () => {
+      try {
+        const universitiesData = await getUniversities();
+        setUniversities(universitiesData);
+      } catch (error) {
+        console.error("Failed to load search metadata:", error);
+      }
+    };
+
+    loadSearchMeta();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -171,6 +201,34 @@ const Header = () => {
     }
   };
 
+  const handleSearchSubmit = useCallback(() => {
+    const normalizedKeyword = keyword.trim();
+    const normalizedSchool = selectedSchool.trim();
+    const normalizedCampus = selectedCampus.trim();
+
+    const selectedUniversity = universities.find(
+      (university) =>
+        university.slug === normalizedSchool ||
+        university.shortName === normalizedSchool ||
+        university.universityName === normalizedSchool
+    );
+
+    const selectedCampusItem = universities
+      .flatMap((university) =>
+        (university.campuses || []).map((campus) => campus)
+      )
+      .find((campus) => campus.slug === normalizedCampus || campus.campusName === normalizedCampus);
+
+    const href = buildSearchHref({
+      itemSlug: undefined,
+      universitySlug: selectedUniversity?.slug || undefined,
+      campusSlug: selectedCampusItem?.slug || undefined,
+      keyword: normalizedKeyword || undefined,
+    });
+
+    router.push(href);
+  }, [keyword, selectedSchool, selectedCampus, universities, router]);
+
   return (
     <div className="flex flex-col w-full font-sans">
       <nav 
@@ -235,6 +293,12 @@ const Header = () => {
                             type="text"
                             value={keyword}
                             onChange={(e) => setKeyword(e.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault();
+                                handleSearchSubmit();
+                              }
+                            }}
                             placeholder="Tìm kiếm..."
                             className="w-full bg-transparent text-base sm:text-sm text-gray-800 placeholder-gray-400 font-medium focus:outline-none"
                         />
@@ -245,7 +309,10 @@ const Header = () => {
                         )}
                       </div>
 
-                      <button className="hidden sm:flex h-8 w-8 mr-1 rounded-md bg-[#FFBA00] hover:bg-[#ffc82a] items-center justify-center text-black transition-colors shrink-0 cursor-pointer">
+                      <button
+                        onClick={handleSearchSubmit}
+                        className="hidden sm:flex h-8 w-8 mr-1 rounded-md bg-[#FFBA00] hover:bg-[#ffc82a] items-center justify-center text-black transition-colors shrink-0 cursor-pointer"
+                      >
                         <Search size={18} strokeWidth={2.5} />
                       </button>
                   </div>

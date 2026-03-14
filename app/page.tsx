@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Hero from "@/components/features/Hero";
 import ProductSection from "@/components/features/ProductSection";
 import { Laptop, Search } from "lucide-react";
@@ -10,10 +10,83 @@ import CategoryGrid from "@/components/features/CategoryGrid";
 import PromoBanner from "@/components/features/PromoBanner";
 import PopularKeywords from "@/components/features/PopularKeywords"; 
 import { useLocation } from "@/providers/LocationProvider";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getCategories } from "@/services/categoryService";
+import { getUniversities } from "@/services/universityService";
+import { CategoryResponse, UniversityResponse } from "@/types/admin";
+import { buildSearchHref } from "@/lib/searchUrl";
 
 export default function Home() {
+   const router = useRouter();
+   const searchParams = useSearchParams();
    const { selectedSchool, setSelectedSchool, selectedCampus, setSelectedCampus } = useLocation();
+   const [keyword, setKeyword] = useState("");
+
+   // Cập nhật keyword từ URL khi ở trang chủ (vd: quay lại từ trang search)
+   useEffect(() => {
+      const q = searchParams.get("q");
+      if (q !== null) {
+         setKeyword(q);
+      } else {
+         setKeyword("");
+      }
+   }, [searchParams]);
+
    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+   const [categories, setCategories] = useState<CategoryResponse[]>([]);
+   const [universities, setUniversities] = useState<UniversityResponse[]>([]);
+
+   useEffect(() => {
+      const loadSearchMeta = async () => {
+         try {
+            const [categoriesData, universitiesData] = await Promise.all([
+               getCategories(),
+               getUniversities(),
+            ]);
+            setCategories(categoriesData);
+            setUniversities(universitiesData);
+         } catch (error) {
+            console.error("Failed to load search metadata:", error);
+         }
+      };
+
+      loadSearchMeta();
+   }, []);
+
+   const handleSearchSubmit = useCallback(() => {
+      const normalizedKeyword = keyword.trim();
+      const selectedCategoryName = selectedCategories[0]?.trim();
+      const normalizedSchool = selectedSchool.trim();
+      const normalizedCampus = selectedCampus.trim();
+
+      const selectedCategory = categories.find(
+         (category) =>
+            category.slug === selectedCategoryName ||
+            category.categoryName === selectedCategoryName
+      );
+
+      const selectedUniversity = universities.find(
+         (university) =>
+            university.slug === normalizedSchool ||
+            university.shortName === normalizedSchool ||
+            university.universityName === normalizedSchool
+      );
+
+      const selectedCampusItem = universities
+         .flatMap((university) =>
+            (university.campuses || []).map((campus) => campus)
+         )
+         .find((campus) => campus.slug === normalizedCampus || campus.campusName === normalizedCampus);
+
+      const href = buildSearchHref({
+         itemSlug: selectedCategory?.slug || undefined,
+         universitySlug: selectedUniversity?.slug || undefined,
+         campusSlug: selectedCampusItem?.slug || undefined,
+         keyword: normalizedKeyword || undefined,
+      });
+
+      router.push(href);
+   }, [keyword, selectedCategories, selectedSchool, selectedCampus, categories, universities, router]);
 
    return (
       <main className="min-h-screen font-sans">
@@ -51,6 +124,14 @@ export default function Home() {
                            <Search size={20} className="text-gray-400 mr-2 shrink-0" />
                            <input
                               type="text"
+                              value={keyword}
+                              onChange={(event) => setKeyword(event.target.value)}
+                              onKeyDown={(event) => {
+                                 if (event.key === "Enter") {
+                                    event.preventDefault();
+                                    handleSearchSubmit();
+                                 }
+                              }}
                               placeholder="Tìm MacBook, sách Triết, tủ lạnh..."
                               className="w-full bg-transparent outline-none text-gray-900 placeholder-gray-500 text-base sm:text-sm font-medium"
                            />
@@ -66,7 +147,10 @@ export default function Home() {
                         />
 
                         {/* 4. Search Button (Yellow) */}
-                        <button className="bg-[#FFBA00] hover:bg-[#ffc82a] text-black font-bold h-12 sm:h-full px-6 py-2 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer">
+                        <button
+                           onClick={handleSearchSubmit}
+                           className="bg-[#FFBA00] hover:bg-[#ffc82a] text-black font-bold h-12 sm:h-full px-6 py-2 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer"
+                        >
                            Tìm kiếm
                         </button>
                      </div>
@@ -74,7 +158,21 @@ export default function Home() {
                      {/* Quick Tags (Dưới thanh search) */}
                      <div className="mt-3 flex flex-wrap gap-2 justify-center lg:justify-start">
                         {['Mac Mini M4', 'Màn hình 24"', 'Bàn học', 'Quạt máy'].map((tag) => (
-                           <span key={tag} className="px-3 py-1 bg-white/60 hover:bg-white text-xs font-semibold text-gray-800 rounded-full cursor-pointer transition-colors backdrop-blur-sm">
+                           <span
+                              key={tag}
+                              onClick={() => {
+                                 setKeyword(tag);
+                                 router.push(
+                                    buildSearchHref({
+                                       itemSlug: undefined,
+                                       universitySlug: undefined,
+                                       campusSlug: undefined,
+                                       keyword: tag,
+                                    })
+                                 );
+                              }}
+                              className="px-3 py-1 bg-white/60 hover:bg-white text-xs font-semibold text-gray-800 rounded-full cursor-pointer transition-colors backdrop-blur-sm"
+                           >
                               ⏱ {tag}
                            </span>
                         ))}
