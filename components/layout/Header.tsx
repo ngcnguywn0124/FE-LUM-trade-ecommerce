@@ -22,10 +22,12 @@ import { useLocation } from "@/providers/LocationProvider";
 import { getUniversities } from "@/services/universityService";
 import { UniversityResponse } from "@/types/admin";
 import { buildSearchHref } from "@/lib/searchUrl";
+import { useSearchHistory } from "@/hooks/useSearchHistory";
 
 const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { addToHistory } = useSearchHistory();
   const { isAuthenticated, user, logout } = useAuthStore();
   const { selectedSchool, setSelectedSchool, selectedCampus, setSelectedCampus } = useLocation();
 
@@ -226,8 +228,11 @@ const Header = () => {
       keyword: normalizedKeyword || undefined,
     });
 
+    if (normalizedKeyword) {
+      addToHistory(normalizedKeyword);
+    }
     router.push(href);
-  }, [keyword, selectedSchool, selectedCampus, universities, router]);
+  }, [keyword, selectedSchool, selectedCampus, universities, router, addToHistory]);
 
   return (
     <div className="flex flex-col w-full font-sans">

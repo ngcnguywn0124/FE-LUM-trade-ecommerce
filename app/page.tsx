@@ -15,10 +15,12 @@ import { getCategories } from "@/services/categoryService";
 import { getUniversities } from "@/services/universityService";
 import { CategoryResponse, UniversityResponse } from "@/types/admin";
 import { buildSearchHref } from "@/lib/searchUrl";
+import { useSearchHistory } from "@/hooks/useSearchHistory";
 
 export default function Home() {
    const router = useRouter();
    const searchParams = useSearchParams();
+   const { history, addToHistory, clearHistory } = useSearchHistory();
    const { selectedSchool, setSelectedSchool, selectedCampus, setSelectedCampus } = useLocation();
    const [keyword, setKeyword] = useState("");
 
@@ -85,8 +87,11 @@ export default function Home() {
          keyword: normalizedKeyword || undefined,
       });
 
+      if (normalizedKeyword) {
+         addToHistory(normalizedKeyword);
+      }
       router.push(href);
-   }, [keyword, selectedCategories, selectedSchool, selectedCampus, categories, universities, router]);
+   }, [keyword, selectedCategories, selectedSchool, selectedCampus, categories, universities, router, addToHistory]);
 
    return (
       <main className="min-h-screen font-sans">
@@ -155,28 +160,38 @@ export default function Home() {
                         </button>
                      </div>
 
-                     {/* Quick Tags (Dưới thanh search) */}
-                     <div className="mt-3 flex flex-wrap gap-2 justify-center lg:justify-start">
-                        {['Mac Mini M4', 'Màn hình 24"', 'Bàn học', 'Quạt máy'].map((tag) => (
-                           <span
-                              key={tag}
-                              onClick={() => {
-                                 setKeyword(tag);
-                                 router.push(
-                                    buildSearchHref({
-                                       itemSlug: undefined,
-                                       universitySlug: undefined,
-                                       campusSlug: undefined,
-                                       keyword: tag,
-                                    })
-                                 );
-                              }}
-                              className="px-3 py-1 bg-white/60 hover:bg-white text-xs font-semibold text-gray-800 rounded-full cursor-pointer transition-colors backdrop-blur-sm"
+                     {/* lịch sử từ khoá vừa tìm kiếm (Dưới thanh search) */}
+                     {history.length > 0 && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2 justify-center lg:justify-start">
+                           <div className="flex flex-wrap gap-2 items-center">
+                              {history.map((tag) => (
+                                 <span
+                                    key={tag}
+                                    onClick={() => {
+                                       setKeyword(tag);
+                                       router.push(
+                                          buildSearchHref({
+                                             itemSlug: undefined,
+                                             universitySlug: undefined,
+                                             campusSlug: undefined,
+                                             keyword: tag,
+                                          })
+                                       );
+                                    }}
+                                    className="px-3 py-1 bg-white/60 hover:bg-white text-xs font-semibold text-gray-800 rounded-full cursor-pointer transition-colors backdrop-blur-sm"
+                                 >
+                                    ⏱ {tag}
+                                 </span>
+                              ))}
+                           </div>
+                           <button 
+                              onClick={clearHistory}
+                              className="text-[10px] font-bold text-gray-500 hover:text-red-500 transition-colors cursor-pointer uppercase tracking-wider px-2"
                            >
-                              ⏱ {tag}
-                           </span>
-                        ))}
-                     </div>
+                              Xóa tất cả
+                           </button>
+                        </div>
+                     )}
                   </div>
                </div>
             </div>
