@@ -33,12 +33,6 @@ const statusToManageStatus = (status: string): PostStatus => {
 const formatVnd = (price?: number | null, isFree?: boolean): string => {
   if (isFree) return 'Miễn phí';
   if (!price) return '0đ';
-  if (price >= 1000000000) {
-    return `${(price / 1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tỷ`;
-  }
-  if (price >= 1000000) {
-    return `${(price / 1000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} triệu`;
-  }
   return `${Math.round(price).toLocaleString('vi-VN')}đ`;
 };
 
@@ -125,12 +119,6 @@ export const mapSummaryToManagedPost = (item: ProductSummaryDto): ManagedPost =>
   const formatPriceForManage = (price: number | null, isFree: boolean | null | undefined) => {
     if (isFree) return 'Miễn phí';
     if (!price) return '0đ';
-    if (price >= 1000000000) {
-      return `${(price / 1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tỷ`;
-    }
-    if (price >= 1000000) {
-      return `${(price / 1000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} triệu`;
-    }
     return `${price.toLocaleString('vi-VN')}đ`;
   };
 

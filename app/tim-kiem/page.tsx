@@ -57,13 +57,14 @@ const SearchContent = () => {
 
   useEffect(() => {
     const categoryFromUrl = searchParams.get("category") || undefined;
+    const subcategoryFromUrl = searchParams.get("subcategory") || undefined;
 
     setFilters((prev) => {
-      if (prev.category === categoryFromUrl) return prev;
+      if (prev.category === categoryFromUrl && prev.subcategory === subcategoryFromUrl) return prev;
       return {
         ...prev,
         category: categoryFromUrl,
-        subcategory: undefined,
+        subcategory: subcategoryFromUrl,
       };
     });
 
@@ -163,10 +164,17 @@ const SearchContent = () => {
     setCurrentPage(1);
 
     const params = new URLSearchParams(searchParams.toString());
+    
     if (newFilters.category) {
       params.set("category", newFilters.category);
     } else {
       params.delete("category");
+    }
+    
+    if (newFilters.subcategory) {
+      params.set("subcategory", newFilters.subcategory);
+    } else {
+      params.delete("subcategory");
     }
 
     router.push(`/tim-kiem?${params.toString()}`, { scroll: false });
@@ -178,14 +186,21 @@ const SearchContent = () => {
       [filterKey]: filterKey === "condition" ? "all" : undefined,
     };
 
+    if (filterKey === "category") {
+      newFilters.subcategory = undefined;
+    }
+
     setFilters(newFilters);
     setCurrentPage(1);
 
+    const params = new URLSearchParams(searchParams.toString());
     if (filterKey === "category") {
-      const params = new URLSearchParams(searchParams.toString());
       params.delete("category");
-      router.push(`/tim-kiem?${params.toString()}`, { scroll: false });
+      params.delete("subcategory");
+    } else if (filterKey === "subcategory") {
+      params.delete("subcategory");
     }
+    router.push(`/tim-kiem?${params.toString()}`, { scroll: false });
   };
 
   const handleSortChange = (sortBy: SortOption) => {
@@ -212,6 +227,7 @@ const SearchContent = () => {
 
     const params = new URLSearchParams(searchParams.toString());
     params.delete("category");
+    params.delete("subcategory");
     router.push(`/tim-kiem?${params.toString()}`);
   };
 

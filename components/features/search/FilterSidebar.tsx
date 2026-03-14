@@ -10,6 +10,7 @@ import { SearchFilters, ConditionFilter } from "@/types";
 import { getCategoryTree } from "@/services/categoryService";
 import { getUniversities } from "@/services/universityService";
 import { CategoryResponse, UniversityResponse } from "@/types/admin";
+import { useLocation } from "@/providers/LocationProvider";
 
 interface FilterSidebarProps {
   filters: SearchFilters;
@@ -20,13 +21,21 @@ interface FilterSidebarProps {
 }
 
 const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategories = false }: FilterSidebarProps) => {
+  const { setSelectedSchool, setSelectedCampus } = useLocation();
+
   // State từ API
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [universities, setUniversities] = useState<UniversityResponse[]>([]);
   
-  // State cho expanded sections
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  const [expandedSchool, setExpandedSchool] = useState<string | null>(null);
+  // State cho expanded sections. Khởi tạo dựa trên các filter đã chọn.
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(filters.category || null);
+  const [expandedSchool, setExpandedSchool] = useState<string | null>(filters.school || null);
+
+  // Mở rộng parent tự động khi sub-item được chọn từ bên ngoài (ví dụ URL)
+  useEffect(() => {
+    if (filters.category) setExpandedCategory(filters.category);
+    if (filters.school) setExpandedSchool(filters.school);
+  }, [filters.category, filters.school]);
 
   // State cho tìm kiếm trường học
   const [schoolSearchQuery, setSchoolSearchQuery] = useState("");
@@ -100,38 +109,27 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
   ];
 
   // Handlers
-  const handleCategoryChange = (categoryName: string) => {
-    const isSameCategory = categoryName === filters.category;
-    const isSubcategorySelected = !!filters.subcategory;
+  const handleCategoryChange = (categorySlug: string) => {
+    const isSameCategory = categorySlug === filters.category;
     
-    // TRƯỜNG HỢP: Click vào danh mục cha đang ĐƯỢC CHỌN
+    // Nếu click vào danh mục đã chọn thì đóng mở rộng, không thay đổi filter
     if (isSameCategory) {
-      // Nếu đang có lọc danh mục con -> Bỏ lọc con, giữ lại lọc cha
-      if (isSubcategorySelected) {
-        onFiltersChange({ 
-          ...filters, 
-          subcategory: undefined,
-        });
-        setExpandedCategory(categoryName); // Vẫn mở rộng
-      } 
-      // Nếu KHÔNG có lọc danh mục con -> Không làm gì (giữ nguyên lọc cha)
-      // Để giống bộ lọc Trường/Cơ sở (click lại vào trường đang chọn thì không mất lọc)
+      setExpandedCategory(expandedCategory === categorySlug ? null : categorySlug);
       return;
     }
 
-    // TRƯỜNG HỢP: Chọn một danh mục cha MỚI
     onFiltersChange({ 
       ...filters, 
-      category: categoryName,
+      category: categorySlug,
       subcategory: undefined,
     });
-    setExpandedCategory(categoryName);
+    setExpandedCategory(categorySlug);
   };
 
-  const handleSubcategoryChange = (subcategoryName: string) => {
+  const handleSubcategoryChange = (subcategorySlug: string) => {
     onFiltersChange({ 
       ...filters, 
-      subcategory: subcategoryName === filters.subcategory ? undefined : subcategoryName,
+      subcategory: subcategorySlug === filters.subcategory ? undefined : subcategorySlug,
     });
   };
 
@@ -161,36 +159,51 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
   const handleSchoolChange = (schoolName: string) => {
     const isSameSchool = schoolName === filters.school;
     
+    // Đồng bộ với LocationProvider
+    const newSchool = isSameSchool ? "" : schoolName;
+    setSelectedSchool(newSchool);
+    setSelectedCampus("");
+
     onFiltersChange({ 
       ...filters, 
       school: isSameSchool ? undefined : schoolName,
-      campus: undefined, // Reset campus khi đổi school
+      campus: undefined, 
     });
     
-    // Auto-expand khi select school mới, collapse khi deselect
     if (isSameSchool) {
-      setExpandedSchool(null);
+      setExpandedSchool(expandedSchool === schoolName ? null : schoolName);
     } else {
       setExpandedSchool(schoolName);
     }
   };
 
   const handleCampusChange = (campusName: string) => {
+    const isSameCampus = campusName === filters.campus;
+    
+    // Đồng bộ với LocationProvider
+    setSelectedCampus(isSameCampus ? "" : campusName);
+
     onFiltersChange({ 
       ...filters, 
-      campus: campusName === filters.campus ? undefined : campusName,
+      campus: isSameCampus ? undefined : campusName,
     });
   };
 
   // Filter trường học dựa trên search query
   const filteredSchools = universities.filter(school => 
-    school.universityName.toLowerCase().includes(schoolSearchQuery.toLowerCase())
+    school.universityName.toLowerCase().includes(schoolSearchQuery.toLowerCase()) ||
+    (school.shortName && school.shortName.toLowerCase().includes(schoolSearchQuery.toLowerCase()))
   );
 
-  // Chỉ hiển thị tối đa 6 trường để giao diện gọn gàng
-  const displayedSchools = filteredSchools.slice(0, 6);
+  // Chỉ hiển thị tối đa 6 trường để giao diện gọn gàng (nếu không search)
+  // Nếu đang search thì hiển thị tối đa 15 kết quả
+  const displayedSchools = schoolSearchQuery ? filteredSchools.slice(0, 15) : filteredSchools.slice(0, 6);
 
   const clearFilters = () => {
+    // Sync LocationProvider
+    setSelectedSchool("");
+    setSelectedCampus("");
+
     onFiltersChange({
       category: undefined,
       subcategory: undefined,
