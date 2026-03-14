@@ -10,6 +10,8 @@ export interface Product {
   tag?: string;
   time?: string;
   imageCount?: number;
+  viewCount?: number;
+  favoriteCount?: number;
   condition?: 'new' | 'like_new' | 'used' | 'old' | 'broken' | 'for-parts';
   category?: string;
   categorySlug?: string;

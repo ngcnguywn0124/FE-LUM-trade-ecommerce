@@ -390,7 +390,9 @@ const SearchPageClient = ({ combinedSlug }: SearchPageClientProps) => {
         case "price-desc":
           return priceB - priceA;
         case "popular":
-          return (b.imageCount || 0) - (a.imageCount || 0);
+          const scoreA = (a.viewCount || 0) + (a.favoriteCount || 0) * 2;
+          const scoreB = (b.viewCount || 0) + (b.favoriteCount || 0) * 2;
+          return scoreB - scoreA;
         case "newest":
         default:
           return 0;

@@ -83,6 +83,8 @@ export const mapSummaryToCardProduct = (item: ProductSummaryDto): Product => ({
   tag: item.isFeatured ? 'Nổi bật' : undefined,
   time: formatRelativeTime(item.createdAt),
   imageCount: item.imageCount || 1,
+  viewCount: item.viewCount || 0,
+  favoriteCount: item.favoriteCount || 0,
   condition: conditionToUi(item.condition),
   category: item.categoryName || undefined,
   categorySlug: item.categorySlug || undefined,
