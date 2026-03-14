@@ -5,8 +5,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { getCategories } from "@/services/categoryService";
 import { CategoryResponse } from "@/types/admin";
+import { buildSearchHref } from "@/lib/searchUrl";
+import { SearchFilters } from "@/types";
 
-const SuggestedCategories = () => {
+interface SuggestedCategoriesProps {
+  filters?: SearchFilters;
+}
+
+const SuggestedCategories = ({ filters }: SuggestedCategoriesProps) => {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
 
   useEffect(() => {
@@ -31,7 +37,14 @@ const SuggestedCategories = () => {
           return (
             <Link
               key={category.categoryId}
-              href={`/tim-kiem?category=${encodeURIComponent(category.slug || "")}`}
+              href={buildSearchHref({ 
+                itemSlug: category.slug || undefined,
+                universitySlug: filters?.school,
+                campusSlug: filters?.campus,
+                minPrice: filters?.priceRange?.min,
+                maxPrice: filters?.priceRange?.max === 999999999 ? undefined : filters?.priceRange?.max,
+                condition: filters?.condition !== "all" ? filters?.condition : undefined,
+               })}
               className="group flex flex-col items-center gap-3 p-4 bg-gray-50 hover:bg-emerald-50 rounded-lg transition-all hover:shadow-md"
             >
               <div className="relative w-12 h-12 group-hover:scale-110 transition-transform">

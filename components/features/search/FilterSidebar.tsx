@@ -74,7 +74,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
   // Get available campuses based on selected university
   const availableCampuses = useMemo(() => {
     if (!filters.school) return [];
-    const uni = universities.find(u => u.universityName === filters.school);
+    const uni = universities.find(u => u.slug === filters.school);
     return uni?.campuses || [];
   }, [filters.school, universities]);
   
@@ -156,36 +156,42 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
     }
   };
 
-  const handleSchoolChange = (schoolName: string) => {
-    const isSameSchool = schoolName === filters.school;
+  const handleSchoolChange = (school: UniversityResponse) => {
+    const schoolSlug = school.slug || "";
+    if (!schoolSlug) return;
+
+    const isSameSchool = schoolSlug === filters.school;
+    const schoolDisplayName = school.shortName || school.universityName;
     
     // Đồng bộ với LocationProvider
-    const newSchool = isSameSchool ? "" : schoolName;
+    const newSchool = isSameSchool ? "" : schoolDisplayName;
     setSelectedSchool(newSchool);
     setSelectedCampus("");
 
     onFiltersChange({ 
       ...filters, 
-      school: isSameSchool ? undefined : schoolName,
+      school: isSameSchool ? undefined : schoolSlug,
       campus: undefined, 
     });
     
     if (isSameSchool) {
-      setExpandedSchool(expandedSchool === schoolName ? null : schoolName);
+      setExpandedSchool(expandedSchool === schoolSlug ? null : schoolSlug);
     } else {
-      setExpandedSchool(schoolName);
+      setExpandedSchool(schoolSlug);
     }
   };
 
-  const handleCampusChange = (campusName: string) => {
-    const isSameCampus = campusName === filters.campus;
+  const handleCampusChange = (campusSlug: string, campusName: string) => {
+    if (!campusSlug) return;
+
+    const isSameCampus = campusSlug === filters.campus;
     
     // Đồng bộ với LocationProvider
     setSelectedCampus(isSameCampus ? "" : campusName);
 
     onFiltersChange({ 
       ...filters, 
-      campus: isSameCampus ? undefined : campusName,
+      campus: isSameCampus ? undefined : campusSlug,
     });
   };
 
@@ -501,22 +507,23 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
             {displayedSchools.length > 0 ? (
               displayedSchools.map((school) => {
                 const hasCampuses = school.campuses && school.campuses.length > 0;
-                const isSelected = filters.school === school.universityName;
-                const isExpanded = expandedSchool === school.universityName;
+                const schoolSlug = school.slug || "";
+                const isSelected = filters.school === schoolSlug;
+                const isExpanded = expandedSchool === schoolSlug;
                 
                 return (
                   <div key={school.universityId}>
                     {/* Main School */}
                     <div
                       className={`flex items-center justify-between py-2 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group ${isSelected ? 'bg-emerald-50/50' : ''}`}
-                      onClick={() => handleSchoolChange(school.universityName)}
+                      onClick={() => handleSchoolChange(school)}
                     >
                       <label className="flex items-center gap-3 cursor-pointer flex-1">
                         <input
                           type="radio"
                           name="school"
                           checked={isSelected}
-                          onChange={() => handleSchoolChange(school.universityName)}
+                          onChange={() => handleSchoolChange(school)}
                           className="hidden" // Hidden radio
                           onClick={(e) => e.stopPropagation()}
                         />
@@ -532,7 +539,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                           onClick={(e) => {
                             e.stopPropagation();
                             if (isSelected) {
-                              setExpandedSchool(isExpanded ? null : school.universityName);
+                              setExpandedSchool(isExpanded ? null : schoolSlug);
                             }
                           }}
                           className={`p-1 rounded transition-colors ${
@@ -556,7 +563,8 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                     {isSelected && isExpanded && availableCampuses.length > 0 && (
                       <div className="ml-7 mt-1 space-y-1 pb-2">
                         {availableCampuses.map((campus) => {
-                          const isCampusSelected = filters.campus === campus.campusName;
+                          const campusSlug = campus.slug || "";
+                          const isCampusSelected = filters.campus === campusSlug;
                           return (
                             <label
                               key={campus.campusId}
@@ -567,7 +575,7 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                                   type="radio"
                                   name="campus"
                                   checked={isCampusSelected}
-                                  onChange={() => handleCampusChange(campus.campusName)}
+                                  onChange={() => handleCampusChange(campusSlug, campus.campusName)}
                                   className="sr-only"
                                 />
                                 <div className={`w-3.5 h-3.5 rounded-full border transition-all ${

@@ -6,6 +6,7 @@ import * as LucideIcons from "lucide-react";
 import Link from "next/link";
 import { getCategoryTree } from "@/services/categoryService";
 import type { CategoryResponse } from "@/types/admin";
+import { buildSearchHref } from "@/lib/searchUrl";
 
 const CategoryIcon = ({ iconName }: { iconName: string | null }) => {
   if (!iconName) return <MoreHorizontal size={18} />;
@@ -78,7 +79,7 @@ const CategoryMegaMenu = () => {
                   }`}
                 >
                   <Link 
-                    href={`/tim-kiem?category=${cat.slug}`}
+                    href={buildSearchHref({ itemSlug: cat.slug || undefined })}
                     className="flex items-center gap-3 flex-1"
                   >
                     <span className={`${activeParent?.categoryId === cat.categoryId ? "text-emerald-500" : "text-gray-400"}`}>
@@ -105,7 +106,7 @@ const CategoryMegaMenu = () => {
                     {activeParent.children?.map((child) => (
                       <Link 
                         key={child.categoryId}
-                        href={`/tim-kiem?category=${activeParent.slug}&subcategory=${child.slug}`}
+                        href={buildSearchHref({ itemSlug: child.slug || undefined })}
                         className="text-gray-600 hover:text-emerald-600 hover:bg-emerald-50/50 px-3 py-2 rounded-lg text-[13px] font-medium transition-all flex items-center justify-between group/item"
                       >
                         {child.categoryName}

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { getCategories } from "@/services/categoryService";
 import type { CategoryResponse } from "@/types/admin";
+import { buildSearchHref } from "@/lib/searchUrl";
 
 const categoryColors = [
   'bg-blue-50', 'bg-yellow-50', 'bg-purple-50', 'bg-orange-50', 
@@ -86,7 +87,7 @@ const CategoryGrid = () => {
           {categories.slice(startIndex, startIndex + itemsPerPage).map((cat, idx) => (
             <Link
               key={cat.categoryId}
-              href={`/tim-kiem?category=${cat.slug}`}
+              href={buildSearchHref({ itemSlug: cat.slug || undefined })}
               className="group flex flex-col items-center"
             >
               <div className="relative w-full aspect-square bg-white flex items-center justify-center mb-0 transition-all duration-500 group-hover:-translate-y-2 overflow-hidden">
