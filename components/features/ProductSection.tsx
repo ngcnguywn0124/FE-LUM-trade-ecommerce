@@ -58,7 +58,7 @@ export default function ProductSection() {
   };
 
   return (
-    <section className="py-12 bg-white">
+    <section id="product-section" className="py-12 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8 border-b border-gray-100 mb-8 pb-1 overflow-x-auto whitespace-nowrap scrollbar-hide">
           {tabs.map((tab) => (

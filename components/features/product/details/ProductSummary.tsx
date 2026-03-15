@@ -15,13 +15,19 @@ import {
   User,
 } from "lucide-react";
 
+import { toast } from "sonner";
+import { favoriteService } from "@/services/favoriteService";
+import { useAuthStore } from "@/stores/authStore";
+
 interface ProductSummaryProps {
+  id: string;
   name: string;
   price: string;
   school: string;
   campus?: string;
   postedTime: string;
   infoTags: string[];
+  isFavorited?: boolean;
   isNegotiable?: boolean;
   contactPhone?: string | null;
   seller: {
@@ -35,12 +41,14 @@ interface ProductSummaryProps {
 }
 
 const ProductSummary = ({
+  id,
   name,
   price,
   school,
   campus,
   postedTime,
   infoTags,
+  isFavorited = false,
   isNegotiable = true,
   contactPhone,
   seller,
@@ -54,6 +62,44 @@ const ProductSummary = ({
     parsedPrice ? Math.round(parsedPrice * 0.9) : 100000
   );
   const [shownPhone, setShownPhone] = useState<string | null>(null);
+  const [isLiked, setIsLiked] = useState(isFavorited);
+  const [isToggling, setIsToggling] = useState(false);
+  const { isAuthenticated } = useAuthStore();
+
+  const handleToggleFavorite = async () => {
+    if (!isAuthenticated) {
+      toast.error("Vui lòng đăng nhập để lưu tin");
+      return;
+    }
+
+    if (isToggling) return;
+
+    try {
+      setIsToggling(true);
+      if (isLiked) {
+        const response = await favoriteService.unsave(id);
+        if (response.code === 200 || response.code === 1000) {
+          setIsLiked(false);
+          toast.success("Đã bỏ lưu tin");
+          // Đồng bộ số lượng ở Header ngay lập tức
+          window.dispatchEvent(new Event("favorite-count-sync"));
+        }
+      } else {
+        const response = await favoriteService.save(id);
+        if (response.code === 200 || response.code === 1000 || response.code === 201) {
+          setIsLiked(true);
+          toast.success("Đã lưu tin");
+          // Đồng bộ số lượng ở Header ngay lập tức
+          window.dispatchEvent(new Event("favorite-count-sync"));
+        }
+      }
+    } catch (error: any) {
+      console.error("Failed to toggle favorite", error);
+      toast.error("Có lỗi xảy ra, vui lòng thử lại sau");
+    } finally {
+      setIsToggling(false);
+    }
+  };
 
   const formattedOfferPrice = useMemo(
     () => `${Math.max(offerPrice, 0).toLocaleString("vi-VN")}đ`,
@@ -70,9 +116,17 @@ const ProductSummary = ({
     <section className="h-full rounded-2xl p-1">
       <div className="flex items-start justify-between gap-3">
         <h1 className="text-2xl leading-snug font-extrabold text-gray-900">{name}</h1>
-        <button className="shrink-0 inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
-          <Heart size={16} />
-          Lưu tin
+        <button 
+          onClick={handleToggleFavorite}
+          disabled={isToggling}
+          className={`shrink-0 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50 ${
+            isLiked 
+              ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100" 
+              : "border-gray-300 text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          <Heart size={16} className={isLiked ? "fill-red-600 text-red-600" : ""} />
+          {isLiked ? "Đã lưu" : "Lưu tin"}
         </button>
       </div>
 

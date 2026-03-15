@@ -1,7 +1,8 @@
 export type WishlistPostStatus = "active" | "sold";
 
 export interface WishlistItem {
-  id: number;
+  id: string | number;
+  slug?: string;
   name: string;
   price: string;
   school: string;
@@ -10,4 +11,5 @@ export interface WishlistItem {
   time: string;
   imageCount: number;
   status: WishlistPostStatus;
+  isFavorited?: boolean;
 }

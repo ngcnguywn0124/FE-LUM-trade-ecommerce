@@ -1,58 +1,42 @@
 "use client";
 
-import React, { useState } from "react";
-import { ChevronDown, BookOpen, Laptop, Home, Shirt, Coffee, Bike, MoreHorizontal, ChevronRight } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ChevronDown, MoreHorizontal, ChevronRight } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import Link from "next/link";
+import { getCategoryTree } from "@/services/categoryService";
+import type { CategoryResponse } from "@/types/admin";
+import { buildSearchHref } from "@/lib/searchUrl";
 
-interface CategoryItem {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  children: string[];
-}
-
-const megaCategories: CategoryItem[] = [
-  { 
-    id: 'giaotrinh', 
-    label: 'Giáo trình', 
-    icon: <BookOpen size={18} />,
-    children: ["Giáo trình Đại cương", "Giáo trình Chuyên ngành", "Từ điển & Sách ngoại ngữ", "Tài liệu ôn thi (Toeic, JLPT)"]
-  },
-  { 
-    id: 'dientu', 
-    label: 'Đồ điện tử', 
-    icon: <Laptop size={18} />,
-    children: ["Laptop & Máy tính bàn", "Điện thoại & Máy tính bảng", "Phụ kiện (Chuột, Phím, Tai nghe)", "Linh kiện PC"]
-  },
-  { 
-    id: 'phongtro', 
-    label: 'Đồ dùng phòng trọ', 
-    icon: <Home size={18} />,
-    children: ["Tủ lạnh & Máy giặt mini", "Nệm, Gối & Ga giường", "Bàn ghế làm việc", "Dụng cụ nhà bếp"]
-  },
-  { 
-    id: 'thoitrang', 
-    label: 'Thời trang nam nữ', 
-    icon: <Shirt size={18} />,
-    children: ["Quần áo", "Giày dép", "Balo & Túi xách", "Phụ kiện thời trang"]
-  },
-  { 
-    id: 'giaitri', 
-    label: 'Giải trí & Sở thích', 
-    icon: <Bike size={18} />,
-    children: ["Nhạc cụ", "Đồ thể thao", "Board games", "Đồ sưu tầm"]
-  },
-  { 
-    id: 'khac', 
-    label: 'Tiện ích khác', 
-    icon: <MoreHorizontal size={18} />,
-    children: ["Mỹ phẩm & Chăm sóc cá nhân", "Dịch vụ (In ấn, sửa chữa)", "Văn phòng phẩm", "Khác"]
-  },
-];
+const CategoryIcon = ({ iconName }: { iconName: string | null }) => {
+  if (!iconName) return <MoreHorizontal size={18} />;
+  
+  // Lấy component icon từ thư viện Lucide dựa trên tên từ database
+  const IconComponent = (LucideIcons as any)[iconName];
+  
+  if (!IconComponent) {
+    return <MoreHorizontal size={18} />;
+  }
+  
+  return <IconComponent size={18} />;
+};
 
 const CategoryMegaMenu = () => {
-  const [activeParent, setActiveParent] = useState<CategoryItem | null>(null);
+  const [activeParent, setActiveParent] = useState<CategoryResponse | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getCategoryTree();
+        setCategories(data);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   return (
     <div 
@@ -72,49 +56,60 @@ const CategoryMegaMenu = () => {
       {/* Mega Menu Content */}
       {isOpen && (
         <div className="absolute top-full left-0 pt-2 z-100 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="bg-white shadow-2xl rounded-xl border border-gray-100 flex overflow-hidden min-w-125 h-90.5 max-h-96">
+          <div className={`bg-white shadow-2xl rounded-xl border border-gray-100 flex overflow-hidden ${
+            activeParent && (!activeParent.children || activeParent.children.length === 0) 
+            ? "min-w-56 w-56 h-auto" 
+            : "min-w-125 h-94 max-h-96"
+          }`}>
             
             {/* Sidebar: Parent Categories */}
-            <div className="w-56 bg-gray-50/50 border-r border-gray-100 py-3 overflow-y-auto">
-              {megaCategories.map((cat) => (
+            <div className={`bg-gray-50/50 py-3 overflow-y-auto ${
+              activeParent && (!activeParent.children || activeParent.children.length === 0) 
+              ? "w-full" 
+              : "w-56 border-r border-gray-100"
+            }`}>
+              {categories.map((cat) => (
                 <div
-                  key={cat.id}
+                  key={cat.categoryId}
                   onMouseEnter={() => setActiveParent(cat)}
                   className={`flex items-center justify-between px-4 py-3 cursor-pointer transition-all ${
-                    activeParent?.id === cat.id 
+                    activeParent?.categoryId === cat.categoryId 
                     ? "bg-white text-emerald-600 font-bold shadow-sm" 
                     : "text-gray-700 hover:bg-white/80"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <span className={`${activeParent?.id === cat.id ? "text-emerald-500" : "text-gray-400"}`}>
-                      {cat.icon}
+                  <Link 
+                    href={buildSearchHref({ itemSlug: cat.slug || undefined })}
+                    className="flex items-center gap-3 flex-1"
+                  >
+                    <span className={`${activeParent?.categoryId === cat.categoryId ? "text-emerald-500" : "text-gray-400"}`}>
+                      <CategoryIcon iconName={cat.iconName} />
                     </span>
-                    <span className="text-[13px] whitespace-nowrap">{cat.label}</span>
-                  </div>
-                  {activeParent?.id === cat.id && <ChevronRight size={14} />}
+                    <span className="text-[13px] whitespace-nowrap">{cat.categoryName}</span>
+                  </Link>
+                  {activeParent?.categoryId === cat.categoryId && (!cat.children || cat.children.length > 0) && <ChevronRight size={14} />}
                 </div>
               ))}
             </div>
 
             {/* Content Body: Child Categories */}
-            <div className="flex-1 bg-white p-6 overflow-y-auto">
-              {activeParent ? (
+            {activeParent && activeParent.children && activeParent.children.length > 0 && (
+              <div className="flex-1 bg-white p-6 overflow-y-auto">
                 <div className="space-y-4 animate-in fade-in slide-in-from-left-2 duration-300">
                   <div className="flex items-center gap-2 pb-2 border-b border-gray-50">
                     <span className="text-emerald-600 font-black text-sm uppercase tracking-wider">
-                      {activeParent.label}
+                      {activeParent.categoryName}
                     </span>
                   </div>
                   
                   <div className="grid grid-cols-1 gap-1">
-                    {activeParent.children.map((child, index) => (
+                    {activeParent.children?.map((child) => (
                       <Link 
-                        key={index}
-                        href="#"
+                        key={child.categoryId}
+                        href={buildSearchHref({ itemSlug: child.slug || undefined })}
                         className="text-gray-600 hover:text-emerald-600 hover:bg-emerald-50/50 px-3 py-2 rounded-lg text-[13px] font-medium transition-all flex items-center justify-between group/item"
                       >
-                        {child}
+                        {child.categoryName}
                         <ChevronRight size={12} className="opacity-0 group-hover/item:opacity-100 -translate-x-2 group-hover/item:translate-x-0 transition-all text-emerald-400" />
                       </Link>
                     ))}
@@ -128,19 +123,21 @@ const CategoryMegaMenu = () => {
                     </p>
                   </div>
                 </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center space-y-4 text-gray-400">
-                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center animate-pulse">
-                        <MoreHorizontal size={32} />
-                    </div>
-                    <div className="space-y-1">
-                        <p className="text-sm font-bold text-gray-800">Chào mừng bạn!</p>
-                        <p className="text-xs">Rê chuột vào các danh mục bên trái <br/> để xem sản phẩm chi tiết</p>
-                    </div>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
+            {/* Initial Welcome message (Only show when no parent is active and we have width for it) */}
+            {!activeParent && (
+              <div className="flex-1 bg-white p-6 flex flex-col items-center justify-center text-center space-y-4 text-gray-400">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center animate-pulse">
+                      <MoreHorizontal size={32} />
+                  </div>
+                  <div className="space-y-1">
+                      <p className="text-sm font-bold text-gray-800">Chào mừng bạn!</p>
+                      <p className="text-xs">Rê chuột vào các danh mục bên trái <br/> để xem sản phẩm chi tiết</p>
+                  </div>
+              </div>
+            )}
           </div>
         </div>
       )}

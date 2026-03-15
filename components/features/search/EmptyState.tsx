@@ -37,7 +37,7 @@ const EmptyState = ({ type = "no-results", keyword, onClearFilters }: EmptyState
           {onClearFilters && (
             <button
               onClick={onClearFilters}
-              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors"
+              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors cursor-pointer"
             >
               Xóa bộ lọc
             </button>

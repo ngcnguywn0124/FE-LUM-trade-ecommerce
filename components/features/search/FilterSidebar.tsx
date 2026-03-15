@@ -1,13 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, memo } from "react";
 import { 
   SlidersHorizontal, X, ChevronDown, ChevronRight,
-  Laptop, BookOpen, Shirt, Bike, Smartphone, Headphones, PenTool, Layers,
   MapPin, Search
 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { SearchFilters, ConditionFilter } from "@/types";
-import { mockCategories, mockSchools, getCampusesBySchool, getSubcategoriesByCategory } from "@/lib/categoriesData";
+import { getCategoryTree } from "@/services/categoryService";
+import { getUniversities } from "@/services/universityService";
+import { CategoryResponse, UniversityResponse } from "@/types/admin";
+import { useLocation } from "@/providers/LocationProvider";
 
 interface FilterSidebarProps {
   filters: SearchFilters;
@@ -17,13 +21,42 @@ interface FilterSidebarProps {
   hideCategories?: boolean;
 }
 
-const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategories = false }: FilterSidebarProps) => {
-  // State cho expanded sections
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  const [expandedSchool, setExpandedSchool] = useState<string | null>(null);
+const FilterSidebar = memo(({ filters, onFiltersChange, isOpen, onClose, hideCategories = false }: FilterSidebarProps) => {
+  const { setSelectedSchool, setSelectedCampus } = useLocation();
+
+  // State từ API
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [universities, setUniversities] = useState<UniversityResponse[]>([]);
+  
+  // State cho expanded sections. Khởi tạo dựa trên các filter đã chọn.
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(filters.category || null);
+  const [expandedSchool, setExpandedSchool] = useState<string | null>(filters.school || null);
+
+  // Mở rộng parent tự động khi sub-item được chọn từ bên ngoài (ví dụ URL)
+  useEffect(() => {
+    if (filters.category) setExpandedCategory(filters.category);
+    if (filters.school) setExpandedSchool(filters.school);
+  }, [filters.category, filters.school]);
 
   // State cho tìm kiếm trường học
   const [schoolSearchQuery, setSchoolSearchQuery] = useState("");
+
+  // Fetch data từ API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [catData, uniData] = await Promise.all([
+          getCategoryTree(),
+          getUniversities()
+        ]);
+        setCategories(catData);
+        setUniversities(uniData);
+      } catch (error) {
+        console.error("Failed to fetch sidebar data:", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Local state cho custom price inputs để tránh lọc ngay lập tức
   const [localMinPrice, setLocalMinPrice] = useState<string>(filters.priceRange?.min?.toString() || '');
@@ -39,27 +72,24 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
     );
   }, [filters.priceRange]);
   
-  // Get available campuses based on selected school
-  const availableCampuses = filters.school 
-    ? getCampusesBySchool(mockSchools.find(s => s.name === filters.school)?.id || '')
-    : [];
+  // Get available campuses based on selected university
+  const availableCampuses = useMemo(() => {
+    if (!filters.school) return [];
+    const uni = universities.find(u => u.slug === filters.school);
+    return uni?.campuses || [];
+  }, [filters.school, universities]);
   
-  // Get available subcategories based on selected category
-  const availableSubcategories = filters.category
-    ? getSubcategoriesByCategory(mockCategories.find(c => c.name === filters.category)?.id || '')
-    : [];
+  // Get available subcategories based on a specific category slug
+  const getSubcategories = (parentSlug: string) => {
+    if (!parentSlug) return [];
+    const parent = categories.find(c => c.slug === parentSlug);
+    return parent?.children || [];
+  };
 
-  const getCategoryIcon = (id: string) => {
-    switch (id) {
-      case 'laptop': return <Laptop size={18} />;
-      case 'sach': return <BookOpen size={18} />;
-      case 'thoi-trang': return <Shirt size={18} />;
-      case 'xe-co': return <Bike size={18} />;
-      case 'dien-thoai': return <Smartphone size={18} />;
-      case 'phu-kien': return <Headphones size={18} />;
-      case 'do-dung-hoc-tap': return <PenTool size={18} />;
-      default: return <Layers size={18} />;
-    }
+  const CategoryIcon = ({ iconName }: { iconName: string | null }) => {
+    if (!iconName) return <LucideIcons.Layers size={18} />;
+    const IconComponent = (LucideIcons as any)[iconName];
+    return IconComponent ? <IconComponent size={18} /> : <LucideIcons.Layers size={18} />;
   };
 
   const conditions: { value: ConditionFilter; label: string }[] = [
@@ -67,8 +97,8 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
     { value: 'new', label: 'Mới 100%' },
     { value: 'like_new', label: 'Như mới' },
     { value: 'used', label: 'Đã qua sử dụng' },
-    { value: 'old', label: 'Cũ' },
-    { value: 'broken', label: 'Hỏng' },
+    { value: 'old', label: 'Cũ/Vẫn dùng tốt' },
+    { value: 'broken', label: 'Hỏng/Lấy linh kiện' },
   ];
 
   const priceRanges = [
@@ -80,27 +110,27 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
   ];
 
   // Handlers
-  const handleCategoryChange = (categoryName: string) => {
-    const isSameCategory = categoryName === filters.category;
+  const handleCategoryChange = (categorySlug: string) => {
+    const isSameCategory = categorySlug === filters.category;
     
+    // Nếu click vào danh mục đã chọn thì đóng mở rộng, không thay đổi filter
+    if (isSameCategory) {
+      setExpandedCategory(expandedCategory === categorySlug ? null : categorySlug);
+      return;
+    }
+
     onFiltersChange({ 
       ...filters, 
-      category: isSameCategory ? undefined : categoryName,
-      subcategory: undefined, // Reset subcategory khi đổi category
+      category: categorySlug,
+      subcategory: undefined,
     });
-    
-    // Auto-expand khi select category mới, collapse khi deselect
-    if (isSameCategory) {
-      setExpandedCategory(null);
-    } else {
-      setExpandedCategory(categoryName);
-    }
+    setExpandedCategory(categorySlug);
   };
 
-  const handleSubcategoryChange = (subcategoryName: string) => {
+  const handleSubcategoryChange = (subcategorySlug: string) => {
     onFiltersChange({ 
       ...filters, 
-      subcategory: subcategoryName === filters.subcategory ? undefined : subcategoryName,
+      subcategory: subcategorySlug === filters.subcategory ? undefined : subcategorySlug,
     });
   };
 
@@ -127,39 +157,60 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
     }
   };
 
-  const handleSchoolChange = (schoolName: string) => {
-    const isSameSchool = schoolName === filters.school;
+  const handleSchoolChange = (school: UniversityResponse) => {
+    const schoolSlug = school.slug || "";
+    if (!schoolSlug) return;
+
+    const isSameSchool = schoolSlug === filters.school;
+    const schoolDisplayName = school.shortName || school.universityName;
     
+    // Đồng bộ với LocationProvider
+    const newSchool = isSameSchool ? "" : schoolDisplayName;
+    setSelectedSchool(newSchool);
+    setSelectedCampus("");
+
     onFiltersChange({ 
       ...filters, 
-      school: isSameSchool ? undefined : schoolName,
-      campus: undefined, // Reset campus khi đổi school
+      school: isSameSchool ? undefined : schoolSlug,
+      campus: undefined, 
     });
     
-    // Auto-expand khi select school mới, collapse khi deselect
     if (isSameSchool) {
-      setExpandedSchool(null);
+      setExpandedSchool(expandedSchool === schoolSlug ? null : schoolSlug);
     } else {
-      setExpandedSchool(schoolName);
+      setExpandedSchool(schoolSlug);
     }
   };
 
-  const handleCampusChange = (campusName: string) => {
+  const handleCampusChange = (campusSlug: string, campusName: string) => {
+    if (!campusSlug) return;
+
+    const isSameCampus = campusSlug === filters.campus;
+    
+    // Đồng bộ với LocationProvider
+    setSelectedCampus(isSameCampus ? "" : campusName);
+
     onFiltersChange({ 
       ...filters, 
-      campus: campusName === filters.campus ? undefined : campusName,
+      campus: isSameCampus ? undefined : campusSlug,
     });
   };
 
   // Filter trường học dựa trên search query
-  const filteredSchools = mockSchools.filter(school => 
-    school.name.toLowerCase().includes(schoolSearchQuery.toLowerCase())
+  const filteredSchools = universities.filter(school => 
+    school.universityName.toLowerCase().includes(schoolSearchQuery.toLowerCase()) ||
+    (school.shortName && school.shortName.toLowerCase().includes(schoolSearchQuery.toLowerCase()))
   );
 
-  // Chỉ hiển thị tối đa 6 trường để giao diện gọn gàng
-  const displayedSchools = filteredSchools.slice(0, 6);
+  // Chỉ hiển thị tối đa 6 trường để giao diện gọn gàng (nếu không search)
+  // Nếu đang search thì hiển thị tối đa 15 kết quả
+  const displayedSchools = schoolSearchQuery ? filteredSchools.slice(0, 15) : filteredSchools.slice(0, 6);
 
   const clearFilters = () => {
+    // Sync LocationProvider
+    setSelectedSchool("");
+    setSelectedCampus("");
+
     onFiltersChange({
       category: undefined,
       subcategory: undefined,
@@ -221,55 +272,47 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
         {/* Categories, etc. */}
 
         {/* Category Filter với Subcategories */}
-        {!hideCategories && (
-        <div className="mb-8">
+        <div className={`mb-8 ${hideCategories ? 'lg:hidden' : ''}`}>
           <h3 className="font-semibold text-gray-900 mb-3 text-sm">Danh mục</h3>
           <div className="space-y-1">
-            {mockCategories.map((category) => {
-              const hasSubcategories = category.subcategories && category.subcategories.length > 0;
-              const isSelected = filters.category === category.name;
-              const isExpanded = expandedCategory === category.name;
+            {categories.map((category) => {
+              const hasSubcategories = category.children && category.children.length > 0;
+              const isSelected = filters.category === category.slug;
+              const isExpanded = expandedCategory === category.slug;
               
               return (
-                <div key={category.id}>
+                <div key={category.categoryId}>
                   {/* Main Category */}
                   <div
                     className={`flex items-center justify-between py-2 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group ${isSelected ? 'bg-emerald-50/50' : ''}`}
-                    onClick={() => handleCategoryChange(category.name)}
+                    onClick={() => handleCategoryChange(category.slug || "")}
                   >
                     <label className="flex items-center gap-3 cursor-pointer flex-1">
                       <input
                         type="radio"
                         name="category"
                         checked={isSelected}
-                        onChange={() => handleCategoryChange(category.name)}
+                        onChange={() => handleCategoryChange(category.slug || "")}
                         className="hidden" // Hidden radio
                         onClick={(e) => e.stopPropagation()}
                       />
                       <span className={`${isSelected ? 'text-emerald-600' : 'text-gray-500 group-hover:text-gray-700'}`}>
-                        {getCategoryIcon(category.id)}
+                        <CategoryIcon iconName={category.iconName} />
                       </span>
                       <span className={`text-sm group-hover:text-gray-900 ${isSelected ? 'text-emerald-600 font-medium' : 'text-gray-700'}`}>
-                        {category.name}
+                        {category.categoryName}
                       </span>
                     </label>
                     {hasSubcategories && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (isSelected) {
-                            setExpandedCategory(isExpanded ? null : category.name);
-                          }
+                          setExpandedCategory(isExpanded ? null : (category.slug || ""));
                         }}
-                        className={`p-1 rounded transition-colors ${
-                          isSelected 
-                            ? 'hover:bg-gray-200' 
-                            : 'opacity-50'
-                        }`}
-                        disabled={!isSelected}
-                        title={!isSelected ? 'Chọn danh mục để xem danh mục con' : 'Xem danh mục con'}
+                        className="p-1 rounded transition-colors hover:bg-gray-200"
+                        title="Xem danh mục con"
                       >
-                        {isExpanded && isSelected ? (
+                        {isExpanded ? (
                           <ChevronDown size={16} className="text-gray-500" />
                         ) : (
                           <ChevronRight size={16} className="text-gray-500" />
@@ -279,48 +322,52 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                   </div>
 
                   {/* Subcategories */}
-                  {isSelected && isExpanded && availableSubcategories.length > 0 && (
-                    <div className="ml-7 mt-1 space-y-1 pb-2">
-                      {availableSubcategories.map((subcategory) => {
-                        const isSubSelected = filters.subcategory === subcategory.name;
-                        return (
-                          <label
-                            key={subcategory.id}
-                            className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
-                          >
-                            <div className="relative flex items-center justify-center">
-                              <input
-                                type="radio"
-                                name="subcategory"
-                                checked={isSubSelected}
-                                onChange={() => handleSubcategoryChange(subcategory.name)}
-                                className="sr-only"
-                              />
-                              <div className={`w-3.5 h-3.5 rounded-full border transition-all ${
-                                isSubSelected 
-                                  ? 'border-emerald-600 border-[4.5px]' 
-                                  : 'border-gray-300 group-hover:border-emerald-500'
-                              }`} />
-                            </div>
-                            <span className={`text-sm transition-colors ${
-                              isSubSelected ? 'text-emerald-700 font-medium' : 'text-gray-600 group-hover:text-gray-900'
-                            }`}>
-                              {subcategory.name}
-                              {subcategory.count && (
-                                <span className="text-xs text-gray-400 ml-1">({subcategory.count})</span>
-                              )}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <AnimatePresence>
+                    {isExpanded && getSubcategories(category.slug || "").length > 0 && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="ml-7 mt-1 space-y-1 pb-2 overflow-hidden"
+                      >
+                        {getSubcategories(category.slug || "").map((subcategory) => {
+                          const isSubSelected = filters.subcategory === subcategory.slug;
+                          return (
+                            <label
+                              key={subcategory.categoryId}
+                              className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
+                            >
+                              <div className="relative flex items-center justify-center">
+                                <input
+                                  type="radio"
+                                  name="subcategory"
+                                  checked={isSubSelected}
+                                  onChange={() => handleSubcategoryChange(subcategory.slug || "")}
+                                  className="sr-only"
+                                />
+                                <div className={`w-3.5 h-3.5 rounded-full border transition-all ${
+                                  isSubSelected 
+                                    ? 'border-emerald-600 border-[4.5px]' 
+                                    : 'border-gray-300 group-hover:border-emerald-500'
+                                }`} />
+                              </div>
+                              <span className={`text-sm transition-colors ${
+                                isSubSelected ? 'text-emerald-700 font-medium' : 'text-gray-600 group-hover:text-gray-900'
+                              }`}>
+                                {subcategory.categoryName}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
           </div>
         </div>
-        )}
 
         {/* Condition Filter */}
         <div className="mb-8">
@@ -430,12 +477,12 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-gray-900 text-sm">Trường học</h3>
             <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">
-              {mockSchools.length} trường
+              {universities.length} trường
             </span>
           </div>
 
           {/* Search bar for schools - Show if more than 6 schools */}
-          {mockSchools.length > 6 && (
+          {universities.length > 6 && (
             <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
               <input
@@ -460,22 +507,23 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
             {displayedSchools.length > 0 ? (
               displayedSchools.map((school) => {
                 const hasCampuses = school.campuses && school.campuses.length > 0;
-                const isSelected = filters.school === school.name;
-                const isExpanded = expandedSchool === school.name;
+                const schoolSlug = school.slug || "";
+                const isSelected = filters.school === schoolSlug;
+                const isExpanded = expandedSchool === schoolSlug;
                 
                 return (
-                  <div key={school.id}>
+                  <div key={school.universityId}>
                     {/* Main School */}
                     <div
                       className={`flex items-center justify-between py-2 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group ${isSelected ? 'bg-emerald-50/50' : ''}`}
-                      onClick={() => handleSchoolChange(school.name)}
+                      onClick={() => handleSchoolChange(school)}
                     >
                       <label className="flex items-center gap-3 cursor-pointer flex-1">
                         <input
                           type="radio"
                           name="school"
                           checked={isSelected}
-                          onChange={() => handleSchoolChange(school.name)}
+                          onChange={() => handleSchoolChange(school)}
                           className="hidden" // Hidden radio
                           onClick={(e) => e.stopPropagation()}
                         />
@@ -483,26 +531,19 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                           <MapPin size={18} />
                         </span>
                         <span className={`text-sm group-hover:text-gray-900 ${isSelected ? 'text-emerald-600 font-medium' : 'text-gray-700'}`}>
-                          {school.name}
+                          {school.shortName || school.universityName}
                         </span>
                       </label>
                       {hasCampuses && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (isSelected) {
-                              setExpandedSchool(isExpanded ? null : school.name);
-                            }
+                            setExpandedSchool(isExpanded ? null : schoolSlug);
                           }}
-                          className={`p-1 rounded transition-colors ${
-                            isSelected 
-                              ? 'hover:bg-gray-200' 
-                              : 'opacity-50'
-                          }`}
-                          disabled={!isSelected}
-                          title={!isSelected ? 'Chọn trường để xem cơ sở' : 'Xem cơ sở'}
+                          className="p-1 rounded transition-colors hover:bg-gray-200"
+                          title="Xem cơ sở"
                         >
-                          {isExpanded && isSelected ? (
+                          {isExpanded ? (
                             <ChevronDown size={16} className="text-gray-500" />
                           ) : (
                             <ChevronRight size={16} className="text-gray-500" />
@@ -512,39 +553,48 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
                     </div>
 
                     {/* Campuses */}
-                    {isSelected && isExpanded && availableCampuses.length > 0 && (
-                      <div className="ml-7 mt-1 space-y-1 pb-2">
-                        {availableCampuses.map((campus) => {
-                          const isCampusSelected = filters.campus === campus.name;
-                          return (
-                            <label
-                              key={campus.id}
-                              className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
-                            >
-                              <div className="relative flex items-center justify-center">
-                                <input
-                                  type="radio"
-                                  name="campus"
-                                  checked={isCampusSelected}
-                                  onChange={() => handleCampusChange(campus.name)}
-                                  className="sr-only"
-                                />
-                                <div className={`w-3.5 h-3.5 rounded-full border transition-all ${
-                                  isCampusSelected 
-                                    ? 'border-emerald-600 border-[4.5px]' 
-                                    : 'border-gray-300 group-hover:border-emerald-500'
-                                }`} />
-                              </div>
-                              <span className={`text-sm transition-colors ${
-                                isCampusSelected ? 'text-emerald-700 font-medium' : 'text-gray-600 group-hover:text-gray-900'
-                              }`}>
-                                {campus.name}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    )}
+                    <AnimatePresence>
+                      {isExpanded && (school.campuses || []).length > 0 && (
+                        <motion.div 
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="ml-7 mt-1 space-y-1 pb-2 overflow-hidden"
+                        >
+                          {(school.campuses || []).map((campus) => {
+                            const campusSlug = campus.slug || "";
+                            const isCampusSelected = filters.campus === campusSlug;
+                            return (
+                              <label
+                                key={campus.campusId}
+                                className="flex items-center gap-3 py-1.5 px-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
+                              >
+                                <div className="relative flex items-center justify-center">
+                                  <input
+                                    type="radio"
+                                    name="campus"
+                                    checked={isCampusSelected}
+                                    onChange={() => handleCampusChange(campusSlug, campus.campusName)}
+                                    className="sr-only"
+                                  />
+                                  <div className={`w-3.5 h-3.5 rounded-full border transition-all ${
+                                    isCampusSelected 
+                                      ? 'border-emerald-600 border-[4.5px]' 
+                                      : 'border-gray-300 group-hover:border-emerald-500'
+                                  }`} />
+                                </div>
+                                <span className={`text-sm transition-colors ${
+                                  isCampusSelected ? 'text-emerald-700 font-medium' : 'text-gray-600 group-hover:text-gray-900'
+                                }`}>
+                                  {campus.campusName}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 );
               })
@@ -564,6 +614,6 @@ const FilterSidebar = ({ filters, onFiltersChange, isOpen, onClose, hideCategori
       </aside>
     </>
   );
-};
+});
 
 export default FilterSidebar;

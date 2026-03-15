@@ -33,12 +33,6 @@ const statusToManageStatus = (status: string): PostStatus => {
 const formatVnd = (price?: number | null, isFree?: boolean): string => {
   if (isFree) return 'Miễn phí';
   if (!price) return '0đ';
-  if (price >= 1000000000) {
-    return `${(price / 1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tỷ`;
-  }
-  if (price >= 1000000) {
-    return `${(price / 1000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} triệu`;
-  }
   return `${Math.round(price).toLocaleString('vi-VN')}đ`;
 };
 
@@ -89,8 +83,12 @@ export const mapSummaryToCardProduct = (item: ProductSummaryDto): Product => ({
   tag: item.isFeatured ? 'Nổi bật' : undefined,
   time: formatRelativeTime(item.createdAt),
   imageCount: item.imageCount || 1,
+  viewCount: item.viewCount || 0,
+  favoriteCount: item.favoriteCount || 0,
+  isFavorited: item.isFavorited || false,
   condition: conditionToUi(item.condition),
   category: item.categoryName || undefined,
+  categorySlug: item.categorySlug || undefined,
   seller: {
     id: item.sellerId || 'unknown-seller',
     name: item.sellerName || 'Người bán ẩn danh',
@@ -109,8 +107,10 @@ export const mapDetailToCardProduct = (item: ProductDetailDto): Product => ({
   tag: item.isFeatured ? 'Nổi bật' : undefined,
   time: formatRelativeTime(item.createdAt),
   imageCount: Math.max(item.images.length, 1),
+  isFavorited: item.isFavorited || false,
   condition: conditionToUi(item.condition),
   category: item.categoryName || undefined,
+  categorySlug: item.categorySlug || undefined,
   seller: {
     id: item.sellerId || 'unknown-seller',
     name: item.sellerName || 'Người bán ẩn danh',
@@ -123,12 +123,6 @@ export const mapSummaryToManagedPost = (item: ProductSummaryDto): ManagedPost =>
   const formatPriceForManage = (price: number | null, isFree: boolean | null | undefined) => {
     if (isFree) return 'Miễn phí';
     if (!price) return '0đ';
-    if (price >= 1000000000) {
-      return `${(price / 1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tỷ`;
-    }
-    if (price >= 1000000) {
-      return `${(price / 1000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} triệu`;
-    }
     return `${price.toLocaleString('vi-VN')}đ`;
   };
 
