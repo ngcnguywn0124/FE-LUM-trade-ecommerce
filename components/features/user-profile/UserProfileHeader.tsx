@@ -1,6 +1,7 @@
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { CalendarDays, Clock3, MapPin, Flag, Share2, SquarePen, Star, UserPlus } from "lucide-react";
-import { UserProfile } from "@/lib/mockUserProfile";
+import { UserProfile } from "@/types/profile";
 
 interface UserProfileHeaderProps {
   profile: UserProfile;
@@ -8,11 +9,32 @@ interface UserProfileHeaderProps {
 }
 
 const UserProfileHeader = ({ profile, isOwnProfile = false }: UserProfileHeaderProps) => {
+  const router = useRouter();
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `Hồ sơ của ${profile.name} trên Lụm`,
+      text: `Xem hồ sơ và các tin đăng của ${profile.name} trên nền tảng trao đổi đồ cũ sinh viên Lụm.`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert("Đã sao chép liên kết hồ sơ vào bộ nhớ tạm!");
+      }
+    } catch (err) {
+      console.error("Lỗi khi chia sẻ:", err);
+    }
+  };
+
   return (
     <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white ">
       <div className="relative h-40 w-full bg-gray-100 sm:h-52">
         <Image
-          src="/user/user-profile-default-cover.png"
+          src={profile.cover || "/user/user-profile-default-cover.png"}
           alt="Cover"
           fill
           className="object-cover"
@@ -51,36 +73,45 @@ const UserProfileHeader = ({ profile, isOwnProfile = false }: UserProfileHeaderP
                   <span>({profile.reviewCount} đánh giá)</span>
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <MapPin size={14} className="text-emerald-600" />
-                  {profile.location}
+                  <MapPin size={14} className={profile.location === "Chưa cập nhật địa chỉ" ? "text-gray-400" : "text-emerald-600"} />
+                  <span className={profile.location === "Chưa cập nhật địa chỉ" ? "italic text-gray-400" : ""}>
+                    {profile.location}
+                  </span>
                 </span>
               </div>
             </div>
           </div>
 
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
-            <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 sm:flex-none cursor-pointer">
+            <button 
+              onClick={handleShare}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 sm:flex-none cursor-pointer"
+            >
               <Share2 size={16} />
               Chia sẻ
             </button>
-            {isOwnProfile ? (
-              <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-[#FFBA00] transition-colors hover:bg-gray-800 sm:flex-none cursor-pointer">
+            {isOwnProfile && (
+              <button 
+                onClick={() => router.push("/tai-khoan/chinh-sua")}
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-[#FFBA00] transition-colors hover:bg-gray-800 sm:flex-none cursor-pointer"
+              >
                 <SquarePen size={16} />
                 Chỉnh sửa hồ sơ
               </button>
-            ) : (
-              <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 sm:flex-none cursor-pointer">
-                <UserPlus size={16} />
-                Theo dõi
-              </button>
             )}
+            {/* // ) : (
+            //   <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 sm:flex-none cursor-pointer">
+            //     <UserPlus size={16} />
+            //     Theo dõi
+            //   </button>
+            // )} */}
           </div>
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl border border-gray-100 bg-gray-50/50 p-4 text-sm sm:grid-cols-4 sm:p-3">
           <div className="flex flex-col sm:block">
             <p className="text-[11px] font-medium text-gray-500 uppercase tracking-widest sm:text-xs">Tổng tin đăng</p>
-            <p className="mt-0.5 text-base font-bold text-gray-900 sm:text-sm">{profile.totalListings + profile.totalSold}</p>
+            <p className="mt-0.5 text-base font-bold text-gray-900 sm:text-sm">{profile.totalListings}</p>
           </div>
           <div className="flex flex-col sm:block">
             <p className="text-[11px] font-medium text-gray-500 uppercase tracking-widest sm:text-xs">Đã giao dịch</p>
@@ -95,7 +126,7 @@ const UserProfileHeader = ({ profile, isOwnProfile = false }: UserProfileHeaderP
           </div>
           <div className="flex flex-col sm:block">
             <p className="text-[11px] font-medium text-gray-400 uppercase tracking-widest sm:text-xs">Hoạt động</p>
-            <p className="mt-0.5 inline-flex items-center gap-1.5 text-sm font-bold text-gray-900">
+            <p className="mt-0.5 inline-flex items-center gap-1.5 text-base font-bold text-emerald-600 sm:text-sm">
               <Clock3 size={14} className="text-emerald-500" />
               {profile.lastActive}
             </p>

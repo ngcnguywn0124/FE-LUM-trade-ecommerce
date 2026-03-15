@@ -70,7 +70,7 @@ export async function changePassword(data: ChangePasswordRequest): Promise<void>
  * Browser tự gửi httpOnly accessToken cookie.
  */
 export async function getCurrentUser(): Promise<UserResponse> {
-  const res = await apiClient.get<ApiResponse<UserResponse>>('/auth/me');
+  const res = await apiClient.get<ApiResponse<UserResponse>>('/users/me/profile');
   return res.data.data;
 }
 

@@ -14,6 +14,8 @@ import { createProduct, getProductById, setPrimaryImage, updateProduct } from '@
 import { getCategoryById } from '@/services/categoryService';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useAuthStore } from '@/stores/authStore';
+import { Loader2 } from 'lucide-react';
 
 const initialFormData: PostItemFormData = {
   title: '',
@@ -44,6 +46,7 @@ interface PostItemPageProps {
 
 const PostItemPage = ({ productId }: PostItemPageProps) => {
   const router = useRouter();
+  const { user, isLoading: isAuthLoading } = useAuthStore();
   const [formData, setFormData] = useState<PostItemFormData>(initialFormData);
   const [errors, setErrors] = useState<PostItemErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,6 +56,34 @@ const PostItemPage = ({ productId }: PostItemPageProps) => {
   const [isLoading, setIsLoading] = useState(!!productId);
   const previewUrlsRef = useRef<string[]>([]);
   const originalImagesRef = useRef<any[]>([]);
+
+  // Kiểm tra thông tin sinh viên trước khi cho phép đăng tin
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+      const hasStudentInfo = 
+        user.universityId && 
+        user.campusId && 
+        user.studentId && 
+        user.fullName && 
+        user.phoneNumber;
+
+      if (!hasStudentInfo) {
+        toast.error('Vui lòng cập nhật đầy đủ Thông tin sinh viên & Liên hệ để sử dụng chức năng đăng tin');
+        router.push('/tai-khoan/chinh-sua?redirect=/dang-tin');
+      }
+    }
+  }, [user, isAuthLoading, router]);
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
+          <p className="text-sm font-medium text-gray-500">Đang kiểm tra quyền truy cập...</p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!productId) return;

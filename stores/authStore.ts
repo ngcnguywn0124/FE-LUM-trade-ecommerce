@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { AxiosError } from 'axios';
 import * as authService from '@/services/authService';
+import * as profileService from '@/services/profileService';
+import * as verificationService from '@/services/verificationService';
 import type {
   ChangePasswordRequest,
   ForgotPasswordRequest,
@@ -9,6 +11,13 @@ import type {
   ResetPasswordRequest,
   UserResponse,
 } from '@/types/auth';
+import type {
+  SendVerificationCodeRequest,
+  StudentVerificationRequest,
+  UpdateProfileRequest,
+  UserVerificationResponse,
+  VerifyCodeRequest,
+} from '@/types/profile';
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -37,6 +46,13 @@ interface AuthState {
   forgotPassword: (data: ForgotPasswordRequest) => Promise<void>;
   resetPassword: (data: ResetPasswordRequest) => Promise<void>;
   changePassword: (data: ChangePasswordRequest) => Promise<void>;
+  updateProfile: (data: UpdateProfileRequest) => Promise<void>;
+  updateAvatar: (file: File) => Promise<void>;
+  updateCover: (file: File) => Promise<void>;
+  sendVerificationCode: (data: SendVerificationCodeRequest) => Promise<UserVerificationResponse>;
+  confirmVerificationCode: (data: VerifyCodeRequest) => Promise<UserVerificationResponse>;
+  submitStudentVerification: (data: StudentVerificationRequest) => Promise<UserVerificationResponse>;
+  getMyVerifications: () => Promise<UserVerificationResponse[]>;
   /** Redirect browser đến Google OAuth2 authorize endpoint trên backend */
   loginWithGoogle: () => void;
   clearError: () => void;
@@ -156,6 +172,124 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         isLoading: false,
         error: getApiErrorMessage(error, 'Đổi mật khẩu thất bại'),
+      });
+      throw error;
+    }
+  },
+
+  updateProfile: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const profile = await profileService.updateMyProfile(data);
+      set({
+        user: profileService.mapProfileToUserResponse(profile),
+        isAuthenticated: true,
+        isLoading: false,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: getApiErrorMessage(error, 'Cập nhật hồ sơ thất bại'),
+      });
+      throw error;
+    }
+  },
+
+  updateAvatar: async (file) => {
+    set({ isLoading: true, error: null });
+    try {
+      const profile = await profileService.updateAvatar(file);
+      set({
+        user: profileService.mapProfileToUserResponse(profile),
+        isAuthenticated: true,
+        isLoading: false,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: getApiErrorMessage(error, 'Cập nhật ảnh đại diện thất bại'),
+      });
+      throw error;
+    }
+  },
+
+  updateCover: async (file) => {
+    set({ isLoading: true, error: null });
+    try {
+      const profile = await profileService.updateCover(file);
+      set({
+        user: profileService.mapProfileToUserResponse(profile),
+        isAuthenticated: true,
+        isLoading: false,
+      });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: getApiErrorMessage(error, 'Cập nhật ảnh bìa thất bại'),
+      });
+      throw error;
+    }
+  },
+
+  sendVerificationCode: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await verificationService.sendVerificationCode(data);
+      set({ isLoading: false });
+      return response;
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: getApiErrorMessage(error, 'Gửi mã xác thực thất bại'),
+      });
+      throw error;
+    }
+  },
+
+  confirmVerificationCode: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await verificationService.confirmVerificationCode(data);
+      await authService.getCurrentUser().then((user) => {
+        set({ user, isAuthenticated: true, isLoading: false });
+      });
+      return response;
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: getApiErrorMessage(error, 'Xác thực mã thất bại'),
+      });
+      throw error;
+    }
+  },
+
+  submitStudentVerification: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await verificationService.submitStudentVerification(data);
+      await authService.getCurrentUser().then((user) => {
+        set({ user, isAuthenticated: true, isLoading: false });
+      });
+      return response;
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: getApiErrorMessage(error, 'Gửi hồ sơ xác thực sinh viên thất bại'),
+      });
+      throw error;
+    }
+  },
+
+  getMyVerifications: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const responses = await verificationService.getMyVerifications();
+      set({ isLoading: false });
+      return responses;
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: getApiErrorMessage(error, 'Không thể lấy lịch sử xác thực'),
       });
       throw error;
     }
