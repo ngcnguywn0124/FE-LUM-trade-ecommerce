@@ -23,6 +23,7 @@ import { getUniversities } from "@/services/universityService";
 import { UniversityResponse } from "@/types/admin";
 import { buildSearchHref } from "@/lib/searchUrl";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
+import { favoriteService } from "@/services/favoriteService";
 
 const Header = () => {
   const pathname = usePathname();
@@ -33,6 +34,7 @@ const Header = () => {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [keyword, setKeyword] = useState("");
+  const [favoriteCount, setFavoriteCount] = useState(0);
 
   // Sync keyword with URL search param 'q'
   const searchParams = useSearchParams();
@@ -71,6 +73,35 @@ const Header = () => {
       const query = search ? `?${search}` : "";
       window.history.replaceState({}, '', `${window.location.pathname}${query}`);
     }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setFavoriteCount(0);
+      return;
+    }
+
+    const loadFavoriteCount = async () => {
+      try {
+        const response = await favoriteService.getCount();
+        if (response.code === 200 || response.code === 1000) {
+          setFavoriteCount(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to load favorite count:", error);
+      }
+    };
+
+    loadFavoriteCount();
+    
+    // Refresh count when custom event or focus happens
+    const handleSync = () => loadFavoriteCount();
+    window.addEventListener("focus", handleSync);
+    window.addEventListener("favorite-count-sync", handleSync);
+    return () => {
+      window.removeEventListener("focus", handleSync);
+      window.removeEventListener("favorite-count-sync", handleSync);
+    };
   }, [isAuthenticated]);
 
   // Kiểm tra xem có đang ở trang chủ không
@@ -328,12 +359,20 @@ const Header = () => {
             {/* --- RIGHT: Actions --- */}
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 z-10">
               <div className="flex items-center gap-0.5 sm:gap-1 text-gray-800">
-                 <button 
-                   onClick={(e) => handleProtectedAction(e, "/tin-da-luu")}
-                   className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer"
-                 >
-                    <Heart size={20} strokeWidth={2.5} />
-                 </button>
+                   <button 
+                     onClick={(e) => handleProtectedAction(e, "/tin-da-luu")}
+                     className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer"
+                   >
+                      <Heart size={20} strokeWidth={2.5} />
+                      {isAuthenticated && favoriteCount > 0 && (
+                        <span className="absolute top-1.5 right-1.5 sm:right-2 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white">
+                          {favoriteCount > 99 ? '99+' : favoriteCount}
+                        </span>
+                      )}
+                      <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+                        Tin đã lưu
+                      </span>
+                   </button>
                  <div className="relative" ref={notificationsRef}>
                    <button
                      type="button"

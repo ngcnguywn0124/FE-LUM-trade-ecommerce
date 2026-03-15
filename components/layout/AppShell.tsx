@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useMemo, useEffect } from 'react';
+import { ReactNode, useMemo, useEffect, Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Header from './Header';
@@ -57,7 +57,9 @@ const AppShell = ({ children }: AppShellProps) => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
+      <Suspense fallback={<div className="h-20 bg-white" />}>
+        <Header />
+      </Suspense>
       <main className="flex-1">
         {children}
       </main>

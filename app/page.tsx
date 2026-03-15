@@ -16,8 +16,9 @@ import { getUniversities } from "@/services/universityService";
 import { CategoryResponse, UniversityResponse } from "@/types/admin";
 import { buildSearchHref } from "@/lib/searchUrl";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
+import { Suspense } from "react";
 
-export default function Home() {
+function HomeContent() {
    const router = useRouter();
    const searchParams = useSearchParams();
    const { history, addToHistory, clearHistory } = useSearchHistory();
@@ -204,5 +205,13 @@ export default function Home() {
          <PopularKeywords />
          {/* <Features /> */}
       </main>
+   );
+}
+
+export default function Home() {
+   return (
+      <Suspense fallback={<div className="min-h-screen bg-white animate-pulse" />}>
+         <HomeContent />
+      </Suspense>
    );
 }

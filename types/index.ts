@@ -12,6 +12,8 @@ export interface Product {
   imageCount?: number;
   viewCount?: number;
   favoriteCount?: number;
+  isFavorited?: boolean;
+  status?: string;
   condition?: 'new' | 'like_new' | 'used' | 'old' | 'broken' | 'for-parts';
   category?: string;
   categorySlug?: string;

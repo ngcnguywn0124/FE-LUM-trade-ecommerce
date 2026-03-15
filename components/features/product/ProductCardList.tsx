@@ -1,30 +1,21 @@
 import React, { useState } from "react";
 import Image from "next/image";
-import { Heart, Image as ImageIcon, MapPin, Clock, User, Star } from "lucide-react";
+import Link from "next/link";
+import { Heart, Image as ImageIcon, MapPin, Clock, Star } from "lucide-react";
+import { favoriteService } from "@/services/favoriteService";
+import { useAuthStore } from "@/stores/authStore";
+import { toast } from "sonner";
+import { Product } from "@/types";
 
 interface ProductProps {
-  product: {
-    id: string | number;
-    name: string;
-    price: string;
-    school: string;
-    campus?: string;
-    image: string;
-    tag?: string;
-    time?: string;
-    imageCount?: number;
-    condition?: 'new' | 'like_new' | 'used' | 'old' | 'broken' | 'for-parts';
-    seller?: {
-      id: string | number;
-      name: string;
-      avatar?: string;
-      rating?: number;
-    };
-  };
+  product: Product;
+  onFavoriteToggle?: (isFavorited: boolean) => void;
 }
 
-const ProductCardList = ({ product }: ProductProps) => {
-  const [isLiked, setIsLiked] = useState(false);
+const ProductCardList = ({ product, onFavoriteToggle }: ProductProps) => {
+  const [isLiked, setIsLiked] = useState(product.isFavorited || false);
+  const [isToggling, setIsToggling] = useState(false);
+  const { isAuthenticated } = useAuthStore();
 
   const conditionLabels = {
     'new': 'Mới 100%',
@@ -35,8 +26,50 @@ const ProductCardList = ({ product }: ProductProps) => {
     'for-parts': 'Phụ tùng'
   };
 
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      toast.error("Vui lòng đăng nhập để lưu tin");
+      return;
+    }
+
+    if (isToggling) return;
+
+    try {
+      setIsToggling(true);
+      const productId = product.id.toString();
+      
+      if (isLiked) {
+        const response = await favoriteService.unsave(productId);
+        if (response.code === 200 || response.code === 1000) {
+          setIsLiked(false);
+          toast.success("Đã bỏ lưu tin");
+          onFavoriteToggle?.(false);
+          // Đồng bộ số lượng ở Header ngay lập tức
+          window.dispatchEvent(new Event("favorite-count-sync"));
+        }
+      } else {
+        const response = await favoriteService.save(productId);
+        if (response.code === 200 || response.code === 1000 || response.code === 201) {
+          setIsLiked(true);
+          toast.success("Đã lưu tin");
+          onFavoriteToggle?.(true);
+          // Đồng bộ số lượng ở Header ngay lập tức
+          window.dispatchEvent(new Event("favorite-count-sync"));
+        }
+      }
+    } catch (error: any) {
+      console.error("Failed to toggle favorite", error);
+      toast.error("Có lỗi xảy ra, vui lòng thử lại sau");
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
   return (
-    <div className="group cursor-pointer bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all duration-300">
+    <Link href={`/bai-dang/${product.slug || product.id}`} className="block group cursor-pointer bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all duration-300">
       <div className="flex gap-4 p-4">
         {/* Image Container */}
         <div className="relative w-32 h-32 sm:w-40 sm:h-40 shrink-0 bg-gray-100 rounded-lg overflow-hidden">
@@ -72,11 +105,9 @@ const ProductCardList = ({ product }: ProductProps) => {
               
               {/* Favorite Button */}
               <button 
-                onClick={(e) => {
-                  e.preventDefault();
-                  setIsLiked(!isLiked);
-                }}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors shrink-0 cursor-pointer"
+                onClick={handleToggleFavorite}
+                disabled={isToggling}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors shrink-0 cursor-pointer disabled:opacity-50"
               >
                 <Heart 
                   size={20} 
@@ -86,9 +117,9 @@ const ProductCardList = ({ product }: ProductProps) => {
             </div>
 
             {/* Condition Badge */}
-            {product.condition && (
+            {product.condition && product.condition !== 'for-parts' && (
               <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded mb-2">
-                {conditionLabels[product.condition]}
+                {conditionLabels[product.condition as keyof typeof conditionLabels]}
               </span>
             )}
 
@@ -145,7 +176,7 @@ const ProductCardList = ({ product }: ProductProps) => {
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
