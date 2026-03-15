@@ -189,7 +189,7 @@ const ProductDetailPage = () => {
           items={[
             {
               label: product.category || "Sản phẩm",
-              href: `/search?category=${encodeURIComponent(product.category || "")}`,
+              href: `/tim-kiem?category=${encodeURIComponent(product.category || "")}`,
             },
             { label: product.name },
           ]}
@@ -233,12 +233,14 @@ const ProductDetailPage = () => {
 
             <div className="lg:col-span-7">
               <ProductSummary
+                id={product.id.toString()}
                 name={product.name}
                 price={product.price}
                 school={product.school}
                 campus={product.campus}
                 postedTime={product.time || "Vừa xong"}
                 infoTags={infoTags}
+                isFavorited={product.isFavorited}
                 isNegotiable={productDetail.isNegotiable}
                 contactPhone={productDetail.contactPhone}
                 seller={{

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import { usePathname } from "next/navigation";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -18,26 +18,46 @@ import NotificationsDropdown from "../features/notifications/NotificationsDropdo
 import { mockNotifications } from "@/lib/mockNotifications";
 import { NotificationItemData } from "@/types/notifications";
 import { useAuthStore } from "@/stores/authStore";
+import { useLocation } from "@/providers/LocationProvider";
+import { getUniversities } from "@/services/universityService";
+import { UniversityResponse } from "@/types/admin";
+import { buildSearchHref } from "@/lib/searchUrl";
+import { useSearchHistory } from "@/hooks/useSearchHistory";
+import { favoriteService } from "@/services/favoriteService";
 
 const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { addToHistory } = useSearchHistory();
   const { isAuthenticated, user, logout } = useAuthStore();
+  const { selectedSchool, setSelectedSchool, selectedCampus, setSelectedCampus } = useLocation();
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [keyword, setKeyword] = useState("");
+  const [favoriteCount, setFavoriteCount] = useState(0);
+
+  // Sync keyword with URL search param 'q'
+  const searchParams = useSearchParams();
+  const q = searchParams.get("q");
+  
+  useEffect(() => {
+    if (q !== null) {
+      setKeyword(q);
+    } else {
+      setKeyword("");
+    }
+  }, [q]);
+
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItemData[]>(mockNotifications);
+  const [universities, setUniversities] = useState<UniversityResponse[]>([]);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  
-  // State cho Trường và Cơ sở
-  const [selectedSchool, setSelectedSchool] = useState("HUTECH");
-  const [selectedCampus, setSelectedCampus] = useState("");
 
   // Kiểm tra query param require_login từ middleware
   useEffect(() => {
@@ -53,6 +73,35 @@ const Header = () => {
       const query = search ? `?${search}` : "";
       window.history.replaceState({}, '', `${window.location.pathname}${query}`);
     }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setFavoriteCount(0);
+      return;
+    }
+
+    const loadFavoriteCount = async () => {
+      try {
+        const response = await favoriteService.getCount();
+        if (response.code === 200 || response.code === 1000) {
+          setFavoriteCount(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to load favorite count:", error);
+      }
+    };
+
+    loadFavoriteCount();
+    
+    // Refresh count when custom event or focus happens
+    const handleSync = () => loadFavoriteCount();
+    window.addEventListener("focus", handleSync);
+    window.addEventListener("favorite-count-sync", handleSync);
+    return () => {
+      window.removeEventListener("focus", handleSync);
+      window.removeEventListener("favorite-count-sync", handleSync);
+    };
   }, [isAuthenticated]);
 
   // Kiểm tra xem có đang ở trang chủ không
@@ -86,6 +135,19 @@ const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHomePage]);
+
+  useEffect(() => {
+    const loadSearchMeta = async () => {
+      try {
+        const universitiesData = await getUniversities();
+        setUniversities(universitiesData);
+      } catch (error) {
+        console.error("Failed to load search metadata:", error);
+      }
+    };
+
+    loadSearchMeta();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -172,6 +234,37 @@ const Header = () => {
     }
   };
 
+  const handleSearchSubmit = useCallback(() => {
+    const normalizedKeyword = keyword.trim();
+    const normalizedSchool = selectedSchool.trim();
+    const normalizedCampus = selectedCampus.trim();
+
+    const selectedUniversity = universities.find(
+      (university) =>
+        university.slug === normalizedSchool ||
+        university.shortName === normalizedSchool ||
+        university.universityName === normalizedSchool
+    );
+
+    const selectedCampusItem = universities
+      .flatMap((university) =>
+        (university.campuses || []).map((campus) => campus)
+      )
+      .find((campus) => campus.slug === normalizedCampus || campus.campusName === normalizedCampus);
+
+    const href = buildSearchHref({
+      itemSlug: undefined,
+      universitySlug: selectedUniversity?.slug || undefined,
+      campusSlug: selectedCampusItem?.slug || undefined,
+      keyword: normalizedKeyword || undefined,
+    });
+
+    if (normalizedKeyword) {
+      addToHistory(normalizedKeyword);
+    }
+    router.push(href);
+  }, [keyword, selectedSchool, selectedCampus, universities, router, addToHistory]);
+
   return (
     <div className="flex flex-col w-full font-sans">
       <nav 
@@ -236,6 +329,12 @@ const Header = () => {
                             type="text"
                             value={keyword}
                             onChange={(e) => setKeyword(e.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault();
+                                handleSearchSubmit();
+                              }
+                            }}
                             placeholder="Tìm kiếm..."
                             className="w-full bg-transparent text-base sm:text-sm text-gray-800 placeholder-gray-400 font-medium focus:outline-none"
                         />
@@ -246,7 +345,10 @@ const Header = () => {
                         )}
                       </div>
 
-                      <button className="hidden sm:flex h-8 w-8 mr-1 rounded-md bg-[#FFBA00] hover:bg-[#ffc82a] items-center justify-center text-black transition-colors shrink-0 cursor-pointer">
+                      <button
+                        onClick={handleSearchSubmit}
+                        className="hidden sm:flex h-8 w-8 mr-1 rounded-md bg-[#FFBA00] hover:bg-[#ffc82a] items-center justify-center text-black transition-colors shrink-0 cursor-pointer"
+                      >
                         <Search size={18} strokeWidth={2.5} />
                       </button>
                   </div>
@@ -257,12 +359,20 @@ const Header = () => {
             {/* --- RIGHT: Actions --- */}
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 z-10">
               <div className="flex items-center gap-0.5 sm:gap-1 text-gray-800">
-                 <button 
-                   onClick={(e) => handleProtectedAction(e, "/tin-da-luu")}
-                   className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer"
-                 >
-                    <Heart size={20} strokeWidth={2.5} />
-                 </button>
+                   <button 
+                     onClick={(e) => handleProtectedAction(e, "/tin-da-luu")}
+                     className="p-2 sm:px-3 sm:py-3 hover:bg-black/10 rounded-full transition-colors relative group cursor-pointer"
+                   >
+                      <Heart size={20} strokeWidth={2.5} />
+                      {isAuthenticated && favoriteCount > 0 && (
+                        <span className="absolute top-1.5 right-1.5 sm:right-2 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white">
+                          {favoriteCount > 99 ? '99+' : favoriteCount}
+                        </span>
+                      )}
+                      <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+                        Tin đã lưu
+                      </span>
+                   </button>
                  <div className="relative" ref={notificationsRef}>
                    <button
                      type="button"

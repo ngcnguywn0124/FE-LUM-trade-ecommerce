@@ -1,12 +1,9 @@
-import {
-  getCampusesBySchool,
-  getCategoryById,
-  getSchoolById,
-  getSubcategoriesByCategory,
-  getTechnicalSpecsByCategory,
-} from '@/lib/categoriesData';
 import Image from 'next/image';
 import { PostItemFormData } from '../../../types/post';
+import { useEffect, useState, useMemo } from 'react';
+import { getCategoryTree } from '@/services/categoryService';
+import { getUniversities } from '@/services/universityService';
+import type { CategoryResponse, UniversityResponse } from '@/types/admin';
 
 interface PostItemPreviewProps {
   formData: PostItemFormData;
@@ -20,10 +17,44 @@ const formatCurrency = (price: string, isFree: boolean) => {
 };
 
 const PostItemPreview = ({ formData, inModal = false }: PostItemPreviewProps) => {
-  const category = getCategoryById(formData.categoryId);
-  const subcategory = getSubcategoriesByCategory(formData.categoryId).find((item) => item.id === formData.subcategoryId);
-  const school = getSchoolById(formData.schoolId);
-  const campus = getCampusesBySchool(formData.schoolId).find((item) => item.id === formData.campusId);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [universities, setUniversities] = useState<UniversityResponse[]>([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [catData, uniData] = await Promise.all([
+          getCategoryTree(),
+          getUniversities()
+        ]);
+        setCategories(catData);
+        setUniversities(uniData);
+      } catch (error) {
+        console.error('Failed to load preview metadata:', error);
+      }
+    };
+    loadData();
+  }, []);
+
+  const category = useMemo(() => 
+    categories.find((c) => c.categoryId === formData.categoryId),
+    [categories, formData.categoryId]
+  );
+  
+  const subcategory = useMemo(() => 
+    category?.children?.find((s) => s.categoryId === formData.subcategoryId),
+    [category, formData.subcategoryId]
+  );
+  
+  const school = useMemo(() => 
+    universities.find((u) => u.universityId === formData.schoolId),
+    [universities, formData.schoolId]
+  );
+  
+  const campus = useMemo(() => 
+    school?.campuses?.find((c) => c.campusId === formData.campusId),
+    [school, formData.campusId]
+  );
 
   const conditionLabel = {
     new: 'Mới 100%',
@@ -39,11 +70,9 @@ const PostItemPreview = ({ formData, inModal = false }: PostItemPreviewProps) =>
     both: 'Cả gặp mặt & giao hàng',
   }[formData.transactionType] || 'Chưa cập nhật';
 
-  const specFields = getTechnicalSpecsByCategory(formData.categoryId);
   const technicalSpecEntries = formData.technicalSpecs
-    .map((item) => {
-      const field = specFields.find((f) => f.key === item.key);
-      return { label: field?.label || item.key, value: item.value };
+    .map((item: { key: string; value: string }) => {
+      return { label: item.key, value: item.value };
     })
     .filter((field) => field.value.trim().length > 0 && field.label);
 
@@ -94,10 +123,10 @@ const PostItemPreview = ({ formData, inModal = false }: PostItemPreviewProps) =>
         <div className="mt-4 rounded-xl border border-gray-200 p-3">
           <p className="text-xs font-semibold text-gray-700 mb-2.5">Thông tin sản phẩm</p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
-            <InfoItem label="Danh mục" value={category?.name} />
-            <InfoItem label="Danh mục con" value={subcategory?.name} />
-            <InfoItem label="Trường" value={school?.name} />
-            <InfoItem label="Cơ sở" value={campus?.name} />
+            <InfoItem label="Danh mục" value={category?.categoryName} />
+            <InfoItem label="Danh mục con" value={subcategory?.categoryName} />
+            <InfoItem label="Trường" value={school?.shortName || school?.universityName} />
+            <InfoItem label="Cơ sở" value={campus?.campusName} />
             <InfoItem label="Tình trạng" value={conditionLabel} />
             <InfoItem label="Giao dịch" value={transactionTypeLabel} />
             <InfoItem label="Thời hạn tin" value={`${formData.expiryDays} ngày`} />
