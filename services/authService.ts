@@ -70,7 +70,7 @@ export async function changePassword(data: ChangePasswordRequest): Promise<void>
  * Browser tự gửi httpOnly accessToken cookie.
  */
 export async function getCurrentUser(): Promise<UserResponse> {
-  const res = await apiClient.get<ApiResponse<UserResponse>>('/users/me/profile');
+  const res = await apiClient.get<ApiResponse<UserResponse>>('/auth/me');
   return res.data.data;
 }
 
@@ -83,6 +83,6 @@ export async function getCurrentUser(): Promise<UserResponse> {
  */
 export function loginWithGoogle(): void {
   const backendUrl =
-    process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8686/api/v1';
+    process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8686/api/v1';
   window.location.href = `${backendUrl}/auth/google/authorize`;
 }
