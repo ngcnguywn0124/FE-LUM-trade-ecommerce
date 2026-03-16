@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   School,
   ShieldCheck,
+  UserCheck,
   SlidersHorizontal,
   FileText,
 } from 'lucide-react';
@@ -44,5 +45,10 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     href: '/admin/phan-quyen',
     label: 'Roles & Quyền',
     icon: ShieldCheck,
+  },
+  {
+    href: '/admin/xac-thuc-sinh-vien',
+    label: 'Xác thực sinh viên',
+    icon: UserCheck,
   },
 ];

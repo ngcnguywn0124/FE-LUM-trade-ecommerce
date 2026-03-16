@@ -56,34 +56,17 @@ const PostItemPage = ({ productId }: PostItemPageProps) => {
   const [isLoading, setIsLoading] = useState(!!productId);
   const previewUrlsRef = useRef<string[]>([]);
   const originalImagesRef = useRef<any[]>([]);
+  const hasRequiredStudentInfo = Boolean(
+    user?.universityId && user?.campusId && user?.studentId && user?.fullName && user?.phoneNumber,
+  );
 
   // Kiểm tra thông tin sinh viên trước khi cho phép đăng tin
   useEffect(() => {
-    if (!isAuthLoading && user) {
-      const hasStudentInfo = 
-        user.universityId && 
-        user.campusId && 
-        user.studentId && 
-        user.fullName && 
-        user.phoneNumber;
-
-      if (!hasStudentInfo) {
+    if (!isAuthLoading && user && !hasRequiredStudentInfo) {
         toast.error('Vui lòng cập nhật đầy đủ Thông tin sinh viên & Liên hệ để sử dụng chức năng đăng tin');
         router.push('/tai-khoan/chinh-sua?redirect=/dang-tin');
-      }
     }
-  }, [user, isAuthLoading, router]);
-
-  if (isAuthLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
-          <p className="text-sm font-medium text-gray-500">Đang kiểm tra quyền truy cập...</p>
-        </div>
-      </div>
-    );
-  }
+  }, [user, isAuthLoading, hasRequiredStudentInfo, router]);
 
   useEffect(() => {
     if (!productId) return;
@@ -446,6 +429,17 @@ const PostItemPage = ({ productId }: PostItemPageProps) => {
       setIsSubmitting(false);
     }
   };
+
+  if (isAuthLoading || (user && !hasRequiredStudentInfo)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
+          <p className="text-sm font-medium text-gray-500">Đang kiểm tra quyền truy cập...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">

@@ -88,6 +88,22 @@ export interface UserVerificationResponse {
   createdAt: string;
 }
 
+export interface PendingStudentVerificationResponse {
+  verificationId: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string | null;
+  studentId: string | null;
+  universityId: string | null;
+  universityName: string | null;
+  campusId: string | null;
+  campusName: string | null;
+  faculty: string | null;
+  graduationYear: number | null;
+  submittedAt: string;
+}
+
 export interface UserReview {
   id: number;
   reviewerName: string;

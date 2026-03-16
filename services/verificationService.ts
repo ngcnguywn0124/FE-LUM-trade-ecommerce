@@ -1,6 +1,7 @@
 import apiClient from '@/lib/apiClient';
 import type { ApiResponse } from '@/types/auth';
 import type {
+  PendingStudentVerificationResponse,
   ReviewStudentVerificationRequest,
   SendVerificationCodeRequest,
   StudentVerificationRequest,
@@ -42,5 +43,10 @@ export async function reviewStudentVerification(
 
 export async function getMyVerifications(): Promise<UserVerificationResponse[]> {
   const res = await apiClient.get<ApiResponse<UserVerificationResponse[]>>('/verifications/me');
+  return res.data.data;
+}
+
+export async function getPendingStudentVerifications(): Promise<PendingStudentVerificationResponse[]> {
+  const res = await apiClient.get<ApiResponse<PendingStudentVerificationResponse[]>>('/verifications/student/pending');
   return res.data.data;
 }

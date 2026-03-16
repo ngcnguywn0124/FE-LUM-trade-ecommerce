@@ -99,6 +99,7 @@ const EditProfilePage = () => {
   const {
     user,
     updateProfile,
+    submitStudentVerification,
     updateAvatar,
     updateCover,
     isLoading,
@@ -126,6 +127,7 @@ const EditProfilePage = () => {
   const [universities, setUniversities] = useState<UniversityResponse[]>([]);
   const [campuses, setCampuses] = useState<CampusResponse[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerifyingStudent, setIsVerifyingStudent] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -289,6 +291,41 @@ const EditProfilePage = () => {
     }
   };
 
+  const handleStudentVerification = async () => {
+    if (
+      !formData.studentId ||
+      !formData.universityId ||
+      !formData.campusId ||
+      !formData.graduationYear
+    ) {
+      alert("Vui lòng nhập đầy đủ MSSV, Trường, Campus và Năm tốt nghiệp trước khi xác thực.");
+      return;
+    }
+
+    setIsVerifyingStudent(true);
+    clearError();
+
+    try {
+      await updateProfile(formData);
+      await submitStudentVerification({
+        studentId: formData.studentId,
+        universityId: formData.universityId,
+        campusId: formData.campusId,
+        faculty: formData.faculty || null,
+        graduationYear: formData.graduationYear,
+      });
+
+      setSuccessMessage("Đã gửi yêu cầu xác thực sinh viên. Vui lòng chờ quản trị viên duyệt.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => setSuccessMessage(""), 4000);
+      await fetchCurrentUser();
+    } catch (err) {
+      console.error("Student verification submit failed", err);
+    } finally {
+      setIsVerifyingStudent(false);
+    }
+  };
+
   if (!user && isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -358,7 +395,7 @@ const EditProfilePage = () => {
                   type="button"
                   onClick={(e) => { e.stopPropagation(); handleCoverClick(); }}
                   disabled={isSubmitting}
-                  className="flex translate-y-2 items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-800 opacity-0 shadow backdrop-blur-sm transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 hover:bg-white disabled:opacity-50"
+                  className="flex translate-y-2 items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-gray-800 opacity-0 shadow backdrop-blur-sm transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 hover:bg-white disabled:opacity-50 cursor-pointer"
                 >
                   <Camera size={12} />
                   {isSubmitting ? "Đang tải..." : "Đổi ảnh bìa"}
@@ -608,12 +645,32 @@ const EditProfilePage = () => {
                 </div>
 
                 {!user?.isStudentVerified && (
-                  <div className="flex items-start gap-2.5 rounded-xl border border-blue-100 bg-blue-50 p-3 text-[11.5px] leading-snug text-blue-600">
-                    <Info size={14} className="mt-0.5 shrink-0" />
-                    <span>
-                      Cập nhật thông tin sinh viên chính xác để được xác thực và tăng độ tin cậy
-                      trong giao dịch.
-                    </span>
+                  <div className="flex flex-col items-center space-y-3 rounded-xl border border-blue-100 bg-blue-50 p-4 text-center">
+                    <div className="flex flex-col items-center gap-2 text-[11.5px] leading-snug text-blue-600">
+                      <Info size={16} className="shrink-0" />
+                      <span>
+                        Cập nhật thông tin sinh viên chính xác để được xác thực và tăng độ tin cậy
+                        trong giao dịch.
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleStudentVerification}
+                      disabled={isVerifyingStudent || isSubmitting}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-2.5 text-xs font-semibold text-blue-700 shadow-sm transition-all hover:bg-blue-100 hover:shadow disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto cursor-pointer"
+                    >
+                      {isVerifyingStudent ? (
+                        <>
+                          <Loader2 size={13} className="animate-spin" />
+                          Đang gửi xác thực...
+                        </>
+                      ) : (
+                        <>
+                          <Shield size={13} />
+                          Gửi xác thực sinh viên
+                        </>
+                      )}
+                    </button>
                   </div>
                 )}
               </SectionCard>
@@ -623,7 +680,7 @@ const EditProfilePage = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 py-3 text-sm font-bold text-amber-400 transition-all hover:-translate-y-px hover:bg-gray-800 active:translate-y-0 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-white"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 py-3 text-sm font-bold text-amber-400 transition-all hover:-translate-y-px hover:bg-gray-800 active:translate-y-0 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-white cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>
@@ -640,7 +697,7 @@ const EditProfilePage = () => {
                 <button
                   type="button"
                   onClick={() => router.back()}
-                  className="w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                  className="w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 cursor-pointer"
                 >
                   Hủy bỏ
                 </button>
