@@ -10,6 +10,8 @@ import UserListingsSection from "@/components/features/user-profile/UserListings
 import { getProducts, mapSummaryToCardProduct } from "@/services/productService";
 import { getUserProfileData } from "@/lib/mockUserProfile";
 import { getCurrentUser } from "@/services/authService";
+import { getPublicProfile } from "@/services/profileService";
+import type { ProfileResponse } from "@/types/profile";
 
 const UserProfilePage = () => {
   const params = useParams<{ id: string }>();
@@ -17,6 +19,7 @@ const UserProfilePage = () => {
 
   const [allProducts, setAllProducts] = useState<ReturnType<typeof mapSummaryToCardProduct>[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [publicProfile, setPublicProfile] = useState<ProfileResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -24,10 +27,17 @@ const UserProfilePage = () => {
       setIsLoading(true);
 
       try {
-        const [productsPage, me] = await Promise.allSettled([
+        const [profileRes, productsPage, me] = await Promise.allSettled([
+          getPublicProfile(userId),
           getProducts({ page: 0, size: 150, sort: "createdAt,desc" }),
           getCurrentUser(),
         ]);
+
+        if (profileRes.status === "fulfilled") {
+          setPublicProfile(profileRes.value);
+        } else {
+          setPublicProfile(null);
+        }
 
         if (productsPage.status === "fulfilled") {
           setAllProducts(productsPage.value.content.map(mapSummaryToCardProduct));
@@ -46,9 +56,14 @@ const UserProfilePage = () => {
     };
 
     loadData();
-  }, []);
+  }, [userId]);
 
-  const userData = useMemo(() => getUserProfileData(userId, allProducts), [allProducts, userId]);
+  const userData = useMemo(() => {
+    if (!publicProfile) {
+      return null;
+    }
+    return getUserProfileData(publicProfile, allProducts);
+  }, [allProducts, publicProfile]);
 
   if (isLoading) {
     return <div className="min-h-screen bg-gray-50 pt-24 pb-12" />;

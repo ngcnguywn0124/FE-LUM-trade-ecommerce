@@ -3,22 +3,32 @@ import { ImagePlus, SendHorizonal } from 'lucide-react';
 
 interface MessageComposerProps {
   value: string;
+  isSeller?: boolean;
   onChange: (value: string) => void;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   onQuickAction?: (text: string) => void;
   onImagesSelect?: (files: File[]) => void;
 }
 
-const QUICK_REPLIES = [
+const BUYER_QUICK_REPLIES = [
   'Món này còn không bạn?',
   'Có bớt giá không ạ?',
   'Mình hẹn gặp ở cổng trường nhé!',
   'Bạn có ship không?',
 ];
 
-const MessageComposer = ({ value, onChange, onSubmit, onQuickAction, onImagesSelect }: MessageComposerProps) => {
+const SELLER_QUICK_REPLIES = [
+  'Chào bạn, món này vẫn còn nhé!',
+  'Bạn qua xem trực tiếp được không?',
+  'Mình có thể bớt một chút nếu bạn qua lấy sớm.',
+  'OK chốt, hẹn bạn ở cổng trường!',
+];
+
+const MessageComposer = ({ value, isSeller, onChange, onSubmit, onQuickAction, onImagesSelect }: MessageComposerProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const quickReplies = isSeller ? SELLER_QUICK_REPLIES : BUYER_QUICK_REPLIES;
 
   // Tự động điều chỉnh chiều cao của textarea dựa trên nội dung
   useEffect(() => {
@@ -46,7 +56,7 @@ const MessageComposer = ({ value, onChange, onSubmit, onQuickAction, onImagesSel
     <div className="border-t border-gray-100 bg-white">
       {/* Quick Replies */}
       <div className="flex items-center gap-2 p-2 overflow-x-auto no-scrollbar border-b border-gray-50 bg-gray-50/30">
-        {QUICK_REPLIES.map((text) => (
+        {quickReplies.map((text) => (
           <button
             key={text}
             onClick={() => onQuickAction?.(text)}

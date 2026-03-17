@@ -1,14 +1,11 @@
 'use client';
 
 import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import SockJS from 'sockjs-client';
+import { Client } from '@stomp/stompjs';
 import { MessageCircleWarning } from 'lucide-react';
-import Breadcrumb from '@/components/shared/Breadcrumb';
-import {
-  CURRENT_USER_ID,
-  formatMessageTime,
-  getConversationLastMessage,
-  mockConversations,
-} from '@/lib/mockMessages';
+import { useAuthStore } from '@/stores/authStore';
+import { chatService, ChatConversationResponse, ChatMessageResponse } from '@/services/chatService';
 import { ChatMessage, Conversation, ConversationTransaction, TransactionPaymentMethod } from '@/types/messages';
 import ChatHeader from './ChatHeader';
 import ConversationList from './ConversationList';
@@ -19,37 +16,136 @@ import ProductSnippet from './ProductSnippet';
 import TransactionSystemMessage from './transaction/TransactionSystemMessage';
 import TransactionActionCard from './transaction/TransactionActionCard';
 
+const CHAT_WS_URL = process.env.NEXT_PUBLIC_CHAT_WS_URL || process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8686/ws';
+
+const normalizeId = (value: string | number | null | undefined): string => (value == null ? '' : String(value));
+
+const isTempMessageId = (id: string | number): boolean => String(id).startsWith('temp-');
+
+const fileToDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Không thể đọc file ảnh'));
+    reader.readAsDataURL(file);
+  });
+
+const mapDeliveryStatus = (status: string | null | undefined): ChatMessage['status'] => {
+  if (!status) return 'sent';
+  const normalized = status.toLowerCase();
+  if (normalized === 'seen' || normalized === 'read') return 'seen';
+  if (normalized === 'delivered') return 'delivered';
+  return 'sent';
+};
+
+const mapApiMessage = (message: ChatMessageResponse): ChatMessage => {
+  const images = (message.messageType === 'image' || message.messageType === 'images')
+    ? (message.content?.includes('|') ? message.content.split('|') : [message.content || message.attachmentUrl || ''])
+    : undefined;
+
+  return {
+    id: message.messageId,
+    conversationId: message.conversationId,
+    senderId: message.senderId,
+    content: message.content || '',
+    sentAt: message.createdAt,
+    status: mapDeliveryStatus(message.deliveryStatus),
+    images: images && images.length > 0 && images[0] !== '' ? images : undefined,
+    transactionEvent: message.transactionEventType
+      ? (message.transactionEventType.toLowerCase() as ChatMessage['transactionEvent'])
+      : undefined,
+  };
+};
+
+const getConversationLastMessage = (conversation: Conversation): ChatMessage => {
+  return conversation.messages[conversation.messages.length - 1];
+};
+
+const formatMessageTime = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+};
+
+const mapApiConversation = (conversation: ChatConversationResponse): Conversation => {
+  const fallbackTime = conversation.lastMessageAt || conversation.joinedAt || new Date().toISOString();
+  
+  // Only create preview if there is no real message history known yet
+  const previewMessage: ChatMessage = {
+    id: `preview-${conversation.conversationId}`,
+    conversationId: conversation.conversationId,
+    senderId: conversation.otherUserId,
+    content: conversation.lastMessagePreview || 'Bắt đầu cuộc trò chuyện',
+    sentAt: fallbackTime,
+    status: 'sent',
+    // If it's an image preview, we might want to flag it or just let it be text
+  };
+
+  return {
+    id: conversation.conversationId,
+    participant: {
+      id: conversation.otherUserId,
+      name: conversation.otherUserName || 'Người dùng',
+      avatar: conversation.otherUserAvatarUrl || '/user/avatar-user-profile-default.png',
+      isOnline: false,
+      sellerPhone: conversation.sellerPhone || undefined,
+    },
+    relatedPost: {
+      id: conversation.productId || `product-${conversation.conversationId}`,
+      slug: conversation.productSlug || undefined,
+      title: conversation.productTitle || 'Sản phẩm',
+      price: conversation.productPrice != null 
+        ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(conversation.productPrice)) 
+        : 'Giá liên hệ',
+      image: conversation.productImageUrl || '/template.png',
+      sellerId: conversation.sellerId || '',
+    },
+    messages: [previewMessage],
+    unreadCount: conversation.isUnread ? 1 : 0,
+    isPinned: conversation.isPinned,
+  };
+};
+
 const MessagesPage = () => {
-  const [conversations, setConversations] = useState<Conversation[]>(mockConversations);
+  const { user } = useAuthStore();
+  const currentUserId = user?.userId || '';
+  const wsClientRef = useRef<Client | null>(null);
+  const loadedConversationIdsRef = useRef<Set<string>>(new Set());
+
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
-  const [activeConversationId, setActiveConversationId] = useState<number | null>(
-    mockConversations[0]?.id ?? null
-  );
+  const [activeConversationId, setActiveConversationId] = useState<string | number | null>(null);
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
   const [draftMessage, setDraftMessage] = useState('');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const activeConversation = useMemo(
-    () => conversations.find((conversation) => conversation.id === activeConversationId) ?? null,
+    () => conversations.find((conversation) => normalizeId(conversation.id) === normalizeId(activeConversationId)) ?? null,
     [conversations, activeConversationId]
   );
 
-  // ─── Role determination (mock: even id = current user is seller) ───────────
-  const isSeller = useMemo(
-    () => (activeConversation ? activeConversation.id % 2 === 0 : false),
-    [activeConversation]
-  );
+  // ─── Role determination ──────────────────────────────────────────────────
+  const isSeller = useMemo(() => {
+    if (!activeConversation || !currentUserId) return false;
+    const postSellerId = normalizeId(activeConversation.relatedPost.sellerId);
+    return postSellerId === normalizeId(currentUserId);
+  }, [activeConversation, currentUserId]);
 
   // ─── Transaction state helpers ────────────────────────────────────────────
 
   /** Tạo system message sự kiện giao dịch vào cuối danh sách tin nhắn */
   const addTransactionSystemMessage = useCallback(
-    (convId: number, eventType: ChatMessage['transactionEvent'], content: string) => {
+    (convId: string | number, eventType: ChatMessage['transactionEvent'], content: string) => {
       const systemMsg: ChatMessage = {
         id: Date.now(),
         conversationId: convId,
-        senderId: CURRENT_USER_ID,
+        senderId: currentUserId,
         content,
         sentAt: new Date().toISOString(),
         status: 'seen',
@@ -57,19 +153,19 @@ const MessagesPage = () => {
       };
       setConversations((prev) =>
         prev.map((c) =>
-          c.id === convId ? { ...c, messages: [...c.messages, systemMsg] } : c
+          normalizeId(c.id) === normalizeId(convId) ? { ...c, messages: [...c.messages, systemMsg] } : c
         )
       );
     },
-    []
+    [currentUserId]
   );
 
   /** Cập nhật dữ liệu giao dịch cho cuộc hội thoại */
   const updateTransaction = useCallback(
-    (convId: number, patch: Partial<ConversationTransaction>) => {
+    (convId: string | number, patch: Partial<ConversationTransaction>) => {
       setConversations((prev) =>
         prev.map((c) => {
-          if (c.id !== convId) return c;
+          if (normalizeId(c.id) !== normalizeId(convId)) return c;
           const existing = c.transaction ?? {
             id: Date.now(),
             status: 'idle' as const,
@@ -168,6 +264,179 @@ const MessagesPage = () => {
     addTransactionSystemMessage(activeConversationId, 'cancelled', 'Giao dịch đã bị huỷ');
   }, [activeConversationId, updateTransaction, addTransactionSystemMessage]);
 
+  const loadMessagesForConversation = useCallback(
+    async (conversationId: string | number, options?: { force?: boolean }) => {
+      if (!currentUserId) return;
+
+      const normalizedConversationId = normalizeId(conversationId);
+      const forceReload = Boolean(options?.force);
+
+      if (!normalizedConversationId || (!forceReload && loadedConversationIdsRef.current.has(normalizedConversationId))) {
+        return;
+      }
+
+      const page = await chatService.getMessages(currentUserId, normalizedConversationId, 0, 50);
+      const messages = [...page.content]
+        .reverse()
+        .map(mapApiMessage);
+
+      setConversations((prev) =>
+        prev.map((conversation) =>
+          normalizeId(conversation.id) === normalizedConversationId
+            ? {
+                ...conversation,
+                messages: (() => {
+                  const serverMessageIds = new Set(messages.map((message) => normalizeId(message.id)));
+                  const localOnlyMessages = conversation.messages.filter((message) => {
+                    const localMessageId = normalizeId(message.id);
+                    // Filter out both temp IDs and the initial 'preview' placeholder
+                    return (
+                      (isTempMessageId(localMessageId) || !serverMessageIds.has(localMessageId)) &&
+                      !String(localMessageId).startsWith('preview-')
+                    );
+                  });
+
+                  const merged = [...messages, ...localOnlyMessages];
+                  return merged.sort(
+                    (first, second) =>
+                      new Date(first.sentAt).getTime() - new Date(second.sentAt).getTime()
+                  );
+                })(),
+              }
+            : conversation
+        )
+      );
+
+      loadedConversationIdsRef.current.add(normalizedConversationId);
+    },
+    [currentUserId]
+  );
+
+  const loadConversations = useCallback(async () => {
+    if (!currentUserId) return;
+
+    const page = await chatService.getConversations(currentUserId, 0, 50);
+    const mapped = page.content.map(mapApiConversation);
+
+    setConversations(mapped);
+    loadedConversationIdsRef.current.clear();
+
+    if (mapped.length === 0) {
+      setActiveConversationId(null);
+      return;
+    }
+
+    const firstConvId = mapped[0].id;
+    setActiveConversationId((prev) => {
+      const targetId = prev ? prev : firstConvId;
+      // Auto-load messages for the initial active conversation
+      void loadMessagesForConversation(targetId, { force: true }).catch(() => undefined);
+      return targetId;
+    });
+  }, [currentUserId, loadMessagesForConversation]);
+
+  const handleIncomingSocketMessage = useCallback(
+    async (payload: string) => {
+      try {
+        const parsed = JSON.parse(payload) as ChatMessageResponse;
+        if (!parsed?.conversationId || !parsed?.messageId) return;
+
+        const incomingMessage = mapApiMessage(parsed);
+        const incomingConversationId = normalizeId(parsed.conversationId);
+        const isActive = normalizeId(activeConversationId) === incomingConversationId;
+        let conversationFound = false;
+
+        setConversations((prev) => {
+          const next = prev.map((conversation) => {
+            if (normalizeId(conversation.id) !== incomingConversationId) {
+              return conversation;
+            }
+
+            conversationFound = true;
+            // If background conversation gets a message, trigger initial load to ensure history is ready
+            if (!isActive && !loadedConversationIdsRef.current.has(incomingConversationId)) {
+              void loadMessagesForConversation(incomingConversationId, { force: true }).catch(() => undefined);
+            }
+
+            const alreadyExists = conversation.messages.some(
+              (message) => normalizeId(message.id) === normalizeId(incomingMessage.id)
+            );
+
+            const updatedMessages = (alreadyExists
+              ? conversation.messages
+              : [...conversation.messages.filter(m => !String(m.id).startsWith('preview-')), incomingMessage]
+            ).sort(
+              (a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
+            );
+
+            return {
+              ...conversation,
+              messages: updatedMessages,
+              unreadCount: isActive ? 0 : (conversation.unreadCount || 0) + (normalizeId(incomingMessage.senderId) === normalizeId(currentUserId) ? 0 : 1),
+            };
+          });
+
+          return conversationFound ? next : prev;
+        });
+
+        if (!conversationFound) {
+          await loadConversations();
+        }
+      } catch {
+        // ignore malformed messages
+      }
+    },
+    [activeConversationId, currentUserId, loadConversations]
+  );
+
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    loadConversations().catch(() => {
+      setConversations([]);
+      setActiveConversationId(null);
+    });
+  }, [currentUserId, loadConversations]);
+
+  useEffect(() => {
+    if (!activeConversationId) return;
+
+    loadMessagesForConversation(activeConversationId).catch(() => {
+      // keep existing messages if fetch fails
+    });
+  }, [activeConversationId, loadMessagesForConversation]);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const client = new Client({
+      webSocketFactory: () => new SockJS(CHAT_WS_URL),
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
+    });
+
+    client.onConnect = () => {
+      client.subscribe('/user/queue/messages', (message) => {
+        void handleIncomingSocketMessage(message.body);
+      });
+    };
+
+    client.onStompError = () => {
+      // ignore, auto reconnect will retry
+    };
+
+    client.activate();
+    wsClientRef.current = client;
+
+    return () => {
+      if (wsClientRef.current) {
+        wsClientRef.current.deactivate();
+        wsClientRef.current = null;
+      }
+    };
+  }, [currentUserId, handleIncomingSocketMessage]);
+
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
@@ -213,13 +482,20 @@ const MessagesPage = () => {
     });
   }, [conversations, search, filter]);
 
-  const handleSelectConversation = (conversationId: number) => {
-    setActiveConversationId(conversationId);
+  const handleSelectConversation = (conversationId: string | number) => {
+    const normalizedId = normalizeId(conversationId);
+    setActiveConversationId(normalizedId);
     setIsMobileChatOpen(true);
+
+    if (currentUserId) {
+      void chatService.markAsRead(currentUserId, normalizedId).catch(() => undefined);
+    }
+
+    void loadMessagesForConversation(normalizedId, { force: true }).catch(() => undefined);
 
     setConversations((prev) =>
       prev.map((conversation) =>
-        conversation.id === conversationId
+        normalizeId(conversation.id) === normalizedId
           ? {
               ...conversation,
               unreadCount: 0,
@@ -229,18 +505,21 @@ const MessagesPage = () => {
     );
   };
 
-  const handleSendMessage = (event?: React.FormEvent<HTMLFormElement>, contentOverride?: string) => {
+  const handleSendMessage = async (event?: React.FormEvent<HTMLFormElement>, contentOverride?: string) => {
     event?.preventDefault();
 
     const content = contentOverride ?? draftMessage.trim();
-    if (!content || !activeConversationId) {
+    if (!content || !activeConversationId || !currentUserId) {
       return;
     }
 
+    const conversationId = normalizeId(activeConversationId);
+    const tempId = `temp-${Date.now()}`;
+
     const newMessage: ChatMessage = {
-      id: Date.now(),
-      conversationId: activeConversationId,
-      senderId: CURRENT_USER_ID,
+      id: tempId,
+      conversationId,
+      senderId: currentUserId,
       content,
       sentAt: new Date().toISOString(),
       status: 'sent',
@@ -248,7 +527,7 @@ const MessagesPage = () => {
 
     setConversations((prev) =>
       prev.map((conversation) =>
-        conversation.id === activeConversationId
+        normalizeId(conversation.id) === conversationId
           ? {
               ...conversation,
               messages: [...conversation.messages, newMessage],
@@ -256,38 +535,139 @@ const MessagesPage = () => {
           : conversation
       )
     );
+
+    try {
+      const sent = await chatService.sendMessage(currentUserId, conversationId, {
+        messageType: 'text',
+        content,
+      });
+      const sentMessage = mapApiMessage(sent);
+
+      setConversations((prev) =>
+        prev.map((conversation) => {
+          if (normalizeId(conversation.id) !== conversationId) return conversation;
+
+          const withoutTemp = conversation.messages.filter((message) => normalizeId(message.id) !== tempId);
+          const alreadyExists = withoutTemp.some(
+            (message) => normalizeId(message.id) === normalizeId(sentMessage.id)
+          );
+
+          return {
+            ...conversation,
+            messages: alreadyExists ? withoutTemp : [...withoutTemp, sentMessage],
+          };
+        })
+      );
+    } catch {
+      setConversations((prev) =>
+        prev.map((conversation) => {
+          if (normalizeId(conversation.id) !== conversationId) return conversation;
+          return {
+            ...conversation,
+            messages: conversation.messages.map((message) =>
+              normalizeId(message.id) === tempId
+                ? { ...message, status: 'delivered' }
+                : message
+            ),
+          };
+        })
+      );
+    } finally {
+      // Small delay before deciding if we need a reload
+      // void loadMessagesForConversation(conversationId, { force: true }).catch(() => undefined);
+    }
 
     if (!contentOverride) {
       setDraftMessage('');
     }
   };
 
-  const handleImagesSelect = (files: File[]) => {
-    if (!activeConversationId) return;
+  const handleImagesSelect = async (files: File[]) => {
+    if (!activeConversationId || !currentUserId || files.length === 0) return;
 
-    // Giả lập tạo URL cho nhiều ảnh
-    const imageUrls = files.map(file => URL.createObjectURL(file));
-    
-    const newMessage: ChatMessage = {
-      id: Date.now(),
-      conversationId: activeConversationId,
-      senderId: CURRENT_USER_ID,
-      content: files.length === 1 ? 'Đã gửi một ảnh' : `Đã gửi ${files.length} ảnh`,
-      images: imageUrls,
+    const conversationId = normalizeId(activeConversationId);
+    const dataUrls: string[] = [];
+
+    // 1. Convert all files to data URLs
+    for (const file of files) {
+      try {
+        const dataUrl = await fileToDataUrl(file);
+        dataUrls.push(dataUrl);
+      } catch (err) {
+        console.error('Failed to convert file to dataUrl:', err);
+      }
+    }
+
+    if (dataUrls.length === 0) return;
+
+    // 2. Create a single temp message for all images
+    const tempId = `temp-images-${Date.now()}`;
+    const tempImageMessage: ChatMessage = {
+      id: tempId,
+      conversationId,
+      senderId: currentUserId,
+      content: dataUrls.join('|'), // Joined by pipe for the frontend to split back into .images
+      images: dataUrls,
       sentAt: new Date().toISOString(),
       status: 'sent',
     };
 
     setConversations((prev) =>
       prev.map((conversation) =>
-        conversation.id === activeConversationId
+        normalizeId(conversation.id) === conversationId
           ? {
               ...conversation,
-              messages: [...conversation.messages, newMessage],
+              messages: [...conversation.messages, tempImageMessage],
             }
           : conversation
       )
     );
+
+    try {
+      // 3. Send as a single message with type 'images'
+      // Use '|' separator for multiple URLs in one string field
+      const sent = await chatService.sendMessage(currentUserId, conversationId, {
+        messageType: 'images',
+        content: '',
+        attachmentUrl: dataUrls.join('|'),
+      });
+
+      const sentMessage = mapApiMessage(sent);
+
+      setConversations((prev) =>
+        prev.map((conversation) => {
+          if (normalizeId(conversation.id) !== conversationId) return conversation;
+
+          const withoutTemp = conversation.messages.filter(
+            (message) => normalizeId(message.id) !== tempId
+          );
+          const alreadyExists = withoutTemp.some(
+            (message) => normalizeId(message.id) === normalizeId(sentMessage.id)
+          );
+
+          return {
+            ...conversation,
+            messages: alreadyExists ? withoutTemp : [...withoutTemp, sentMessage],
+          };
+        })
+      );
+    } catch {
+      setConversations((prev) =>
+        prev.map((conversation) => {
+          if (normalizeId(conversation.id) !== conversationId) return conversation;
+          return {
+            ...conversation,
+            messages: conversation.messages.map((message) =>
+              normalizeId(message.id) === tempId
+                ? { ...message, status: 'delivered' }
+                : message
+            ),
+          };
+        })
+      );
+    } finally {
+      // void loadMessagesForConversation(conversationId, { force: true }).catch(() => undefined);
+    }
   };
 
   return (
@@ -319,6 +699,7 @@ const MessagesPage = () => {
                 <ChatHeader
                   conversation={activeConversation}
                   isMobile={isMobileChatOpen}
+                  isSeller={isSeller}
                   onBack={() => setIsMobileChatOpen(false)}
                 />
 
@@ -357,8 +738,8 @@ const MessagesPage = () => {
                         const showDateSeparator = !prevMessage || 
                           new Date(prevMessage.sentAt).toDateString() !== new Date(message.sentAt).toDateString();
                         
-                        const isLastInGroup = !nextMessage || nextMessage.senderId !== message.senderId;
-                        const isOwn = message.senderId === CURRENT_USER_ID;
+                        const isLastInGroup = !nextMessage || normalizeId(nextMessage.senderId) !== normalizeId(message.senderId);
+                        const isOwn = normalizeId(message.senderId) === normalizeId(currentUserId);
 
                         return (
                           <div key={message.id} className="space-y-3">
@@ -426,6 +807,7 @@ const MessagesPage = () => {
 
                 <MessageComposer
                   value={draftMessage}
+                  isSeller={isSeller}
                   onChange={setDraftMessage}
                   onSubmit={handleSendMessage}
                   onQuickAction={(text) => handleSendMessage(undefined, text)}

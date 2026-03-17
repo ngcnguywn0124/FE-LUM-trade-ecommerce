@@ -1,38 +1,5 @@
 import { Product } from "@/types";
-
-export interface UserReview {
-  id: number;
-  reviewerName: string;
-  reviewerAvatar?: string;
-  rating: number;
-  createdAt: string;
-  comment: string;
-  productName: string;
-  isVerifiedPurchase: boolean;
-}
-
-export interface UserProfile {
-  id: string;
-  name: string;
-  avatar?: string;
-  rating: number;
-  reviewCount: number;
-  totalListings: number;
-  totalSold: number;
-  followers: number;
-  responseRate: number;
-  responseTime: string;
-  joinDate: string;
-  lastActive: string;
-  location: string;
-}
-
-export interface UserProfileData {
-  profile: UserProfile;
-  listings: Product[];
-  reviews: UserReview[];
-  ratingBreakdown: Record<number, number>;
-}
+import type { ProfileResponse, UserProfile, UserProfileData, UserReview } from "@/types/profile";
 
 const REVIEWER_NAMES = [
   "Minh Anh",
@@ -161,36 +128,79 @@ const getAverageRating = (reviews: UserReview[]): number => {
   return Number((total / reviews.length).toFixed(1));
 };
 
+const formatRelativeTime = (iso: string): string => {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const minutes = Math.max(1, Math.floor(diffMs / (1000 * 60)));
+  if (minutes < 60) return `${minutes} phút trước`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} giờ trước`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} ngày trước`;
+
+  const months = Math.floor(days / 30);
+  return `${months} tháng trước`;
+};
+
+const normalizeId = (value: string | number | undefined | null): string => {
+  if (value === null || value === undefined) return "";
+  return String(value).trim().toLowerCase();
+};
+
+const isCountableListingStatus = (status?: string) => {
+  if (!status) return true;
+  const normalizedStatus = status.trim().toLowerCase();
+  return normalizedStatus !== "deleted" && normalizedStatus !== "hidden" && normalizedStatus !== "admin_hidden";
+};
+
 export const getUserProfileData = (
-  userId: string,
+  profileResponse: ProfileResponse,
   products: Product[]
-): UserProfileData | null => {
-  if (!userId) return null;
+): UserProfileData => {
+  const userSeed = toSeed(profileResponse.userId);
+  const normalizedUserId = normalizeId(profileResponse.userId);
 
-  const userSeed = toSeed(userId);
-
-  const listings = products.filter((item) => item.seller?.id === userId);
-  if (!listings.length) return null;
-
+  const listings = products.filter((item) => normalizeId(item.seller?.id) === normalizedUserId);
+  const visibleListings = listings.filter((item) => isCountableListingStatus(item.status));
   const primaryListing = listings[0];
-  const reviews = buildReviews(userId, listings);
+  const reviewProducts = listings.length ? listings : products.slice(0, 10);
+  const reviews = buildReviews(profileResponse.userId, reviewProducts);
   const ratingBreakdown = buildRatingBreakdown(reviews);
-  const averageRating = getAverageRating(reviews);
+  const reputationScore = Number(profileResponse.reputationScore ?? 0);
+  const averageRating = getAverageRating(reviews) || Math.max(0, Math.min(5, reputationScore));
+
+  const createdAt = profileResponse.createdAt ? new Date(profileResponse.createdAt) : null;
+  const joinDate = createdAt && !Number.isNaN(createdAt.getTime())
+    ? `Tháng ${createdAt.getMonth() + 1}/${createdAt.getFullYear()}`
+    : "Chưa cập nhật";
+
+  const lastLoginAt = profileResponse.lastLoginAt ? new Date(profileResponse.lastLoginAt) : null;
+  const lastActive = lastLoginAt && !Number.isNaN(lastLoginAt.getTime())
+    ? formatRelativeTime(lastLoginAt.toISOString())
+    : "Vừa mới xong";
+
+  const location =
+    profileResponse.location ||
+    (primaryListing
+      ? `${primaryListing.school}${primaryListing.campus ? ` • ${primaryListing.campus}` : ""}`
+      : "Chưa cập nhật địa chỉ");
 
   const profile: UserProfile = {
-    id: userId,
-    name: primaryListing.seller?.name || `User ${userId}`,
-    avatar: primaryListing.seller?.avatar,
-    rating: averageRating || Number((primaryListing.seller?.rating || 4.5).toFixed(1)),
-    reviewCount: reviews.length,
-    totalListings: listings.length,
-    totalSold: getStableNumber(userSeed, 1, listings.length + 8, listings.length + 55),
-    followers: getStableNumber(userSeed, 2, 40, 600),
-    responseRate: getStableNumber(userSeed, 3, 88, 99),
-    responseTime: `${getStableNumber(userSeed, 4, 5, 35)} phút`,
-    joinDate: `Tháng ${1 + (userSeed % 12)}/${2021 + (userSeed % 3)}`,
-    lastActive: userSeed % 2 === 0 ? "5p trước" : "1h trước",
-    location: `${primaryListing.school}${primaryListing.campus ? ` • ${primaryListing.campus}` : ""}`,
+    id: profileResponse.userId,
+    name: profileResponse.fullName,
+    avatar: profileResponse.avatarUrl || primaryListing?.seller?.avatar,
+    cover: profileResponse.coverUrl || undefined,
+    rating: profileResponse.rating ?? Number(averageRating.toFixed(1)),
+    reviewCount: profileResponse.reviewCount ?? reviews.length,
+    totalListings: profileResponse.totalListings ?? visibleListings.length,
+    totalSold: profileResponse.totalSold ?? profileResponse.totalSales ?? getStableNumber(userSeed, 1, listings.length, listings.length + 30),
+    followers: profileResponse.followersCount || getStableNumber(userSeed, 2, 10, 200),
+    responseRate: Number(profileResponse.responseRate || getStableNumber(userSeed, 3, 80, 99)),
+    responseTime: profileResponse.responseTime || `${getStableNumber(userSeed, 4, 5, 30)} phút`,
+    joinDate,
+    lastActive,
+    location,
   };
 
   return {
