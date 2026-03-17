@@ -12,12 +12,13 @@ import {
   PhoneCall,
   Share2,
   Star,
-  User,
 } from "lucide-react";
 
 import { toast } from "sonner";
 import { favoriteService } from "@/services/favoriteService";
+import { chatService } from "@/services/chatService";
 import { useAuthStore } from "@/stores/authStore";
+import { useRouter } from "next/navigation";
 
 interface ProductSummaryProps {
   id: string;
@@ -53,6 +54,7 @@ const ProductSummary = ({
   contactPhone,
   seller,
 }: ProductSummaryProps) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const parsedPrice = useMemo(() => Number(price.replace(/[^\d]/g, "")) || 0, [price]);
   const sellerRating = (seller.rating ?? 4.5).toFixed(1);
   const sellerActivityStatus = seller.activityStatus || "Đang hoạt động";
@@ -64,7 +66,9 @@ const ProductSummary = ({
   const [shownPhone, setShownPhone] = useState<string | null>(null);
   const [isLiked, setIsLiked] = useState(isFavorited);
   const [isToggling, setIsToggling] = useState(false);
-  const { isAuthenticated } = useAuthStore();
+  const [isOpeningChat, setIsOpeningChat] = useState(false);
+  const { isAuthenticated, user } = useAuthStore();
+  const router = useRouter();
 
   const handleToggleFavorite = async () => {
     if (!isAuthenticated) {
@@ -110,6 +114,40 @@ const ProductSummary = ({
 
   const handleShowPhone = () => {
     setShownPhone(contactPhone || "Chưa cập nhật");
+  };
+
+  const handleChatNow = async () => {
+    if (!isAuthenticated || !user) {
+      toast.error("Vui lòng đăng nhập để nhắn tin");
+      return;
+    }
+
+    if (String(user.userId) === String(seller.id)) {
+      toast.error("Bạn không thể nhắn tin cho chính mình");
+      return;
+    }
+
+    const sellerId = typeof seller.id === "string" ? seller.id : String(seller.id ?? "");
+    if (!uuidRegex.test(sellerId)) {
+      toast.error("Không thể khởi tạo cuộc trò chuyện: thiếu thông tin người bán");
+      return;
+    }
+
+    try {
+      setIsOpeningChat(true);
+      const conversation = await chatService.createOrGetConversation(user.userId, {
+        targetUserId: sellerId,
+        productId: id,
+      });
+      if (conversation && conversation.conversationId) {
+        router.push(`/tin-nhan?id=${conversation.conversationId}`);
+      }
+    } catch (error) {
+      console.error("Failed to create conversation:", error);
+      toast.error("Không thể khởi tạo cuộc trò chuyện");
+    } finally {
+      setIsOpeningChat(false);
+    }
   };
 
   return (
@@ -158,9 +196,13 @@ const ProductSummary = ({
       </div>
 
       <div className="mt-5 hidden md:grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors cursor-pointer">
+        <button 
+          onClick={handleChatNow}
+          disabled={isOpeningChat}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white hover:bg-gray-800 transition-colors cursor-pointer disabled:opacity-50"
+        >
           <MessageCircle size={18} />
-          Nhắn tin người bán
+          {isOpeningChat ? "Đang kết nối..." : "Nhắn tin người bán"}
         </button>
         {shownPhone ? (
           <a

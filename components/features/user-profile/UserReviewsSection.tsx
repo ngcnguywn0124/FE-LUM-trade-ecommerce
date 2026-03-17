@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { BadgeCheck, Star } from "lucide-react";
-import { UserReview } from "@/lib/mockUserProfile";
+import { UserReview } from "@/types/profile";
 
 interface UserReviewsSectionProps {
   reviews: UserReview[];
@@ -96,7 +96,7 @@ const UserReviewsSection = ({ reviews }: UserReviewsSectionProps) => {
               <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                 <div 
                   className={`h-full transition-all duration-500 ${star >= 4 ? "bg-emerald-500" : star >= 3 ? "bg-amber-400" : "bg-rose-400"}`}
-                  style={{ width: `${(ratingStats[star] / reviews.length) * 100}%` }}
+                  style={{ width: `${reviews.length ? (ratingStats[star] / reviews.length) * 100 : 0}%` }}
                 />
               </div>
               <span className="text-xs font-medium text-gray-400 w-8">{ratingStats[star]}</span>

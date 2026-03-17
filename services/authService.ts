@@ -83,6 +83,6 @@ export async function getCurrentUser(): Promise<UserResponse> {
  */
 export function loginWithGoogle(): void {
   const backendUrl =
-    process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8686/api/v1';
+    process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8686/api/v1';
   window.location.href = `${backendUrl}/auth/google/authorize`;
 }

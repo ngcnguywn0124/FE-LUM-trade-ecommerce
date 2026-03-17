@@ -4,12 +4,12 @@ import ConversationListItem from './ConversationListItem';
 
 interface ConversationListProps {
   conversations: Conversation[];
-  activeConversationId: number | null;
+  activeConversationId: string | number | null;
   searchValue: string;
   filter: 'all' | 'unread';
   onSearchChange: (value: string) => void;
   onFilterChange: (filter: 'all' | 'unread') => void;
-  onConversationSelect: (conversationId: number) => void;
+  onConversationSelect: (conversationId: string | number) => void;
 }
 
 const ConversationList = ({

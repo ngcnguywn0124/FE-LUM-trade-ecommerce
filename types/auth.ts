@@ -19,9 +19,12 @@ export interface UserResponse {
   coverUrl: string | null;
   roles: string[];
   isSocialAccount: boolean;
+  gender: "male" | "female" | "other" | null;
+  dateOfBirth: string | null;
   studentId: string | null;
-  universityId: number | null;
-  campusId: number | null;
+  universityId: string | null;
+  campusId: string | null;
+  graduationYear: number | null;
   faculty: string | null;
   bio: string | null;
   location: string | null;
@@ -31,6 +34,7 @@ export interface UserResponse {
   followersCount: number;
   followingCount: number;
   responseRate: number;
+  responseTime?: string | null;
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   isStudentVerified: boolean;

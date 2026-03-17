@@ -43,18 +43,19 @@ export interface ConversationTransaction {
 // ─── Message Types ───────────────────────────────────────────────────────────
 
 export interface MessageUser {
-  id: number;
+  id: string | number;
   name: string;
   avatar: string;
   isOnline: boolean;
   lastSeen?: string;
   phone?: string;
+  sellerPhone?: string;
 }
 
 export interface ChatMessage {
-  id: number;
-  conversationId: number;
-  senderId: number;
+  id: string | number;
+  conversationId: string | number;
+  senderId: string | number;
   content: string;
   sentAt: string;
   status: MessageDeliveryStatus;
@@ -64,15 +65,16 @@ export interface ChatMessage {
 }
 
 export interface MessageRelatedPost {
-  id: number;
+  id: string | number;
   slug?: string;
   title: string;
   price: string;
   image: string;
+  sellerId: string;
 }
 
 export interface Conversation {
-  id: number;
+  id: string | number;
   participant: MessageUser;
   relatedPost: MessageRelatedPost;
   messages: ChatMessage[];

@@ -3,15 +3,26 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Circle, Info, Phone } from 'lucide-react';
 import { Conversation } from '@/types/messages';
-import { formatRelativeTime } from '@/lib/mockMessages';
+
+const formatRelativeTime = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return 'vừa xong';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} phút trước`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} giờ trước`;
+  return date.toLocaleDateString('vi-VN');
+};
 
 interface ChatHeaderProps {
   conversation: Conversation;
   isMobile: boolean;
+  isSeller?: boolean;
   onBack?: () => void;
 }
 
-const ChatHeader = ({ conversation, isMobile, onBack }: ChatHeaderProps) => {
+const ChatHeader = ({ conversation, isMobile, isSeller, onBack }: ChatHeaderProps) => {
   const [showPhone, setShowPhone] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -37,15 +48,17 @@ const ChatHeader = ({ conversation, isMobile, onBack }: ChatHeaderProps) => {
 
         <Link
           href={`/tai-khoan/${conversation.participant.id}`}
-          className="flex items-center gap-2.5 group"
+          className="flex items-center gap-2.5 group shrink-0"
         >
-          <Image
-            src={conversation.participant.avatar}
-            alt={conversation.participant.name}
-            width={36}
-            height={36}
-            className="rounded-full border border-gray-100"
-          />
+          <div className="relative w-9 h-9 shrink-0">
+            <Image
+              src={conversation.participant.avatar}
+              alt={conversation.participant.name}
+              width={36}
+              height={36}
+              className="rounded-full border border-gray-100 object-cover w-full h-full"
+            />
+          </div>
 
           <div className="min-w-0 flex-1">
             <p className="font-semibold text-sm text-gray-900 truncate leading-tight group-hover:text-emerald-600 transition-colors">
@@ -62,7 +75,7 @@ const ChatHeader = ({ conversation, isMobile, onBack }: ChatHeaderProps) => {
         </Link>
 
         <div className="flex items-center gap-1 sm:gap-2 ml-auto">
-          {conversation.participant.phone && (
+          {!isSeller && conversation.participant.sellerPhone && (
             <button
               onClick={() => setShowPhone(!showPhone)}
               title={showPhone ? 'Ẩn số điện thoại' : 'Hiện số điện thoại'}
@@ -70,7 +83,7 @@ const ChatHeader = ({ conversation, isMobile, onBack }: ChatHeaderProps) => {
             >
               <Phone size={14} className={showPhone ? 'fill-emerald-600' : ''} />
               <span className="text-[11px] font-bold tracking-wide">
-                {showPhone ? conversation.participant.phone : 'Gọi điện'}
+                {showPhone ? conversation.participant.sellerPhone : 'Gọi điện'}
               </span>
             </button>
           )}
