@@ -1,4 +1,4 @@
-export type MessageDeliveryStatus = 'sent' | 'delivered' | 'seen';
+export type MessageDeliveryStatus = 'sending' | 'sent' | 'delivered' | 'seen' | 'error';
 
 // ─── Transaction Types ───────────────────────────────────────────────────────
 
