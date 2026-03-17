@@ -21,12 +21,26 @@ async function handler(
       .map((c) => `${c.name}=${c.value}`)
       .join('; ');
 
+    const forwardedHeaders = new Headers();
+    request.headers.forEach((value, key) => {
+      const lowerKey = key.toLowerCase();
+      if (lowerKey === 'host' || lowerKey === 'content-length' || lowerKey === 'connection') {
+        return;
+      }
+      forwardedHeaders.set(key, value);
+    });
+
+    if (!forwardedHeaders.has('Content-Type') && request.headers.get('content-type')) {
+      forwardedHeaders.set('Content-Type', request.headers.get('content-type') as string);
+    }
+
+    if (cookieHeader) {
+      forwardedHeaders.set('Cookie', cookieHeader);
+    }
+
     const backendResponse = await fetch(backendUrl, {
       method: request.method,
-      headers: {
-        'Content-Type': request.headers.get('content-type') || 'application/json',
-        ...(cookieHeader ? { Cookie: cookieHeader } : {}),
-      },
+      headers: forwardedHeaders,
       body:
         request.method !== 'GET' && request.method !== 'HEAD'
           ? await request.arrayBuffer()
@@ -65,14 +79,20 @@ async function handler(
     }
 
     // ── Response thường ────────────────────────────────────────────────────
-    const responseBody = await backendResponse.arrayBuffer();
+    const status = backendResponse.status;
+    const isNoBodyStatus = status === 204 || status === 205 || status === 304;
+
+    const responseBody = isNoBodyStatus ? null : await backendResponse.arrayBuffer();
+
+    const responseHeaders: Record<string, string> = {};
+    const contentType = backendResponse.headers.get('content-type');
+    if (contentType && !isNoBodyStatus) {
+      responseHeaders['Content-Type'] = contentType;
+    }
 
     const response = new NextResponse(responseBody, {
-      status: backendResponse.status,
-      headers: {
-        'Content-Type':
-          backendResponse.headers.get('content-type') || 'application/json',
-      },
+      status,
+      headers: responseHeaders,
     });
 
     const setCookies = backendResponse.headers.getSetCookie?.() ?? [];

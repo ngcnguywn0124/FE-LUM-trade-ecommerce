@@ -1,12 +1,27 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Conversation } from '@/types/messages';
-import { formatMessageTime, getConversationLastMessage } from '@/lib/mockMessages';
+import { Conversation, ChatMessage } from '@/types/messages';
+import { useAuthStore } from '@/stores/authStore';
+
+const getConversationLastMessage = (conversation: Conversation): ChatMessage => {
+  return conversation.messages[conversation.messages.length - 1];
+};
+
+const formatMessageTime = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+};
 
 interface ConversationListItemProps {
   conversation: Conversation;
   isActive: boolean;
-  onClick: (conversationId: number) => void;
+  onClick: (conversationId: string | number) => void;
 }
 
 const ConversationListItem = ({
@@ -14,9 +29,10 @@ const ConversationListItem = ({
   isActive,
   onClick,
 }: ConversationListItemProps) => {
+  const { user } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const lastMessage = getConversationLastMessage(conversation);
-  const isOwnMessage = lastMessage.senderId === 1;
+  const isOwnMessage = String(lastMessage.senderId) === String(user?.userId ?? '');
 
   useEffect(() => {
     setMounted(true);

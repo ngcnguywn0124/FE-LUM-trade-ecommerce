@@ -244,7 +244,7 @@ const ProductDetailPage = () => {
                 isNegotiable={productDetail.isNegotiable}
                 contactPhone={productDetail.contactPhone}
                 seller={{
-                  id: product.seller?.id,
+                  id: productDetail.sellerId ?? undefined,
                   name: product.seller?.name || "Người bán ẩn danh",
                   avatar: product.seller?.avatar,
                   rating: productDetail.sellerReputation ?? 0,
