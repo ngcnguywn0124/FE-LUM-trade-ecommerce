@@ -5,6 +5,7 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { MessageCircleWarning } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { useChatStore } from '@/stores/chatStore';
 import { chatService, ChatConversationResponse, ChatMessageResponse } from '@/services/chatService';
 import { ChatMessage, Conversation, ConversationTransaction, TransactionPaymentMethod } from '@/types/messages';
 import ChatHeader from './ChatHeader';
@@ -33,8 +34,8 @@ const fileToDataUrl = (file: File): Promise<string> =>
 const mapDeliveryStatus = (status: string | null | undefined): ChatMessage['status'] => {
   if (!status) return 'sent';
   const normalized = status.toLowerCase();
-  if (normalized === 'seen' || normalized === 'read') return 'seen';
-  if (normalized === 'delivered') return 'delivered';
+  if (normalized === 'seen' || normalized === 'read' || normalized === 'đã xem' || normalized === 'đã đọc') return 'seen';
+  if (normalized === 'delivered' || normalized === 'đã nhận') return 'delivered';
   return 'sent';
 };
 
@@ -113,6 +114,7 @@ const mapApiConversation = (conversation: ChatConversationResponse): Conversatio
 
 const MessagesPage = () => {
   const { user } = useAuthStore();
+  const { setTotalUnreadCount } = useChatStore();
   const currentUserId = user?.userId || '';
   const wsClientRef = useRef<Client | null>(null);
   const loadedConversationIdsRef = useRef<Set<string>>(new Set());
@@ -123,7 +125,12 @@ const MessagesPage = () => {
   const [activeConversationId, setActiveConversationId] = useState<string | number | null>(null);
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
   const [draftMessage, setDraftMessage] = useState('');
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [typingUsers, setTypingUsers] = useState<Record<string, { userId: string; timestamp: number }>>({});
+  const [hasMoreMessages, setHasMoreMessages] = useState<Record<string, boolean>>({});
+  const [currentPages, setCurrentPages] = useState<Record<string, number>>({});
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const prevScrollHeightRef = useRef<number>(0);
 
   const activeConversation = useMemo(
     () => conversations.find((conversation) => normalizeId(conversation.id) === normalizeId(activeConversationId)) ?? null,
@@ -265,49 +272,95 @@ const MessagesPage = () => {
   }, [activeConversationId, updateTransaction, addTransactionSystemMessage]);
 
   const loadMessagesForConversation = useCallback(
-    async (conversationId: string | number, options?: { force?: boolean }) => {
+    async (
+      conversationId: string | number,
+      options?: { force?: boolean; page?: number; isLoadMore?: boolean }
+    ) => {
       if (!currentUserId) return;
 
       const normalizedConversationId = normalizeId(conversationId);
       const forceReload = Boolean(options?.force);
+      const isLoadMore = Boolean(options?.isLoadMore);
+      const pageIndex = options?.page ?? 0;
 
-      if (!normalizedConversationId || (!forceReload && loadedConversationIdsRef.current.has(normalizedConversationId))) {
+      // Prevent redundant loads or loads when no more messages
+      if (
+        !normalizedConversationId ||
+        (!forceReload && !isLoadMore && loadedConversationIdsRef.current.has(normalizedConversationId)) ||
+        (isLoadMore && hasMoreMessages[normalizedConversationId] === false)
+      ) {
         return;
       }
 
-      const page = await chatService.getMessages(currentUserId, normalizedConversationId, 0, 50);
-      const messages = [...page.content]
-        .reverse()
-        .map(mapApiMessage);
+      if (isLoadMore) setIsLoadingMore(true);
 
-      setConversations((prev) =>
-        prev.map((conversation) =>
-          normalizeId(conversation.id) === normalizedConversationId
-            ? {
-                ...conversation,
-                messages: (() => {
-                  const serverMessageIds = new Set(messages.map((message) => normalizeId(message.id)));
-                  const localOnlyMessages = conversation.messages.filter((message) => {
-                    const localMessageId = normalizeId(message.id);
-                    // Filter out both temp IDs and the initial 'preview' placeholder
-                    return (
-                      (isTempMessageId(localMessageId) || !serverMessageIds.has(localMessageId)) &&
-                      !String(localMessageId).startsWith('preview-')
+      try {
+        const pageSize = 20;
+        const page = await chatService.getMessages(
+          currentUserId,
+          normalizedConversationId,
+          pageIndex,
+          pageSize
+        );
+
+        const newMessages = [...page.content].reverse().map(mapApiMessage);
+
+        setHasMoreMessages((prev) => ({
+          ...prev,
+          [normalizedConversationId]: !page.last,
+        }));
+
+        setCurrentPages((prev) => ({
+          ...prev,
+          [normalizedConversationId]: pageIndex,
+        }));
+
+        if (scrollContainerRef.current) {
+          prevScrollHeightRef.current = scrollContainerRef.current.scrollHeight;
+        }
+
+        setConversations((prev) =>
+          prev.map((conversation) =>
+            normalizeId(conversation.id) === normalizedConversationId
+              ? {
+                  ...conversation,
+                  messages: (() => {
+                    if (isLoadMore) {
+                      // Avoid duplicates when prepending
+                      const existingIds = new Set(conversation.messages.map((m) => normalizeId(m.id)));
+                      const filteredNew = newMessages.filter((m) => !existingIds.has(normalizeId(m.id)));
+                      return [...filteredNew, ...conversation.messages];
+                    }
+
+                    // Original logic for first load/refresh
+                    const serverMessageIds = new Set(newMessages.map((message) => normalizeId(message.id)));
+                    const localOnlyMessages = conversation.messages.filter((message) => {
+                      const localMessageId = normalizeId(message.id);
+                      return (
+                        (isTempMessageId(localMessageId) || !serverMessageIds.has(localMessageId)) &&
+                        !String(localMessageId).startsWith('preview-')
+                      );
+                    });
+
+                    const merged = [...newMessages, ...localOnlyMessages];
+                    return merged.sort(
+                      (first, second) =>
+                        new Date(first.sentAt).getTime() - new Date(second.sentAt).getTime()
                     );
-                  });
+                  })(),
+                }
+              : conversation
+          )
+        );
 
-                  const merged = [...messages, ...localOnlyMessages];
-                  return merged.sort(
-                    (first, second) =>
-                      new Date(first.sentAt).getTime() - new Date(second.sentAt).getTime()
-                  );
-                })(),
-              }
-            : conversation
-        )
-      );
-
-      loadedConversationIdsRef.current.add(normalizedConversationId);
+        if (!isLoadMore) {
+          loadedConversationIdsRef.current.add(normalizedConversationId);
+        }
+      } catch (error) {
+        console.error('Failed to load messages:', error);
+      } finally {
+        if (isLoadMore) setIsLoadingMore(false);
+      }
     },
     [currentUserId]
   );
@@ -344,6 +397,8 @@ const MessagesPage = () => {
         const incomingMessage = mapApiMessage(parsed);
         const incomingConversationId = normalizeId(parsed.conversationId);
         const isActive = normalizeId(activeConversationId) === incomingConversationId;
+        const currentUserIdNormalized = normalizeId(currentUserId);
+        const isFromMe = normalizeId(incomingMessage.senderId) === currentUserIdNormalized;
         let conversationFound = false;
 
         setConversations((prev) => {
@@ -372,12 +427,17 @@ const MessagesPage = () => {
             return {
               ...conversation,
               messages: updatedMessages,
-              unreadCount: isActive ? 0 : (conversation.unreadCount || 0) + (normalizeId(incomingMessage.senderId) === normalizeId(currentUserId) ? 0 : 1),
+              unreadCount: isActive ? 0 : (conversation.unreadCount || 0) + (isFromMe ? 0 : 1),
             };
           });
 
           return conversationFound ? next : prev;
         });
+
+        if (isActive && !isFromMe && scrollContainerRef.current) {
+          // Immediately scroll to bottom when receiving a message in active chat
+          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+        }
 
         if (!conversationFound) {
           await loadConversations();
@@ -386,7 +446,7 @@ const MessagesPage = () => {
         // ignore malformed messages
       }
     },
-    [activeConversationId, currentUserId, loadConversations]
+    [activeConversationId, currentUserId, loadConversations, loadMessagesForConversation]
   );
 
   useEffect(() => {
@@ -420,6 +480,56 @@ const MessagesPage = () => {
       client.subscribe('/user/queue/messages', (message) => {
         void handleIncomingSocketMessage(message.body);
       });
+
+      // Lắng nghe sự kiện cập nhật trạng thái tin nhắn (đã nhận/đã xem)
+      client.subscribe('/user/queue/status', (message) => {
+        try {
+          const statusUpdate = JSON.parse(message.body);
+          // statusUpdate có thể là một object {messageId, status...} hoặc list
+          const updates = Array.isArray(statusUpdate) ? statusUpdate : [statusUpdate];
+          
+          setConversations((prev) =>
+            prev.map((conv) => {
+              const convUpdates = updates.filter(u => normalizeId(u.conversationId) === normalizeId(conv.id));
+              if (convUpdates.length === 0) return conv;
+
+              const updateMap = new Map(convUpdates.map(u => [normalizeId(u.messageId), mapDeliveryStatus(u.status)]));
+
+              return {
+                ...conv,
+                messages: conv.messages.map((m) => {
+                  const newStatus = updateMap.get(normalizeId(m.id));
+                  return newStatus ? { ...m, status: newStatus } : m;
+                }),
+              };
+            })
+          );
+        } catch (err) {
+          // ignore malformed updates
+        }
+      });
+
+      // Lắng nghe sự kiện đang soạn tin nhắn (typing)
+      client.subscribe('/user/queue/typing', (message) => {
+        try {
+          const data = JSON.parse(message.body);
+          const { conversationId, userId, isTyping } = data;
+          
+          if (normalizeId(userId) === normalizeId(currentUserId)) return;
+
+          setTypingUsers(prev => {
+            const next = { ...prev };
+            if (isTyping) {
+              next[normalizeId(conversationId)] = { userId, timestamp: Date.now() };
+            } else {
+              delete next[normalizeId(conversationId)];
+            }
+            return next;
+          });
+        } catch (err) {
+          // ignore
+        }
+      });
     };
 
     client.onStompError = () => {
@@ -437,7 +547,7 @@ const MessagesPage = () => {
     };
   }, [currentUserId, handleIncomingSocketMessage]);
 
-  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+  const scrollToBottom = (behavior: ScrollBehavior = 'auto') => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
         top: scrollContainerRef.current.scrollHeight,
@@ -446,18 +556,34 @@ const MessagesPage = () => {
     }
   };
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    
+    // Với flex-col-reverse, cuộn lên trên (để tải thêm) tương đương với việc cuộn xuống dưới cùng của scrollHeight
+    const isAtTopVisual = Math.abs(container.scrollTop) + container.clientHeight >= container.scrollHeight - 5;
+
+    if (isAtTopVisual && !isLoadingMore && activeConversationId) {
+      const convId = normalizeId(activeConversationId);
+      const currentPage = currentPages[convId] ?? 0;
+      const hasMore = hasMoreMessages[convId] !== false;
+
+      if (hasMore) {
+        void loadMessagesForConversation(convId, {
+          isLoadMore: true,
+          page: currentPage + 1,
+        });
+      }
+    }
+  };
+
   useEffect(() => {
-    // Khi đổi cuộc hội thoại, cuộn TỨC THÌ (auto) xuống cuối để thấy tin nhắn mới nhất ngay lập tức
-    scrollToBottom('auto');
+    // Với flex-col-reverse, trình duyệt tự động giữ vị trí cuộn ở "bottom" (scrollTop: 0)
+    // khi có phần tử mới được thêm vào đầu danh sách (bottom visual).
   }, [activeConversationId]);
 
   useEffect(() => {
-    // Khi có tin nhắn mới hoặc gửi ảnh, cuộn mượt (smooth) xuống cuối
-    const timer = setTimeout(() => {
-      scrollToBottom('smooth');
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [activeConversation?.messages?.length]);
+    // Không cần scrollToBottom thủ công nữa
+  }, [activeConversation?.messages?.length, currentUserId]);
 
   const filteredConversations = useMemo(() => {
     const normalizedSearch = search.toLowerCase().trim();
@@ -489,6 +615,16 @@ const MessagesPage = () => {
 
     if (currentUserId) {
       void chatService.markAsRead(currentUserId, normalizedId).catch(() => undefined);
+      
+      // Sync unread count to Header
+      void (async () => {
+        try {
+          const count = await chatService.getTotalUnreadCount(currentUserId);
+          setTotalUnreadCount(count);
+          // Dispatch custom event just in case
+          window.dispatchEvent(new CustomEvent('chat-unread-sync', { detail: { count } }));
+        } catch (e) { /* ignore */ }
+      })();
     }
 
     void loadMessagesForConversation(normalizedId, { force: true }).catch(() => undefined);
@@ -579,7 +715,21 @@ const MessagesPage = () => {
 
     if (!contentOverride) {
       setDraftMessage('');
+      handleTyping(false);
     }
+  };
+
+  const handleTyping = (isTyping: boolean) => {
+    if (!wsClientRef.current || !activeConversationId || !currentUserId) return;
+    
+    wsClientRef.current.publish({
+      destination: '/app/chat.typing',
+      body: JSON.stringify({
+        conversationId: activeConversationId,
+        userId: currentUserId,
+        isTyping,
+      }),
+    });
   };
 
   const handleImagesSelect = async (files: File[]) => {
@@ -722,86 +872,102 @@ const MessagesPage = () => {
                   
                   <div 
                     ref={scrollContainerRef}
-                    className="absolute inset-0 px-3 md:px-5 py-4 overflow-y-auto space-y-3"
+                    onScroll={handleScroll}
+                    className="absolute inset-0 px-3 md:px-5 py-2 overflow-y-auto flex flex-col-reverse"
                   >
-                    {activeConversation.messages.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-gray-500 text-sm">
-                        <MessageCircleWarning size={20} className="mb-2" />
-                        Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện.
-                      </div>
-                    ) : (
-                      activeConversation.messages.map((message, index) => {
-                        const prevMessage = activeConversation.messages[index - 1];
-                        const nextMessage = activeConversation.messages[index + 1];
-                        
-                        // Check if we should show a date separator
-                        const showDateSeparator = !prevMessage || 
-                          new Date(prevMessage.sentAt).toDateString() !== new Date(message.sentAt).toDateString();
-                        
-                        const isLastInGroup = !nextMessage || normalizeId(nextMessage.senderId) !== normalizeId(message.senderId);
-                        const isOwn = normalizeId(message.senderId) === normalizeId(currentUserId);
-
-                        return (
-                          <div key={message.id} className="space-y-3">
-                            {showDateSeparator && (
-                              <div className="flex justify-center my-4">
-                                <span className="px-3 py-1 rounded-full bg-gray-100/80 text-[10px] text-gray-500 font-medium backdrop-blur-sm">
-                                  {new Date(message.sentAt).toLocaleDateString('vi-VN', {
-                                    weekday: 'long',
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric'
-                                  })}
-                                </span>
-                              </div>
-                            )}
-
-                            {/* Transaction system event → render pill instead of bubble */}
-                            {message.transactionEvent ? (
-                              <TransactionSystemMessage
-                                event={message.transactionEvent}
-                                actorName={
-                                  isOwn
-                                    ? undefined   // resolve from context inside component
-                                    : activeConversation.participant.name
-                                }
-                                sentAt={message.sentAt}
-                              />
-                            ) : (
-                              <MessageBubble
-                                message={message}
-                                isOwnMessage={isOwn}
-                                displayTime={formatMessageTime(message.sentAt)}
-                                senderAvatar={
-                                  !isOwn && isLastInGroup
-                                    ? activeConversation.participant.avatar
-                                    : undefined
-                                }
-                              />
-                            )}
+                    {activeConversationId && (
+                      <>
+                        {/* 1. Typing Indicator at the literal visual BOTTOM (First in DOM order for col-reverse) */}
+                        {typingUsers[normalizeId(activeConversationId)] && (
+                          <div className="flex items-center gap-2 text-gray-400 text-xs italic ml-12 mb-2 shrink-0">
+                            <div className="flex gap-1 p-2.5 bg-gray-100 rounded-2xl rounded-bl-sm">
+                              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s]" />
+                              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s] [animation-delay:0.2s]" />
+                              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s] [animation-delay:0.4s]" />
+                            </div>
                           </div>
-                        );
-                      })
-                    )}
+                        )}
 
-                    {/* ── Transaction Action Card (live, pinned to bottom of chat) ── */}
-                    {activeConversation.transaction &&
-                      ['seller_confirmed', 'meetup_confirmed', 'payment_pending', 'completed', 'cancelled'].includes(
-                        activeConversation.transaction.status
-                      ) && (
-                        <TransactionActionCard
-                          transaction={activeConversation.transaction}
-                          relatedPost={activeConversation.relatedPost}
-                          isSeller={isSeller}
-                          sellerName={isSeller ? 'Bạn' : activeConversation.participant.name}
-                          buyerName={!isSeller ? 'Bạn' : activeConversation.participant.name}
-                          onSellerSetMeetup={handleSellerSetMeetup}
-                          onBuyerConfirmMeetup={handleBuyerConfirmMeetup}
-                          onBuyerConfirmPayment={handleBuyerConfirmPayment}
-                          onSellerConfirmPayment={handleSellerConfirmPayment}
-                          onCancel={handleCancelTransaction}
-                        />
-                      )}
+                        {/* 2. Last message seen indicator handled in MessageBubble - no need for extra div here unless specific spacing needed */}
+
+                        {/* 3. Messages List (Rendered newest-first) */}
+                        {[...activeConversation.messages].reverse().map((message, index, reversedArr) => {
+                          const nextMessage = reversedArr[index - 1]; // Message that came AFTER this one
+                          const prevMessage = reversedArr[index + 1]; // Message that came BEFORE this one
+                          
+                          const showDateSeparator = !prevMessage || 
+                            new Date(prevMessage.sentAt).toDateString() !== new Date(message.sentAt).toDateString();
+                          
+                          const isLastInGroup = !nextMessage || normalizeId(nextMessage.senderId) !== normalizeId(message.senderId);
+                          const isOwn = normalizeId(message.senderId) === normalizeId(currentUserId);
+
+                          return (
+                            <div key={message.id} className="mb-3">
+                              {showDateSeparator && (
+                                <div className="flex justify-center my-4">
+                                  <span className="px-3 py-1 rounded-full bg-gray-100/80 text-[10px] text-gray-500 font-medium whitespace-nowrap">
+                                    {new Date(message.sentAt).toLocaleDateString('vi-VN', {
+                                      weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
+                                    })}
+                                  </span>
+                                </div>
+                              )}
+                              {message.transactionEvent ? (
+                                <TransactionSystemMessage
+                                  event={message.transactionEvent}
+                                  actorName={isOwn ? undefined : activeConversation.participant.name}
+                                  sentAt={message.sentAt}
+                                />
+                              ) : (
+                                <MessageBubble
+                                  message={message}
+                                  isOwnMessage={isOwn}
+                                  displayTime={formatMessageTime(message.sentAt)}
+                                  senderAvatar={!isOwn && isLastInGroup ? activeConversation.participant.avatar : undefined}
+                                  recipientAvatar={activeConversation.participant.avatar}
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {/* 4. Action Card for active transactions */}
+                        {activeConversation.transaction &&
+                          ['seller_confirmed', 'meetup_confirmed', 'payment_pending', 'completed', 'cancelled'].includes(
+                            activeConversation.transaction.status
+                          ) && (
+                            <div className="my-2 order-last"> {/* Pushes it further "up" in the history visual */}
+                              <TransactionActionCard
+                                transaction={activeConversation.transaction}
+                                relatedPost={activeConversation.relatedPost}
+                                isSeller={isSeller}
+                                sellerName={isSeller ? 'Bạn' : activeConversation.participant.name}
+                                buyerName={!isSeller ? 'Bạn' : activeConversation.participant.name}
+                                onSellerSetMeetup={handleSellerSetMeetup}
+                                onBuyerConfirmMeetup={handleBuyerConfirmMeetup}
+                                onBuyerConfirmPayment={handleBuyerConfirmPayment}
+                                onSellerConfirmPayment={handleSellerConfirmPayment}
+                                onCancel={handleCancelTransaction}
+                              />
+                            </div>
+                          )}
+
+                        {/* 5. Loader for Infinite Scroll at the very end of DOM (visual top) */}
+                        {isLoadingMore && (
+                          <div className="flex justify-center py-4 shrink-0 order-last">
+                            <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                          </div>
+                        )}
+
+                        {/* Empty state if no messages */}
+                        {activeConversation.messages.length === 0 && (
+                          <div className="flex flex-col items-center justify-center text-gray-500 text-sm py-20 order-last">
+                            <MessageCircleWarning size={20} className="mb-2" />
+                            Chưa có tin nhắn nào.
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -812,6 +978,7 @@ const MessagesPage = () => {
                   onSubmit={handleSendMessage}
                   onQuickAction={(text) => handleSendMessage(undefined, text)}
                   onImagesSelect={handleImagesSelect}
+                  onTyping={handleTyping}
                 />
               </>
             )}

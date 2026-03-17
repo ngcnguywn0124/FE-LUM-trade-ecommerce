@@ -8,6 +8,7 @@ interface MessageComposerProps {
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   onQuickAction?: (text: string) => void;
   onImagesSelect?: (files: File[]) => void;
+  onTyping?: (isTyping: boolean) => void;
 }
 
 const BUYER_QUICK_REPLIES = [
@@ -24,9 +25,18 @@ const SELLER_QUICK_REPLIES = [
   'OK chốt, hẹn bạn ở cổng trường!',
 ];
 
-const MessageComposer = ({ value, isSeller, onChange, onSubmit, onQuickAction, onImagesSelect }: MessageComposerProps) => {
+const MessageComposer = ({ 
+  value, 
+  isSeller, 
+  onChange, 
+  onSubmit, 
+  onQuickAction, 
+  onImagesSelect,
+  onTyping
+}: MessageComposerProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const quickReplies = isSeller ? SELLER_QUICK_REPLIES : BUYER_QUICK_REPLIES;
 
@@ -38,6 +48,19 @@ const MessageComposer = ({ value, isSeller, onChange, onSubmit, onQuickAction, o
       textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 44), 120)}px`;
     }
   }, [value]);
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onChange(e.target.value);
+    
+    // Typing logic
+    if (onTyping) {
+      onTyping(true);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        onTyping(false);
+      }, 3000);
+    }
+  };
 
   const handleImageClick = () => {
     fileInputRef.current?.click();
@@ -90,7 +113,7 @@ const MessageComposer = ({ value, isSeller, onChange, onSubmit, onQuickAction, o
           <textarea
             ref={textareaRef}
             value={value}
-            onChange={(event) => onChange(event.target.value)}
+            onChange={handleTextChange}
             rows={1}
             placeholder="Nhập tin nhắn..."
             className="flex-1 resize-none rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-[15px] text-gray-900 placeholder:text-gray-400 outline-none focus:border-emerald-500 transition-all max-h-30 overflow-y-auto no-scrollbar"

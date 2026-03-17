@@ -119,4 +119,14 @@ export const chatService = {
       getUserHeader(userId)
     );
   },
+
+  async getTotalUnreadCount(userId: string): Promise<number> {
+    try {
+      const response = await chatApiClient.get<number>('/unread-count', getUserHeader(userId));
+      return response.data;
+    } catch (error) {
+      console.warn('Failed to fetch unread count from server, falling back to 0:', error);
+      return 0; // Trả về 0 thay vì báo lỗi 500 để không làm treo UI
+    }
+  },
 };

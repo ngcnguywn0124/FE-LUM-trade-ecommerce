@@ -5,6 +5,8 @@ import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import SockJS from 'sockjs-client';
+import { Client } from '@stomp/stompjs';
 import { toast } from "sonner";
 import { 
   Menu, Search, Bell, MessageCircle,
@@ -18,20 +20,26 @@ import NotificationsDropdown from "../features/notifications/NotificationsDropdo
 import { mockNotifications } from "@/lib/mockNotifications";
 import { NotificationItemData } from "@/types/notifications";
 import { useAuthStore } from "@/stores/authStore";
+import { useChatStore } from "@/stores/chatStore";
 import { useLocation } from "@/providers/LocationProvider";
 import { getUniversities } from "@/services/universityService";
+import { chatService } from "@/services/chatService";
 import { UniversityResponse } from "@/types/admin";
 import { buildSearchHref } from "@/lib/searchUrl";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 import { favoriteService } from "@/services/favoriteService";
+
+const CHAT_WS_URL = process.env.NEXT_PUBLIC_CHAT_WS_URL || process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8686/ws';
 
 const Header = () => {
   const pathname = usePathname();
   const router = useRouter();
   const { addToHistory } = useSearchHistory();
   const { isAuthenticated, user, logout } = useAuthStore();
+  const { totalUnreadCount, setTotalUnreadCount } = useChatStore();
   const { selectedSchool, setSelectedSchool, selectedCampus, setSelectedCampus } = useLocation();
 
+  const wsClientRef = useRef<Client | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [favoriteCount, setFavoriteCount] = useState(0);
@@ -103,6 +111,73 @@ const Header = () => {
       window.removeEventListener("favorite-count-sync", handleSync);
     };
   }, [isAuthenticated]);
+
+  // Sync Unread Chat Count via REST + WebSocket
+  useEffect(() => {
+    if (!isAuthenticated || !user?.userId) {
+      setTotalUnreadCount(0);
+      return;
+    }
+
+    const userId = String(user.userId);
+
+    // Initial load through REST
+    const fetchCount = async () => {
+      try {
+        const count = await chatService.getTotalUnreadCount(userId);
+        setTotalUnreadCount(count || 0);
+      } catch (err) {
+        console.warn("Could not sync initial unread count:", err);
+        setTotalUnreadCount(0);
+      }
+    };
+    fetchCount();
+
+    // Setup WebSocket listener for real-time updates
+    const client = new Client({
+      webSocketFactory: () => new SockJS(CHAT_WS_URL),
+      reconnectDelay: 5000,
+    });
+
+    client.onConnect = () => {
+      // Listener for direct messages
+      client.subscribe('/user/queue/messages', (message) => {
+        try {
+          const msg = JSON.parse(message.body);
+          // Only increment if message is from someone else and user is NOT on the chat page of that conversation
+          if (String(msg.senderId) !== userId && !window.location.pathname.includes('/tin-nhan')) {
+            useChatStore.getState().incrementUnreadCount();
+          }
+        } catch (e) { /* ignore */ }
+      });
+
+      // Listener for global unread count updates (if backend sends it)
+      client.subscribe('/user/queue/unread-count-sync', (message) => {
+        try {
+          const count = Number(message.body);
+          if (!isNaN(count)) setTotalUnreadCount(count);
+        } catch (e) { /* ignore */ }
+      });
+    };
+
+    client.activate();
+    wsClientRef.current = client;
+
+    // Listen to local events (e.g. from MessagesPage when marking as read)
+    const handleReadSync = (e: any) => {
+      if (e.detail?.count !== undefined) {
+        setTotalUnreadCount(e.detail.count);
+      } else {
+        fetchCount();
+      }
+    };
+    window.addEventListener('chat-unread-sync', handleReadSync);
+
+    return () => {
+      if (wsClientRef.current) wsClientRef.current.deactivate();
+      window.removeEventListener('chat-unread-sync', handleReadSync);
+    };
+  }, [isAuthenticated, user?.userId, setTotalUnreadCount]);
 
   // Kiểm tra xem có đang ở trang chủ không
   const isHomePage = pathname === "/";
@@ -398,9 +473,14 @@ const Header = () => {
                  </div>
                   <button 
                     onClick={(e) => handleProtectedAction(e, "/tin-nhan")}
-                    className="hidden sm:flex items-center gap-2 px-4 py-2 hover:bg-black/10 rounded-lg font-bold text-sm transition-colors text-gray-800 cursor-pointer"
+                    className="group relative hidden sm:flex items-center gap-2 px-4 py-2 hover:bg-black/10 rounded-lg font-bold text-sm transition-colors text-gray-800 cursor-pointer"
                   >
                     <MessageCircle size={20} strokeWidth={2.5} />
+                    {totalUnreadCount > 0 && (
+                      <span className="absolute top-0.5 left-1.5 sm:left-6 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white">
+                        {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
+                      </span>
+                    )}
                     <span className="hidden xl:inline">Chat</span>
                   </button>
               </div>
