@@ -3,8 +3,8 @@ import Image from 'next/image';
 import { Conversation, ChatMessage } from '@/types/messages';
 import { useAuthStore } from '@/stores/authStore';
 
-const getConversationLastMessage = (conversation: Conversation): ChatMessage => {
-  return conversation.messages[conversation.messages.length - 1];
+const getConversationLastMessage = (conversation: Conversation): ChatMessage | undefined => {
+  return conversation.messages?.at(-1);
 };
 
 const formatMessageTime = (dateString: string) => {
@@ -32,7 +32,21 @@ const ConversationListItem = ({
   const { user } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const lastMessage = getConversationLastMessage(conversation);
-  const isOwnMessage = String(lastMessage.senderId) === String(user?.userId ?? '');
+  const isOwnMessage = lastMessage
+    ? String(lastMessage.senderId) === String(user?.userId ?? '')
+    : false;
+  const previewTime = lastMessage?.sentAt || new Date(0).toISOString();
+  const previewContent = (() => {
+    if (!lastMessage) return 'Bắt đầu cuộc trò chuyện';
+    // Nếu content là base64 image hoặc có images
+    if (lastMessage.images && lastMessage.images.length > 0) {
+      return isOwnMessage ? 'Bạn đã gửi hình ảnh' : 'Đã gửi hình ảnh';
+    }
+    if (lastMessage.content?.startsWith('data:image/')) {
+      return isOwnMessage ? 'Bạn đã gửi hình ảnh' : 'Đã gửi hình ảnh';
+    }
+    return lastMessage.content || 'Bắt đầu cuộc trò chuyện';
+  })();
 
   useEffect(() => {
     setMounted(true);
@@ -65,7 +79,7 @@ const ConversationListItem = ({
           <div className="flex items-center gap-2">
             <p className="text-sm font-semibold text-gray-900 truncate">{conversation.participant.name}</p>
             <span className="ml-auto text-xs text-gray-400 shrink-0">
-              {mounted ? formatMessageTime(lastMessage.sentAt) : ''}
+              {mounted ? formatMessageTime(previewTime) : ''}
             </span>
           </div>
 
@@ -74,7 +88,7 @@ const ConversationListItem = ({
           <div className="mt-1.5 flex items-center gap-2">
             <p className="text-sm text-gray-600 truncate flex-1">
               {isOwnMessage ? 'Bạn: ' : ''}
-              {lastMessage.content}
+              {previewContent}
             </p>
             {conversation.unreadCount > 0 && (
               <span className="shrink-0 min-w-5 h-5 px-1 rounded-full bg-emerald-600 text-white text-[11px] font-semibold flex items-center justify-center">

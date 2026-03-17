@@ -58,8 +58,15 @@ const mapApiMessage = (message: ChatMessageResponse): ChatMessage => {
   };
 };
 
-const getConversationLastMessage = (conversation: Conversation): ChatMessage => {
-  return conversation.messages[conversation.messages.length - 1];
+const getConversationLastMessage = (conversation: Conversation): ChatMessage | undefined => {
+  return conversation.messages?.at(-1);
+};
+
+const getLastMessageTimestamp = (conversation: Conversation): number => {
+  const last = getConversationLastMessage(conversation);
+  const sentAt = last?.sentAt;
+  const t = sentAt ? Date.parse(sentAt) : Number.NaN;
+  return Number.isFinite(t) ? t : 0;
 };
 
 const formatMessageTime = (dateString: string) => {
@@ -474,10 +481,18 @@ const MessagesPage = () => {
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
+      connectHeaders: {
+        'user-id': currentUserId,
+      },
     });
 
     client.onConnect = () => {
       client.subscribe('/user/queue/messages', (message) => {
+        void handleIncomingSocketMessage(message.body);
+      });
+
+      // Fallback khi /user/queue không hoạt động ổn định qua proxy/ngrok
+      client.subscribe(`/topic/user-${currentUserId}`, (message) => {
         void handleIncomingSocketMessage(message.body);
       });
 
@@ -600,12 +615,7 @@ const MessagesPage = () => {
       );
     });
 
-    return matched.sort((first, second) => {
-      const firstLastMessage = getConversationLastMessage(first);
-      const secondLastMessage = getConversationLastMessage(second);
-
-      return new Date(secondLastMessage.sentAt).getTime() - new Date(firstLastMessage.sentAt).getTime();
-    });
+    return matched.sort((first, second) => getLastMessageTimestamp(second) - getLastMessageTimestamp(first));
   }, [conversations, search, filter]);
 
   const handleSelectConversation = (conversationId: string | number) => {
