@@ -23,6 +23,7 @@ export const mockConversations: Conversation[] = [
       title: 'Laptop Dell Inspiron i5, 16GB RAM',
       price: '9.200.000đ',
       image: '/template.png',
+      sellerId: '201',
     },
     unreadCount: 2,
     isPinned: true,
@@ -82,6 +83,7 @@ export const mockConversations: Conversation[] = [
       title: 'Giáo trình Kinh tế vi mô - bản mới',
       price: '75.000đ',
       image: '/product/giao-trinh-nnptudm.jpg',
+      sellerId: '202',
     },
     unreadCount: 0,
     messages: [
@@ -125,6 +127,7 @@ export const mockConversations: Conversation[] = [
       title: 'Balo laptop chống nước 15.6 inch',
       price: '220.000đ',
       image: '/template.png',
+      sellerId: '203',
     },
     unreadCount: 1,
     messages: [
@@ -160,6 +163,7 @@ export const mockConversations: Conversation[] = [
       title: 'Balo laptop chống nước 15.6 inch',
       price: '220.000đ',
       image: '/template.png',
+      sellerId: '204',
     },
     unreadCount: 1,
     messages: [
@@ -195,6 +199,7 @@ export const mockConversations: Conversation[] = [
       title: 'Balo laptop chống nước 15.6 inch',
       price: '220.000đ',
       image: '/template.png',
+      sellerId: '205',
     },
     unreadCount: 1,
     messages: [
@@ -230,6 +235,7 @@ export const mockConversations: Conversation[] = [
       title: 'Balo laptop chống nước 15.6 inch',
       price: '220.000đ',
       image: '/template.png',
+      sellerId: '206',
     },
     unreadCount: 1,
     messages: [
@@ -265,6 +271,7 @@ export const mockConversations: Conversation[] = [
       title: 'Balo laptop chống nước 15.6 inch',
       price: '220.000đ',
       image: '/template.png',
+      sellerId: '207',
     },
     unreadCount: 1,
     messages: [
@@ -300,6 +307,7 @@ export const mockConversations: Conversation[] = [
       title: 'Balo laptop chống nước 15.6 inch',
       price: '220.000đ',
       image: '/template.png',
+      sellerId: '208',
     },
     unreadCount: 1,
     messages: [
@@ -335,6 +343,7 @@ export const mockConversations: Conversation[] = [
       title: 'Balo laptop chống nước 15.6 inch',
       price: '220.000đ',
       image: '/template.png',
+      sellerId: '209',
     },
     unreadCount: 1,
     messages: [
@@ -370,6 +379,7 @@ export const mockConversations: Conversation[] = [
       title: 'Balo laptop chống nước 15.6 inch',
       price: '220.000đ',
       image: '/template.png',
+      sellerId: '210',
     },
     unreadCount: 1,
     messages: [

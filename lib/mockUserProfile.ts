@@ -175,9 +175,10 @@ export const getUserProfileData = (
     ? `Tháng ${createdAt.getMonth() + 1}/${createdAt.getFullYear()}`
     : "Chưa cập nhật";
 
-  const lastLoginAt = profileResponse.lastLoginAt ? new Date(profileResponse.lastLoginAt) : null;
-  const lastActive = lastLoginAt && !Number.isNaN(lastLoginAt.getTime())
-    ? formatRelativeTime(lastLoginAt.toISOString())
+  const lastActiveTimestamp = profileResponse.lastSeenAt || profileResponse.lastLoginAt;
+  const lastActiveDate = lastActiveTimestamp ? new Date(lastActiveTimestamp) : null;
+  const lastActive = lastActiveDate && !Number.isNaN(lastActiveDate.getTime())
+    ? formatRelativeTime(lastActiveDate.toISOString())
     : "Vừa mới xong";
 
   const location =
@@ -200,6 +201,8 @@ export const getUserProfileData = (
     responseTime: profileResponse.responseTime || `${getStableNumber(userSeed, 4, 5, 30)} phút`,
     joinDate,
     lastActive,
+    isOnline: profileResponse.isOnline,
+    lastSeenAt: profileResponse.lastSeenAt,
     location,
   };
 
