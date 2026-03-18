@@ -5,6 +5,8 @@ export interface ChatConversationResponse {
   otherUserId: string;
   otherUserName: string;
   otherUserAvatarUrl: string | null;
+  otherUserOnline?: boolean | null;
+  otherUserLastSeenAt?: string | null;
   productId: string | null;
   productTitle: string | null;
   productImageUrl: string | null;

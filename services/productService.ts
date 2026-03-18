@@ -93,6 +93,8 @@ export const mapSummaryToCardProduct = (item: ProductSummaryDto): Product => ({
     id: item.sellerId || 'unknown-seller',
     name: item.sellerName || 'Người bán ẩn danh',
     avatar: item.sellerAvatar || undefined,
+    isOnline: item.sellerIsOnline,
+    lastSeenAt: item.sellerLastSeenAt,
   },
 });
 
@@ -116,6 +118,8 @@ export const mapDetailToCardProduct = (item: ProductDetailDto): Product => ({
     name: item.sellerName || 'Người bán ẩn danh',
     avatar: item.sellerAvatar || undefined,
     rating: item.sellerReputation ?? undefined,
+    isOnline: item.sellerIsOnline,
+    lastSeenAt: item.sellerLastSeenAt,
   },
 });
 

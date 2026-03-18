@@ -126,9 +126,9 @@ const UserProfileHeader = ({ profile, isOwnProfile = false }: UserProfileHeaderP
           </div>
           <div className="flex flex-col sm:block">
             <p className="text-[11px] font-medium text-gray-400 uppercase tracking-widest sm:text-xs">Hoạt động</p>
-            <p className="mt-0.5 inline-flex items-center gap-1.5 text-base font-bold text-emerald-600 sm:text-sm">
-              <Clock3 size={14} className="text-emerald-500" />
-              {profile.lastActive}
+            <p className={`mt-0.5 inline-flex items-center gap-1.5 text-base font-bold sm:text-sm ${profile.isOnline ? "text-emerald-600" : "text-gray-500"}`}>
+              <Clock3 size={14} className={profile.isOnline ? "text-emerald-500" : "text-gray-400"} />
+              {profile.isOnline ? "Đang hoạt động" : profile.lastActive}
             </p>
           </div>
         </div>

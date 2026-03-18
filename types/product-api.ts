@@ -38,6 +38,8 @@ export interface ProductSummaryDto {
   sellerId: string | null;
   sellerName: string | null;
   sellerAvatar: string | null;
+  sellerIsOnline?: boolean;
+  sellerLastSeenAt?: string | null;
 }
 
 export interface ProductImageDto {
@@ -95,6 +97,8 @@ export interface ProductDetailDto {
   sellerAvatar: string | null;
   sellerReputation: number | null;
   sellerTotalSales: number | null;
+  sellerIsOnline?: boolean;
+  sellerLastSeenAt?: string | null;
   images: ProductImageDto[];
   tags: TagDto[];
   attributeValues: ProductAttributeValueResponse[];

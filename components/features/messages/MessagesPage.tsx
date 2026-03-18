@@ -19,7 +19,14 @@ import TransactionActionCard from './transaction/TransactionActionCard';
 
 const CHAT_WS_URL = process.env.NEXT_PUBLIC_CHAT_WS_URL || process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8686/ws';
 
-const normalizeId = (value: string | number | null | undefined): string => (value == null ? '' : String(value));
+const normalizeId = (value: string | number | null | undefined): string => 
+  (value == null ? '' : String(value).trim().toLowerCase());
+
+type PresenceEvent = {
+  userId: string;
+  online: boolean;
+  lastSeenAt?: string | null;
+};
 
 const isTempMessageId = (id: string | number): boolean => String(id).startsWith('temp-');
 
@@ -100,7 +107,8 @@ const mapApiConversation = (conversation: ChatConversationResponse): Conversatio
       id: conversation.otherUserId,
       name: conversation.otherUserName || 'Người dùng',
       avatar: conversation.otherUserAvatarUrl || '/user/avatar-user-profile-default.png',
-      isOnline: false,
+      isOnline: Boolean(conversation.otherUserOnline),
+      lastSeen: conversation.otherUserLastSeenAt || undefined,
       sellerPhone: conversation.sellerPhone || undefined,
     },
     relatedPost: {
@@ -424,10 +432,31 @@ const MessagesPage = () => {
               (message) => normalizeId(message.id) === normalizeId(incomingMessage.id)
             );
 
-            const updatedMessages = (alreadyExists
-              ? conversation.messages
-              : [...conversation.messages.filter(m => !String(m.id).startsWith('preview-')), incomingMessage]
-            ).sort(
+            // Logic to find and replace temp message if this is from me
+            let updatedMessages = conversation.messages;
+            if (isFromMe && !alreadyExists) {
+              // Find a temp message from me with same content
+              const tempMessageIndex = updatedMessages.findLastIndex(
+                (m) => isTempMessageId(m.id) && 
+                       normalizeId(m.senderId) === currentUserIdNormalized &&
+                       m.content === incomingMessage.content
+              );
+
+              if (tempMessageIndex !== -1) {
+                // Replace temp message with real one to prevent jumping/flicker
+                updatedMessages = [
+                  ...updatedMessages.slice(0, tempMessageIndex),
+                  incomingMessage,
+                  ...updatedMessages.slice(tempMessageIndex + 1)
+                ];
+              } else {
+                updatedMessages = [...updatedMessages.filter(m => !String(m.id).startsWith('preview-')), incomingMessage];
+              }
+            } else if (!alreadyExists) {
+              updatedMessages = [...updatedMessages.filter(m => !String(m.id).startsWith('preview-')), incomingMessage];
+            }
+
+            updatedMessages = [...updatedMessages].sort(
               (a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
             );
 
@@ -441,13 +470,16 @@ const MessagesPage = () => {
           return conversationFound ? next : prev;
         });
 
-        if (isActive && !isFromMe && scrollContainerRef.current) {
-          // Immediately scroll to bottom when receiving a message in active chat
-          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
-        }
+        // Browser handles auto-scrolling to visual bottom (scrollTop 0) in flex-col-reverse naturally
+        // when prepending new items to the DOM.
 
         if (!conversationFound) {
           await loadConversations();
+        }
+
+        // Real-time Seen: If active chat and message is from OTHER person, mark as read immediately
+        if (isActive && !isFromMe && currentUserIdNormalized) {
+          void chatService.markAsRead(currentUserIdNormalized, incomingConversationId).catch(() => undefined);
         }
       } catch {
         // ignore malformed messages
@@ -455,6 +487,43 @@ const MessagesPage = () => {
     },
     [activeConversationId, currentUserId, loadConversations, loadMessagesForConversation]
   );
+
+  const handleIncomingStatusUpdate = useCallback((statusUpdate: any) => {
+    const updates = Array.isArray(statusUpdate) ? statusUpdate : [statusUpdate];
+    
+    setConversations((prev) =>
+      prev.map((conv) => {
+        const currentUserIdNormalized = normalizeId(currentUserId);
+        const convUpdates = updates.filter(u => normalizeId(u.conversationId) === normalizeId(conv.id));
+        if (convUpdates.length === 0) return conv;
+
+        // Check if it's a conversation-wide "seen" update by the OTHER user
+        const isSeenByOther = convUpdates.some(u => 
+          u.status === 'seen' && !u.messageId && normalizeId(u.userId) !== currentUserIdNormalized
+        );
+
+        return {
+          ...conv,
+          messages: conv.messages.map((m) => {
+            // If conversation-wide seen by OTHER, update all 'sent' or 'delivered' messages from ME to 'seen'
+            if (isSeenByOther && normalizeId(m.senderId) === currentUserIdNormalized) {
+              if (m.status !== 'seen' && !isTempMessageId(m.id)) {
+                return { ...m, status: 'seen' as const };
+              }
+            }
+            
+            // Otherwise check for specific message ID updates
+            const specificUpdate = convUpdates.find(u => normalizeId(u.messageId) === normalizeId(m.id));
+            if (specificUpdate) {
+              return { ...m, status: mapDeliveryStatus(specificUpdate.status) };
+            }
+            
+            return m;
+          }),
+        };
+      })
+    );
+  }, [currentUserId]);
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -496,29 +565,44 @@ const MessagesPage = () => {
         void handleIncomingSocketMessage(message.body);
       });
 
+      // Fallback status topic
+      client.subscribe(`/topic/user-${currentUserId}/status`, (message) => {
+        try {
+          const statusUpdate = JSON.parse(message.body);
+          handleIncomingStatusUpdate(statusUpdate);
+        } catch { /* ignore */ }
+      });
+
+      // Presence: online/offline + last seen
+      client.subscribe('/topic/presence', (message) => {
+        try {
+          const evt = JSON.parse(message.body) as PresenceEvent;
+          const changedUserId = normalizeId(evt.userId);
+          if (!changedUserId) return;
+
+          setConversations((prev) =>
+            prev.map((conv) => {
+              if (normalizeId(conv.participant.id) !== changedUserId) return conv;
+              return {
+                ...conv,
+                participant: {
+                  ...conv.participant,
+                  isOnline: Boolean(evt.online),
+                  lastSeen: evt.lastSeenAt ?? conv.participant.lastSeen,
+                },
+              };
+            })
+          );
+        } catch {
+          // ignore malformed
+        }
+      });
+
       // Lắng nghe sự kiện cập nhật trạng thái tin nhắn (đã nhận/đã xem)
       client.subscribe('/user/queue/status', (message) => {
         try {
           const statusUpdate = JSON.parse(message.body);
-          // statusUpdate có thể là một object {messageId, status...} hoặc list
-          const updates = Array.isArray(statusUpdate) ? statusUpdate : [statusUpdate];
-          
-          setConversations((prev) =>
-            prev.map((conv) => {
-              const convUpdates = updates.filter(u => normalizeId(u.conversationId) === normalizeId(conv.id));
-              if (convUpdates.length === 0) return conv;
-
-              const updateMap = new Map(convUpdates.map(u => [normalizeId(u.messageId), mapDeliveryStatus(u.status)]));
-
-              return {
-                ...conv,
-                messages: conv.messages.map((m) => {
-                  const newStatus = updateMap.get(normalizeId(m.id));
-                  return newStatus ? { ...m, status: newStatus } : m;
-                }),
-              };
-            })
-          );
+          handleIncomingStatusUpdate(statusUpdate);
         } catch (err) {
           // ignore malformed updates
         }
@@ -560,12 +644,13 @@ const MessagesPage = () => {
         wsClientRef.current = null;
       }
     };
-  }, [currentUserId, handleIncomingSocketMessage]);
+  }, [currentUserId, handleIncomingSocketMessage, handleIncomingStatusUpdate]);
 
   const scrollToBottom = (behavior: ScrollBehavior = 'auto') => {
     if (scrollContainerRef.current) {
+      // In flex-col-reverse, visual bottom is scrollTop: 0
       scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
+        top: 0,
         behavior,
       });
     }
@@ -668,7 +753,7 @@ const MessagesPage = () => {
       senderId: currentUserId,
       content,
       sentAt: new Date().toISOString(),
-      status: 'sent',
+      status: 'sending',
     };
 
     setConversations((prev) =>
@@ -682,6 +767,11 @@ const MessagesPage = () => {
       )
     );
 
+    if (!contentOverride) {
+      setDraftMessage('');
+      handleTyping(false);
+    }
+
     try {
       const sent = await chatService.sendMessage(currentUserId, conversationId, {
         messageType: 'text',
@@ -693,14 +783,22 @@ const MessagesPage = () => {
         prev.map((conversation) => {
           if (normalizeId(conversation.id) !== conversationId) return conversation;
 
-          const withoutTemp = conversation.messages.filter((message) => normalizeId(message.id) !== tempId);
-          const alreadyExists = withoutTemp.some(
+          const alreadyExists = conversation.messages.some(
             (message) => normalizeId(message.id) === normalizeId(sentMessage.id)
           );
 
+          if (alreadyExists) {
+            return {
+              ...conversation,
+              messages: conversation.messages.filter(m => normalizeId(m.id) !== tempId)
+            };
+          }
+
           return {
             ...conversation,
-            messages: alreadyExists ? withoutTemp : [...withoutTemp, sentMessage],
+            messages: conversation.messages.map(m => 
+              normalizeId(m.id) === tempId ? sentMessage : m
+            ),
           };
         })
       );
@@ -712,20 +810,12 @@ const MessagesPage = () => {
             ...conversation,
             messages: conversation.messages.map((message) =>
               normalizeId(message.id) === tempId
-                ? { ...message, status: 'delivered' }
+                ? { ...message, status: 'error' }
                 : message
             ),
           };
         })
       );
-    } finally {
-      // Small delay before deciding if we need a reload
-      // void loadMessagesForConversation(conversationId, { force: true }).catch(() => undefined);
-    }
-
-    if (!contentOverride) {
-      setDraftMessage('');
-      handleTyping(false);
     }
   };
 
@@ -766,10 +856,10 @@ const MessagesPage = () => {
       id: tempId,
       conversationId,
       senderId: currentUserId,
-      content: dataUrls.join('|'), // Joined by pipe for the frontend to split back into .images
+      content: '', 
       images: dataUrls,
       sentAt: new Date().toISOString(),
-      status: 'sent',
+      status: 'sending',
     };
 
     setConversations((prev) =>
@@ -785,7 +875,6 @@ const MessagesPage = () => {
 
     try {
       // 3. Send as a single message with type 'images'
-      // Use '|' separator for multiple URLs in one string field
       const sent = await chatService.sendMessage(currentUserId, conversationId, {
         messageType: 'images',
         content: '',
@@ -798,16 +887,22 @@ const MessagesPage = () => {
         prev.map((conversation) => {
           if (normalizeId(conversation.id) !== conversationId) return conversation;
 
-          const withoutTemp = conversation.messages.filter(
-            (message) => normalizeId(message.id) !== tempId
-          );
-          const alreadyExists = withoutTemp.some(
+          const alreadyExists = conversation.messages.some(
             (message) => normalizeId(message.id) === normalizeId(sentMessage.id)
           );
 
+          if (alreadyExists) {
+            return {
+              ...conversation,
+              messages: conversation.messages.filter(m => normalizeId(m.id) !== tempId)
+            };
+          }
+
           return {
             ...conversation,
-            messages: alreadyExists ? withoutTemp : [...withoutTemp, sentMessage],
+            messages: conversation.messages.map(m => 
+              normalizeId(m.id) === tempId ? sentMessage : m
+            ),
           };
         })
       );
@@ -819,14 +914,12 @@ const MessagesPage = () => {
             ...conversation,
             messages: conversation.messages.map((message) =>
               normalizeId(message.id) === tempId
-                ? { ...message, status: 'delivered' }
+                ? { ...message, status: 'error' }
                 : message
             ),
           };
         })
       );
-    } finally {
-      // void loadMessagesForConversation(conversationId, { force: true }).catch(() => undefined);
     }
   };
 
@@ -887,59 +980,67 @@ const MessagesPage = () => {
                   >
                     {activeConversationId && (
                       <>
-                        {/* 1. Typing Indicator at the literal visual BOTTOM (First in DOM order for col-reverse) */}
-                        {typingUsers[normalizeId(activeConversationId)] && (
-                          <div className="flex items-center gap-2 text-gray-400 text-xs italic ml-12 mb-2 shrink-0">
-                            <div className="flex gap-1 p-2.5 bg-gray-100 rounded-2xl rounded-bl-sm">
-                              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s]" />
-                              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s] [animation-delay:0.2s]" />
-                              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s] [animation-delay:0.4s]" />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 2. Last message seen indicator handled in MessageBubble - no need for extra div here unless specific spacing needed */}
-
-                        {/* 3. Messages List (Rendered newest-first) */}
-                        {[...activeConversation.messages].reverse().map((message, index, reversedArr) => {
-                          const nextMessage = reversedArr[index - 1]; // Message that came AFTER this one
-                          const prevMessage = reversedArr[index + 1]; // Message that came BEFORE this one
+                        {/* Identify the LAST seen message from current user to show ONLY one avatar marker */}
+                        {(() => {
+                          const messagesFromMe = activeConversation.messages.filter(m => normalizeId(m.senderId) === normalizeId(currentUserId));
+                          const lastSeenMessageId = messagesFromMe.findLast(m => m.status === 'seen')?.id;
                           
-                          const showDateSeparator = !prevMessage || 
-                            new Date(prevMessage.sentAt).toDateString() !== new Date(message.sentAt).toDateString();
-                          
-                          const isLastInGroup = !nextMessage || normalizeId(nextMessage.senderId) !== normalizeId(message.senderId);
-                          const isOwn = normalizeId(message.senderId) === normalizeId(currentUserId);
-
                           return (
-                            <div key={message.id} className="mb-3">
-                              {showDateSeparator && (
-                                <div className="flex justify-center my-4">
-                                  <span className="px-3 py-1 rounded-full bg-gray-100/80 text-[10px] text-gray-500 font-medium whitespace-nowrap">
-                                    {new Date(message.sentAt).toLocaleDateString('vi-VN', {
-                                      weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
-                                    })}
-                                  </span>
+                            <>
+                              {/* 1. Typing Indicator at the literal visual BOTTOM (First in DOM order for col-reverse) */}
+                              {typingUsers[normalizeId(activeConversationId)] && (
+                                <div className="flex items-center gap-2 text-gray-400 text-xs italic ml-12 mb-2 shrink-0">
+                                  <div className="flex gap-1 p-2.5 bg-gray-100 rounded-2xl rounded-bl-sm">
+                                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s]" />
+                                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s] [animation-delay:0.2s]" />
+                                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s] [animation-delay:0.4s]" />
+                                  </div>
                                 </div>
                               )}
-                              {message.transactionEvent ? (
-                                <TransactionSystemMessage
-                                  event={message.transactionEvent}
-                                  actorName={isOwn ? undefined : activeConversation.participant.name}
-                                  sentAt={message.sentAt}
-                                />
-                              ) : (
-                                <MessageBubble
-                                  message={message}
-                                  isOwnMessage={isOwn}
-                                  displayTime={formatMessageTime(message.sentAt)}
-                                  senderAvatar={!isOwn && isLastInGroup ? activeConversation.participant.avatar : undefined}
-                                  recipientAvatar={activeConversation.participant.avatar}
-                                />
-                              )}
-                            </div>
+
+                              {[...activeConversation.messages].reverse().map((message, index, reversedArr) => {
+                                const nextMessage = reversedArr[index - 1]; // Message that came AFTER this one
+                                const prevMessage = reversedArr[index + 1]; // Message that came BEFORE this one
+                                
+                                const showDateSeparator = !prevMessage || 
+                                  new Date(prevMessage.sentAt).toDateString() !== new Date(message.sentAt).toDateString();
+                                
+                                const isLastInGroup = !nextMessage || normalizeId(nextMessage.senderId) !== normalizeId(message.senderId);
+                                const isOwn = normalizeId(message.senderId) === normalizeId(currentUserId);
+                                const isLastSeenMarker = isOwn && lastSeenMessageId && normalizeId(message.id) === normalizeId(lastSeenMessageId);
+
+                                return (
+                                  <div key={message.id} className="mb-3">
+                                    {showDateSeparator && (
+                                      <div className="flex justify-center my-4">
+                                        <span className="px-3 py-1 rounded-full bg-gray-100/80 text-[10px] text-gray-500 font-medium whitespace-nowrap">
+                                          {new Date(message.sentAt).toLocaleDateString('vi-VN', {
+                                            weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
+                                          })}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {message.transactionEvent ? (
+                                      <TransactionSystemMessage
+                                        event={message.transactionEvent}
+                                        actorName={isOwn ? undefined : activeConversation.participant.name}
+                                        sentAt={message.sentAt}
+                                      />
+                                    ) : (
+                                      <MessageBubble
+                                        message={message}
+                                        isOwnMessage={isOwn}
+                                        displayTime={formatMessageTime(message.sentAt)}
+                                        senderAvatar={!isOwn && isLastInGroup ? activeConversation.participant.avatar : undefined}
+                                        recipientAvatar={isLastSeenMarker ? activeConversation.participant.avatar : undefined}
+                                      />
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </>
                           );
-                        })}
+                        })()}
 
                         {/* 4. Action Card for active transactions */}
                         {activeConversation.transaction &&
