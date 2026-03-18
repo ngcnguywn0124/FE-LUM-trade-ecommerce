@@ -24,6 +24,8 @@ export interface Product {
     name: string;
     avatar?: string;
     rating?: number;
+    isOnline?: boolean;
+    lastSeenAt?: string | null;
   };
 }
 

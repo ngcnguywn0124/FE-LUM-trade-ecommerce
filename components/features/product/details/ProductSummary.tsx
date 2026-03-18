@@ -38,6 +38,8 @@ interface ProductSummaryProps {
     rating?: number;
     activityStatus?: string;
     totalSales?: number;
+    isOnline?: boolean;
+    lastSeenAt?: string | null;
   };
 }
 
@@ -57,7 +59,19 @@ const ProductSummary = ({
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const parsedPrice = useMemo(() => Number(price.replace(/[^\d]/g, "")) || 0, [price]);
   const sellerRating = (seller.rating ?? 4.5).toFixed(1);
-  const sellerActivityStatus = seller.activityStatus || "Đang hoạt động";
+  
+  const formatLastSeen = (iso?: string | null) => {
+    if (!iso) return "Ngoại tuyến";
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    if (minutes < 1) return "Vừa mới truy cập";
+    if (minutes < 60) return `Hoạt động ${minutes} phút trước`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `Hoạt động ${hours} giờ trước`;
+    return "Ngoại tuyến";
+  };
+
+  const sellerActivityStatus = seller.isOnline ? "Đang hoạt động" : formatLastSeen(seller.lastSeenAt);
   const sellerSoldCount = seller.totalSales ?? 0;
   const sellerProfileHref = seller.id ? `/tai-khoan/${seller.id}` : undefined;
   const [offerPrice, setOfferPrice] = useState(

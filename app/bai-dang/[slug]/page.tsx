@@ -248,7 +248,8 @@ const ProductDetailPage = () => {
                   name: product.seller?.name || "Người bán ẩn danh",
                   avatar: product.seller?.avatar,
                   rating: productDetail.sellerReputation ?? 0,
-                  activityStatus: "Đang hoạt động",
+                  isOnline: productDetail.sellerIsOnline,
+                  lastSeenAt: productDetail.sellerLastSeenAt,
                   totalSales: productDetail.sellerTotalSales ?? 0,
                 }}
               />

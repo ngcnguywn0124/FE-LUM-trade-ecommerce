@@ -33,6 +33,8 @@ export interface ProfileResponse {
   isActive: boolean;
   createdAt: string;
   lastLoginAt: string | null;
+  lastSeenAt?: string | null;
+  isOnline?: boolean;
 
   // Statistics for UI
   totalListings?: number;
@@ -129,6 +131,8 @@ export interface UserProfile {
   responseTime: string;
   joinDate: string;
   lastActive: string;
+  isOnline?: boolean;
+  lastSeenAt?: string | null;
   location: string;
 }
 

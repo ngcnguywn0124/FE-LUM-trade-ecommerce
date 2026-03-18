@@ -106,7 +106,7 @@ const MessageBubble = ({ message, isOwnMessage, displayTime, senderAvatar, recip
               )}
               <span className="text-emerald-600 font-bold">{message.images.length} ảnh</span>
               <span className="w-0.5 h-0.5 bg-gray-300 rounded-full" />
-              <span>{mounted ? displayTime : ''}</span>
+              <span>{displayTime}</span>
               {isOwnMessage && statusIcon()}
             </div>
 
@@ -134,7 +134,7 @@ const MessageBubble = ({ message, isOwnMessage, displayTime, senderAvatar, recip
 
               <div className={`mt-1.5 flex items-center gap-1 text-[11px] ${isOwnMessage ? 'justify-end text-emerald-100' : 'text-gray-400'}`}>
                 {message.status === 'error' && <span className="text-red-500 font-bold">Lỗi</span>}
-                <span>{mounted ? displayTime : ''}</span>
+                <span>{displayTime}</span>
                 {isOwnMessage && statusIcon()}
               </div>
             </div>
@@ -152,11 +152,11 @@ const MessageBubble = ({ message, isOwnMessage, displayTime, senderAvatar, recip
         )}
 
         {/* Read Receipt Avatar (Small avatar of recipient when message is seen) */}
-        {isOwnMessage && message.status === 'seen' && (
+        {isOwnMessage && message.status === 'seen' && recipientAvatar && (
           <div className="flex justify-end mt-1 px-1">
             <div className="w-4 h-4 rounded-full overflow-hidden border border-white shadow-sm">
               <img 
-                src={recipientAvatar || '/user/avatar-user-profile-default.png'} 
+                src={recipientAvatar} 
                 alt="seen by" 
                 className="w-full h-full object-cover"
               />

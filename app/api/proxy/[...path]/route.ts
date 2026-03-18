@@ -3,6 +3,20 @@ import { cookies } from 'next/headers';
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8686';
 
+function sanitizeSetCookie(raw: string, isFrontendHttps: boolean) {
+  let sanitized = raw
+    .replace(/Domain=[^;]+;?\s*/gi, '')
+    .replace(/SameSite=None/gi, 'SameSite=Lax');
+
+  // Nếu frontend đang chạy HTTP (ví dụ localhost), cookie có `Secure`
+  // sẽ không được browser lưu. Ta bỏ `Secure` ở phía proxy để dev hoạt động.
+  if (!isFrontendHttps) {
+    sanitized = sanitized.replace(/;\s*Secure/gi, '');
+  }
+
+  return sanitized;
+}
+
 async function handler(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -21,6 +35,8 @@ async function handler(
       .map((c) => `${c.name}=${c.value}`)
       .join('; ');
 
+    const isFrontendHttps = request.nextUrl.protocol === 'https:';
+
     const forwardedHeaders = new Headers();
     request.headers.forEach((value, key) => {
       const lowerKey = key.toLowerCase();
@@ -36,6 +52,11 @@ async function handler(
 
     if (cookieHeader) {
       forwardedHeaders.set('Cookie', cookieHeader);
+    }
+
+    // Ngrok có thể trả "browser warning page" nếu thiếu header này
+    if (!forwardedHeaders.has('ngrok-skip-browser-warning')) {
+      forwardedHeaders.set('ngrok-skip-browser-warning', 'true');
     }
 
     const backendResponse = await fetch(backendUrl, {
@@ -69,9 +90,7 @@ async function handler(
       // Rewrite Set-Cookie từ :8686 → :3000
       const setCookies = backendResponse.headers.getSetCookie?.() ?? [];
       setCookies.forEach((cookie) => {
-        const sanitized = cookie
-          .replace(/Domain=[^;]+;?\s*/gi, '')
-          .replace(/SameSite=None/gi, 'SameSite=Lax');
+        const sanitized = sanitizeSetCookie(cookie, isFrontendHttps);
         response.headers.append('Set-Cookie', sanitized);
       });
 
@@ -97,9 +116,7 @@ async function handler(
 
     const setCookies = backendResponse.headers.getSetCookie?.() ?? [];
     setCookies.forEach((cookie) => {
-      const sanitized = cookie
-        .replace(/Domain=[^;]+;?\s*/gi, '')
-        .replace(/SameSite=None/gi, 'SameSite=Lax');
+      const sanitized = sanitizeSetCookie(cookie, isFrontendHttps);
       response.headers.append('Set-Cookie', sanitized);
     });
 
