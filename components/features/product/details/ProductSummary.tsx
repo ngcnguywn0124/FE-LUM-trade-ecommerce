@@ -81,6 +81,7 @@ const ProductSummary = ({
   const [isLiked, setIsLiked] = useState(isFavorited);
   const [isToggling, setIsToggling] = useState(false);
   const [isOpeningChat, setIsOpeningChat] = useState(false);
+  const [isSendingOffer, setIsSendingOffer] = useState(false);
   const { isAuthenticated, user } = useAuthStore();
   const router = useRouter();
 
@@ -161,6 +162,53 @@ const ProductSummary = ({
       toast.error("Không thể khởi tạo cuộc trò chuyện");
     } finally {
       setIsOpeningChat(false);
+    }
+  };
+
+  const handleSendOffer = async () => {
+    if (!isAuthenticated || !user) {
+      toast.error("Vui lòng đăng nhập để gửi đề xuất");
+      return;
+    }
+
+    if (String(user.userId) === String(seller.id)) {
+      toast.error("Bạn không thể deal giá với chính mình");
+      return;
+    }
+
+    if (offerPrice <= 0) {
+      toast.error("Vui lòng nhập giá đề xuất hợp lệ");
+      return;
+    }
+
+    const sellerId = typeof seller.id === "string" ? seller.id : String(seller.id ?? "");
+    if (!uuidRegex.test(sellerId)) {
+      toast.error("Không thể gửi đề xuất: thiếu thông tin người bán");
+      return;
+    }
+
+    try {
+      setIsSendingOffer(true);
+      const conversation = await chatService.createOrGetConversation(user.userId, {
+        targetUserId: sellerId,
+        productId: id,
+      });
+
+      const message = `Món này mình rất thích nhưng ngân sách có hạn, mình muốn giá ${offerPrice.toLocaleString('vi-VN')}đ. Được thì báo mình qua lấy sớm nha.`;
+
+      await chatService.sendMessage(user.userId, conversation.conversationId, {
+        messageType: 'offer',
+        content: message,
+        offerAmount: offerPrice,
+      });
+
+      toast.success("Đã gửi đề xuất giá thành công!");
+      router.push(`/tin-nhan?id=${conversation.conversationId}`);
+    } catch (error) {
+      console.error("Failed to send offer:", error);
+      toast.error("Có lỗi xảy ra khi gửi đề xuất, vui lòng thử lại");
+    } finally {
+      setIsSendingOffer(false);
     }
   };
 
@@ -263,8 +311,12 @@ const ProductSummary = ({
               className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 outline-none focus:border-emerald-500"
               aria-label="Giá đề xuất"
             />
-            <button className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors cursor-pointer">
-              Gửi đề xuất {formattedOfferPrice}
+            <button 
+              onClick={handleSendOffer}
+              disabled={isSendingOffer}
+              className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isSendingOffer ? 'Đang gửi...' : `Gửi đề xuất ${formattedOfferPrice}`}
             </button>
           </div>
         </div>
