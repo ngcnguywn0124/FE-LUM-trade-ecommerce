@@ -17,7 +17,7 @@ import CategorySelector from "../shared/CategorySelector";
 import CategoryMegaMenu from "../shared/CategoryMegaMenu";
 import AuthModal from "../features/auth/AuthModal";
 import NotificationsDropdown from "../features/notifications/NotificationsDropdown";
-import { mockNotifications } from "@/lib/mockNotifications";
+
 import { NotificationItemData } from "@/types/notifications";
 import { useAuthStore } from "@/stores/authStore";
 import { useChatStore } from "@/stores/chatStore";
@@ -61,7 +61,7 @@ const Header = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationItemData[]>(mockNotifications);
+  const [notifications, setNotifications] = useState<NotificationItemData[]>([]);
   const [universities, setUniversities] = useState<UniversityResponse[]>([]);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -270,7 +270,7 @@ const Header = () => {
     router.push('/');
   };
 
-  const handleMarkRead = (id: number) => {
+  const handleMarkRead = (id: string) => {
     setNotifications((prev) =>
       prev.map((item) =>
         item.id === id

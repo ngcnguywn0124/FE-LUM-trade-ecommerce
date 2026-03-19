@@ -19,6 +19,8 @@ export interface ChatConversationResponse {
   isUnread: boolean;
   isPinned: boolean;
   joinedAt: string;
+  transactionId?: string | null;
+  transactionStatus?: string | null;
 }
 
 export interface ChatMessageResponse {
@@ -35,6 +37,16 @@ export interface ChatMessageResponse {
   deliveryStatus: string | null;
   isEdited: boolean | null;
   createdAt: string;
+  // Transaction detail fields (sent via WebSocket event messages)
+  transactionId?: string | null;
+  transactionStatus?: string | null;
+  meetupLocation?: string | null;
+  meetupTime?: string | null;
+  agreedPrice?: number | null;
+  buyerConfirmedMeetup?: boolean | null;
+  sellerConfirmedMeetup?: boolean | null;
+  buyerConfirmedPayment?: boolean | null;
+  sellerConfirmedPayment?: boolean | null;
 }
 
 export interface SpringPage<T> {
@@ -62,7 +74,9 @@ export interface SendMessagePayload {
 }
 
 const chatApiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_CHAT_API_URL || '/api/proxy/api/chat',
+  baseURL: process.env.NEXT_PUBLIC_API_URL
+    ? `${process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1$/, '')}/api/chat`
+    : '/api/chat',
   timeout: 15000,
   withCredentials: true,
   headers: {

@@ -15,7 +15,7 @@ interface TransactionActionCardProps {
   isSeller: boolean;
   sellerName: string;
   buyerName: string;
-  onSellerSetMeetup: (location: string, time: string) => void;
+  onSellerSetMeetup: (location: string, time: string, price?: number) => void;
   onBuyerConfirmMeetup: (paymentMethod: TransactionPaymentMethod) => void;
   onBuyerConfirmPayment: () => void;
   onSellerConfirmPayment: () => void;
@@ -81,11 +81,12 @@ const ActionButton = ({
 // ─── Step 0: Hẹn gặp ────────────────────────────────────────────────────────
 
 const MeetupStep = ({
-  transaction, isSeller, sellerName, buyerName,
+  transaction, isSeller, sellerName, buyerName, relatedPostPrice,
   onSellerSetMeetup, onBuyerConfirmMeetup,
-}: Pick<TransactionActionCardProps, 'transaction' | 'isSeller' | 'sellerName' | 'buyerName' | 'onSellerSetMeetup' | 'onBuyerConfirmMeetup'>) => {
+}: Pick<TransactionActionCardProps, 'transaction' | 'isSeller' | 'sellerName' | 'buyerName' | 'onSellerSetMeetup' | 'onBuyerConfirmMeetup'> & { relatedPostPrice: number | string }) => {
   const [location, setLocation] = useState(transaction.meetupLocation ?? '');
-  const [meetTime, setMeetTime] = useState(transaction.meetupTime ?? '');
+  const [meetTime, setMeetTime] = useState(transaction.meetupTime ? transaction.meetupTime.substring(0, 16) : '');
+  const [agreedPriceStr, setAgreedPriceStr] = useState(transaction.agreedPrice ?? relatedPostPrice.toString());
   const [isEditing, setIsEditing] = useState(!transaction.meetupLocation);
   const [paymentMethod, setPaymentMethod] = useState<TransactionPaymentMethod>('cash');
 
@@ -99,7 +100,20 @@ const MeetupStep = ({
         {/* Proposal form / display */}
         {isEditing ? (
           <div className="space-y-2">
-            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Đề xuất địa điểm gặp mặt</p>
+            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Đề xuất địa điểm, thời gian & Giá</p>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">₫</span>
+              <input
+                type="text"
+                value={agreedPriceStr}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, '');
+                  setAgreedPriceStr(val);
+                }}
+                placeholder="Giá chốt (VNĐ)..."
+                className="w-full pl-8 pr-3 py-2 rounded-xl border border-gray-200 text-[12px] font-semibold text-emerald-700 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50 transition-all font-mono"
+              />
+            </div>
             <div className="relative">
               <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
@@ -112,6 +126,7 @@ const MeetupStep = ({
             <div className="relative">
               <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
+                type="datetime-local"
                 value={meetTime}
                 onChange={(e) => setMeetTime(e.target.value)}
                 placeholder="Thời gian (VD: 14:00 ngày 10/3)"
@@ -120,14 +135,21 @@ const MeetupStep = ({
             </div>
             <ActionButton
               onClick={() => {
-                if (location.trim() && meetTime.trim()) {
-                  onSellerSetMeetup(location.trim(), meetTime.trim());
-                  setIsEditing(false);
+                if (location.trim() && meetTime.trim() && agreedPriceStr.trim()) {
+                  // Convert local datetime-local value to ISO string for OffsetDateTime backend
+                  try {
+                    const isoDate = new Date(meetTime).toISOString();
+                    const numericPrice = Number(agreedPriceStr);
+                    onSellerSetMeetup(location.trim(), isoDate, numericPrice);
+                    setIsEditing(false);
+                  } catch (e) {
+                    console.error("Invalid date format", e);
+                  }
                 }
               }}
               variant="primary"
               icon={MapPin}
-              disabled={!location.trim() || !meetTime.trim()}
+              disabled={!location.trim() || !meetTime.trim() || !agreedPriceStr.trim()}
             >
               Gửi đề xuất cho người mua
             </ActionButton>
@@ -401,6 +423,7 @@ const TransactionActionCard = ({
               isSeller={isSeller}
               sellerName={sellerName}
               buyerName={buyerName}
+              relatedPostPrice={relatedPost.price}
               onSellerSetMeetup={onSellerSetMeetup}
               onBuyerConfirmMeetup={onBuyerConfirmMeetup}
             />

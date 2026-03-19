@@ -7,7 +7,7 @@ import NotificationsEmptyState from './NotificationsEmptyState';
 interface NotificationSectionProps {
   notifications: NotificationItemData[];
   compact?: boolean;
-  onMarkRead?: (id: number) => void;
+  onMarkRead?: (id: string) => void;
 }
 
 const NotificationSection = ({ notifications, compact = false, onMarkRead }: NotificationSectionProps) => {
