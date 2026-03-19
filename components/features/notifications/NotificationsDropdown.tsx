@@ -6,7 +6,7 @@ import NotificationSection from './NotificationSection';
 
 interface NotificationsDropdownProps {
   notifications: NotificationItemData[];
-  onMarkRead: (id: number) => void;
+  onMarkRead: (id: string) => void;
   onMarkAllRead: () => void;
   onClose: () => void;
 }

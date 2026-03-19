@@ -2,24 +2,40 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Bell, Bookmark, MessageCircle, Megaphone } from 'lucide-react';
-import { formatNotificationTime } from '@/lib/mockNotifications';
+import { Bell, Bookmark, MessageCircle, Megaphone, ArrowLeftRight } from 'lucide-react';
 import { NotificationItemData, NotificationType } from '@/types/notifications';
 
 interface NotificationItemProps {
   notification: NotificationItemData;
   compact?: boolean;
-  onMarkRead?: (id: number) => void;
+  onMarkRead?: (id: string) => void;
+}
+
+/** Hiển thị thời gian thông báo */
+function formatNotificationTime(isoDate: string): string {
+  const diffInMinutes = Math.max(1, Math.floor((Date.now() - new Date(isoDate).getTime()) / 60000));
+  if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} giờ trước`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) return `${diffInDays} ngày trước`;
+  return new Date(isoDate).toLocaleDateString('vi-VN');
 }
 
 const iconByType: Record<NotificationType, React.ReactNode> = {
   message: <MessageCircle size={16} />,
   post: <Megaphone size={16} />,
-  wishlist: <Bookmark size={16} />,
+  transaction: <ArrowLeftRight size={16} />,
   system: <Bell size={16} />,
 };
 
 const NotificationItem = ({ notification, compact = false, onMarkRead }: NotificationItemProps) => {
+  const Wrapper = notification.targetHref
+    ? ({ children }: { children: React.ReactNode }) => (
+        <Link href={notification.targetHref!}>{children}</Link>
+      )
+    : ({ children }: { children: React.ReactNode }) => <>{children}</>;
+
   return (
     <article
       className={`group rounded-xl border px-3 py-3 transition-colors ${
@@ -27,13 +43,26 @@ const NotificationItem = ({ notification, compact = false, onMarkRead }: Notific
       } ${compact ? 'p-3' : 'md:px-4 md:py-4'}`}
     >
       <div className="flex items-start gap-3">
-        <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-900 text-white">
-          {iconByType[notification.type]}
-        </span>
+        {/* Actor avatar or icon */}
+        {notification.actorAvatar ? (
+          <Image
+            src={notification.actorAvatar}
+            alt={notification.actorName ?? ''}
+            width={32}
+            height={32}
+            className="mt-0.5 h-8 w-8 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-900 text-white">
+            {iconByType[notification.type] ?? <Bell size={16} />}
+          </span>
+        )}
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <h4 className="truncate text-sm font-semibold text-gray-900 md:text-base">{notification.title}</h4>
+            <h4 className="truncate text-sm font-semibold text-gray-900 md:text-base">
+              {notification.title}
+            </h4>
             {!notification.isRead && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-red-500" />}
           </div>
 
@@ -55,7 +84,7 @@ const NotificationItem = ({ notification, compact = false, onMarkRead }: Notific
 
               {notification.targetHref && (
                 <Link href={notification.targetHref} className="text-xs font-semibold text-gray-900 hover:underline">
-                  {notification.targetLabel || 'Xem chi tiết'}
+                  Xem chi tiết
                 </Link>
               )}
             </div>

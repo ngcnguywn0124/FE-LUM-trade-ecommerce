@@ -10,32 +10,33 @@ export type TransactionStatus =
   | 'meetup_confirmed'   // Hai bên đã xác nhận thông tin gặp mặt
   | 'payment_pending'    // Chờ xác nhận thanh toán
   | 'completed'          // Giao dịch hoàn tất thành công
-  | 'cancelled';         // Huỷ giao dịch
+  | 'cancelled'          // Huỷ giao dịch
+  | 'disputed';          // Đang tranh chấp
 
 export type TransactionPaymentMethod = 'cash' | 'transfer';
 
-export type TransactionEventType =
-  | 'buyer_requested'
-  | 'seller_confirmed'
-  | 'meetup_confirmed'
-  | 'payment_confirmed'
-  | 'completed'
-  | 'cancelled';
+export type TransactionEventType = TransactionStatus;
 
 /** Dữ liệu giao dịch gắn theo cuộc hội thoại */
 export interface ConversationTransaction {
-  id: number;
+  /** UUID từ API */
+  id: string;
   status: TransactionStatus;
   agreedPrice?: string;
   meetupLocation?: string;
   meetupTime?: string;
   paymentMethod?: TransactionPaymentMethod;
+  shippingMethod?: string;
   /** Trạng thái xác nhận gặp mặt của từng bên */
   buyerConfirmedMeetup?: boolean;
   sellerConfirmedMeetup?: boolean;
   /** Trạng thái xác nhận thanh toán */
   buyerConfirmedPayment?: boolean;
   sellerConfirmedPayment?: boolean;
+  cancellationReason?: string;
+  cancelledBy?: string;
+  notes?: string;
+  isReviewed?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -62,6 +63,16 @@ export interface ChatMessage {
   images?: string[];
   /** Nếu có → render TransactionSystemMessage thay vì MessageBubble */
   transactionEvent?: TransactionEventType;
+  /** Thông tin transaction đính kèm (cho WebSocket sync) */
+  transactionId?: string;
+  transactionStatus?: TransactionStatus;
+  meetupLocation?: string;
+  meetupTime?: string;
+  agreedPrice?: number;
+  buyerConfirmedMeetup?: boolean;
+  sellerConfirmedMeetup?: boolean;
+  buyerConfirmedPayment?: boolean;
+  sellerConfirmedPayment?: boolean;
 }
 
 export interface MessageRelatedPost {

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { ConversationTransaction, MessageRelatedPost, TransactionPaymentMethod } from '@/types/messages';
 import TransactionStepTracker from './TransactionStepTracker';
+import ReviewModal from './ReviewModal';
 
 interface TransactionActionCardProps {
   transaction: ConversationTransaction;
@@ -15,7 +16,8 @@ interface TransactionActionCardProps {
   isSeller: boolean;
   sellerName: string;
   buyerName: string;
-  onSellerSetMeetup: (location: string, time: string) => void;
+  currentUserId: string;
+  onSellerSetMeetup: (location: string, time: string, price?: number) => void;
   onBuyerConfirmMeetup: (paymentMethod: TransactionPaymentMethod) => void;
   onBuyerConfirmPayment: () => void;
   onSellerConfirmPayment: () => void;
@@ -81,11 +83,12 @@ const ActionButton = ({
 // ─── Step 0: Hẹn gặp ────────────────────────────────────────────────────────
 
 const MeetupStep = ({
-  transaction, isSeller, sellerName, buyerName,
+  transaction, isSeller, sellerName, buyerName, relatedPostPrice,
   onSellerSetMeetup, onBuyerConfirmMeetup,
-}: Pick<TransactionActionCardProps, 'transaction' | 'isSeller' | 'sellerName' | 'buyerName' | 'onSellerSetMeetup' | 'onBuyerConfirmMeetup'>) => {
+}: Pick<TransactionActionCardProps, 'transaction' | 'isSeller' | 'sellerName' | 'buyerName' | 'onSellerSetMeetup' | 'onBuyerConfirmMeetup'> & { relatedPostPrice: number | string }) => {
   const [location, setLocation] = useState(transaction.meetupLocation ?? '');
-  const [meetTime, setMeetTime] = useState(transaction.meetupTime ?? '');
+  const [meetTime, setMeetTime] = useState(transaction.meetupTime ? transaction.meetupTime.substring(0, 16) : '');
+  const [agreedPriceStr, setAgreedPriceStr] = useState(transaction.agreedPrice ?? relatedPostPrice.toString());
   const [isEditing, setIsEditing] = useState(!transaction.meetupLocation);
   const [paymentMethod, setPaymentMethod] = useState<TransactionPaymentMethod>('cash');
 
@@ -99,7 +102,20 @@ const MeetupStep = ({
         {/* Proposal form / display */}
         {isEditing ? (
           <div className="space-y-2">
-            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Đề xuất địa điểm gặp mặt</p>
+            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Đề xuất địa điểm, thời gian & Giá</p>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">₫</span>
+              <input
+                type="text"
+                value={agreedPriceStr}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, '');
+                  setAgreedPriceStr(val);
+                }}
+                placeholder="Giá chốt (VNĐ)..."
+                className="w-full pl-8 pr-3 py-2 rounded-xl border border-gray-200 text-[12px] font-semibold text-emerald-700 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50 transition-all font-mono"
+              />
+            </div>
             <div className="relative">
               <MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
@@ -112,6 +128,7 @@ const MeetupStep = ({
             <div className="relative">
               <Clock size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
+                type="datetime-local"
                 value={meetTime}
                 onChange={(e) => setMeetTime(e.target.value)}
                 placeholder="Thời gian (VD: 14:00 ngày 10/3)"
@@ -120,14 +137,21 @@ const MeetupStep = ({
             </div>
             <ActionButton
               onClick={() => {
-                if (location.trim() && meetTime.trim()) {
-                  onSellerSetMeetup(location.trim(), meetTime.trim());
-                  setIsEditing(false);
+                if (location.trim() && meetTime.trim() && agreedPriceStr.trim()) {
+                  // Convert local datetime-local value to ISO string for OffsetDateTime backend
+                  try {
+                    const isoDate = new Date(meetTime).toISOString();
+                    const numericPrice = Number(agreedPriceStr);
+                    onSellerSetMeetup(location.trim(), isoDate, numericPrice);
+                    setIsEditing(false);
+                  } catch (e) {
+                    console.error("Invalid date format", e);
+                  }
                 }
               }}
               variant="primary"
               icon={MapPin}
-              disabled={!location.trim() || !meetTime.trim()}
+              disabled={!location.trim() || !meetTime.trim() || !agreedPriceStr.trim()}
             >
               Gửi đề xuất cho người mua
             </ActionButton>
@@ -300,28 +324,65 @@ const PaymentStep = ({
 
 // ─── Step 2: Hoàn tất ────────────────────────────────────────────────────────
 
-const CompletedStep = ({ isSeller }: { isSeller: boolean }) => (
-  <div className="flex flex-col items-center gap-2 py-2 text-center">
-    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-200">
-      <CheckCircle2 size={24} className="text-white" />
+const CompletedStep = ({
+  isSeller,
+  transactionId,
+  sellerName,
+  currentUserId
+}: {
+  isSeller: boolean,
+  transactionId: string,
+  sellerName: string,
+  currentUserId: string
+}) => {
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
+
+  return (
+    <div className="flex flex-col items-center gap-2 py-2 text-center">
+      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-200">
+        <CheckCircle2 size={24} className="text-white" />
+      </div>
+      <div>
+        <p className="text-[13px] font-bold text-gray-900">Giao dịch hoàn tất! 🎉</p>
+        <p className="text-[11px] text-gray-500 mt-0.5">
+          {isSeller ? 'Cảm ơn bạn đã đăng bán trên Lụm!' : 'Cảm ơn bạn đã mua sắm trên Lụm!'}
+        </p>
+      </div>
+
+      {!isSeller && !hasReviewed && (
+        <button
+          onClick={() => setShowReviewModal(true)}
+          className="flex items-center gap-1.5 px-4 py-2 mt-1 rounded-xl bg-yellow-50 border border-yellow-200 text-[12px] font-semibold text-yellow-700 hover:bg-yellow-100 transition-all cursor-pointer"
+        >
+          <Star size={13} className="fill-yellow-400 text-yellow-400" />
+          Đánh giá {sellerName}
+        </button>
+      )}
+      {!isSeller && hasReviewed && (
+        <p className="text-[11px] text-emerald-600 font-semibold mt-1">✓ Bạn đã gửi đánh giá</p>
+      )}
+
+      {showReviewModal && (
+        <ReviewModal
+          transactionId={transactionId}
+          sellerName={sellerName}
+          currentUserId={currentUserId}
+          onClose={() => setShowReviewModal(false)}
+          onSuccess={() => {
+            setShowReviewModal(false);
+            setHasReviewed(true);
+          }}
+        />
+      )}
     </div>
-    <div>
-      <p className="text-[13px] font-bold text-gray-900">Giao dịch hoàn tất! 🎉</p>
-      <p className="text-[11px] text-gray-500 mt-0.5">
-        {isSeller ? 'Cảm ơn bạn đã đăng bán trên Lụm!' : 'Cảm ơn bạn đã mua sắm trên Lụm!'}
-      </p>
-    </div>
-    <button className="flex items-center gap-1.5 px-4 py-2 mt-1 rounded-xl bg-yellow-50 border border-yellow-200 text-[12px] font-semibold text-yellow-700 hover:bg-yellow-100 transition-all cursor-pointer">
-      <Star size={13} className="fill-yellow-400 text-yellow-400" />
-      Đánh giá {isSeller ? 'người mua' : 'người bán'}
-    </button>
-  </div>
-);
+  );
+};
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 const TransactionActionCard = ({
-  transaction, relatedPost, isSeller, sellerName, buyerName,
+  transaction, relatedPost, isSeller, sellerName, buyerName, currentUserId,
   onSellerSetMeetup, onBuyerConfirmMeetup,
   onBuyerConfirmPayment, onSellerConfirmPayment,
   onCancel,
@@ -361,7 +422,7 @@ const TransactionActionCard = ({
               </span>
             </div>
           </div>
-          <span className="text-[10px] text-emerald-100/80">#{transaction.id}</span>
+          {/* <span className="text-[10px] text-emerald-100/80">#{transaction.id}</span> */}
         </div>
 
         {/* ── Product summary ── */}
@@ -394,13 +455,19 @@ const TransactionActionCard = ({
         {/* ── Step Content ── */}
         <CardSection>
           {isCompleted ? (
-            <CompletedStep isSeller={isSeller} />
+            <CompletedStep
+              isSeller={isSeller}
+              transactionId={transaction.id}
+              sellerName={sellerName}
+              currentUserId={currentUserId}
+            />
           ) : currentStep === 0 ? (
             <MeetupStep
               transaction={transaction}
               isSeller={isSeller}
               sellerName={sellerName}
               buyerName={buyerName}
+              relatedPostPrice={relatedPost.price}
               onSellerSetMeetup={onSellerSetMeetup}
               onBuyerConfirmMeetup={onBuyerConfirmMeetup}
             />

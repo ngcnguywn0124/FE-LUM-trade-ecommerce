@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, Clock, HandshakeIcon, XCircle, Banknote, Star } from 'lucide-react';
+import { CheckCircle2, Clock, HandshakeIcon, XCircle, Banknote, Star, MessageCircleWarning } from 'lucide-react';
 import { TransactionEventType } from '@/types/messages';
 
 interface TransactionSystemMessageProps {
@@ -40,12 +40,19 @@ const EVENT_CONFIG: Record<
     borderColor: 'border-blue-200',
     label: () => 'Hai bên đã xác nhận thông tin gặp mặt',
   },
-  payment_confirmed: {
+  payment_pending: {
     icon: Banknote,
-    iconColor: 'text-emerald-600',
-    bgColor: 'bg-emerald-50',
-    borderColor: 'border-emerald-200',
-    label: () => 'Đã xác nhận thanh toán · Sắp hoàn tất!',
+    iconColor: 'text-blue-500',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    label: () => 'Đang chờ xác nhận thanh toán',
+  },
+  idle: {
+    icon: MessageCircleWarning,
+    iconColor: 'text-gray-400',
+    bgColor: 'bg-gray-50',
+    borderColor: 'border-gray-200',
+    label: () => 'Bắt đầu cuộc trò chuyện',
   },
   completed: {
     icon: Star,
@@ -60,6 +67,13 @@ const EVENT_CONFIG: Record<
     bgColor: 'bg-red-50',
     borderColor: 'border-red-200',
     label: (actor) => `${actor ?? 'Một bên'} đã huỷ giao dịch`,
+  },
+  disputed: {
+    icon: MessageCircleWarning,
+    iconColor: 'text-red-500',
+    bgColor: 'bg-red-50',
+    borderColor: 'border-red-200',
+    label: () => 'Giao dịch đang tranh chấp',
   },
 };
 
