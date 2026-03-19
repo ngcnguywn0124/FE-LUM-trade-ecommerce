@@ -34,9 +34,11 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
   const campuses = selectedSchool?.campuses || [];
   const transactionTypeOptions = [
     { id: 'meetup', name: 'Gặp mặt trực tiếp' },
-    { id: 'delivery', name: 'Giao hàng' },
-    { id: 'both', name: 'Cả hai hình thức' },
+    { id: 'delivery', name: 'Giao hàng (Đang phát triển)' },
+    { id: 'both', name: 'Cả hai hình thức (Đang phát triển)' },
   ];
+  // Note: CustomSelect should respect disabled options or filter selectable to 'meetup' only
+  // For now, only 'meetup' will be selectable due to prefill, others shown as info
 
   return (
     <PostItemSection
@@ -87,18 +89,20 @@ const PostItemLocationContact = ({ formData, errors, onFieldChange }: PostItemLo
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Hình thức giao dịch <span className="text-red-500">*</span>
             </label>
-            <CustomSelect
-              value={formData.transactionType}
-              options={transactionTypeOptions}
-              onChange={(value) => {
-                onFieldChange('transactionType', value as TransactionType);
-                if (value === 'delivery') {
-                  onFieldChange('meetingPoint', '');
-                }
-              }}
-              placeholder="Chọn hình thức"
-              error={errors.transactionType}
-            />
+            <div className="space-y-1">
+              <CustomSelect
+                value={formData.transactionType}
+                options={[{ id: 'meetup', name: 'Gặp mặt trực tiếp' }]}
+                onChange={(value) => {
+                  onFieldChange('transactionType', value as TransactionType);
+                }}
+                placeholder="Chọn hình thức"
+                error={errors.transactionType}
+              />
+              <p className="text-xs text-gray-500 italic">
+                📢 Tạm thời chỉ hỗ trợ giao dịch trực tiếp. Giao hàng &amp; kết hợp đang phát triển.
+              </p>
+            </div>
             {errors.transactionType && <p className="mt-1 text-xs text-red-500 font-medium">{errors.transactionType}</p>}
           </div>
 
