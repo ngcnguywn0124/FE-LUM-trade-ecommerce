@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { ConversationTransaction, MessageRelatedPost, TransactionPaymentMethod } from '@/types/messages';
 import TransactionStepTracker from './TransactionStepTracker';
+import ReviewModal from './ReviewModal';
 
 interface TransactionActionCardProps {
   transaction: ConversationTransaction;
@@ -15,6 +16,7 @@ interface TransactionActionCardProps {
   isSeller: boolean;
   sellerName: string;
   buyerName: string;
+  currentUserId: string;
   onSellerSetMeetup: (location: string, time: string, price?: number) => void;
   onBuyerConfirmMeetup: (paymentMethod: TransactionPaymentMethod) => void;
   onBuyerConfirmPayment: () => void;
@@ -322,28 +324,65 @@ const PaymentStep = ({
 
 // ─── Step 2: Hoàn tất ────────────────────────────────────────────────────────
 
-const CompletedStep = ({ isSeller }: { isSeller: boolean }) => (
-  <div className="flex flex-col items-center gap-2 py-2 text-center">
-    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-200">
-      <CheckCircle2 size={24} className="text-white" />
+const CompletedStep = ({
+  isSeller,
+  transactionId,
+  sellerName,
+  currentUserId
+}: {
+  isSeller: boolean,
+  transactionId: string,
+  sellerName: string,
+  currentUserId: string
+}) => {
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
+
+  return (
+    <div className="flex flex-col items-center gap-2 py-2 text-center">
+      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-200">
+        <CheckCircle2 size={24} className="text-white" />
+      </div>
+      <div>
+        <p className="text-[13px] font-bold text-gray-900">Giao dịch hoàn tất! 🎉</p>
+        <p className="text-[11px] text-gray-500 mt-0.5">
+          {isSeller ? 'Cảm ơn bạn đã đăng bán trên Lụm!' : 'Cảm ơn bạn đã mua sắm trên Lụm!'}
+        </p>
+      </div>
+
+      {!isSeller && !hasReviewed && (
+        <button
+          onClick={() => setShowReviewModal(true)}
+          className="flex items-center gap-1.5 px-4 py-2 mt-1 rounded-xl bg-yellow-50 border border-yellow-200 text-[12px] font-semibold text-yellow-700 hover:bg-yellow-100 transition-all cursor-pointer"
+        >
+          <Star size={13} className="fill-yellow-400 text-yellow-400" />
+          Đánh giá {sellerName}
+        </button>
+      )}
+      {!isSeller && hasReviewed && (
+        <p className="text-[11px] text-emerald-600 font-semibold mt-1">✓ Bạn đã gửi đánh giá</p>
+      )}
+
+      {showReviewModal && (
+        <ReviewModal
+          transactionId={transactionId}
+          sellerName={sellerName}
+          currentUserId={currentUserId}
+          onClose={() => setShowReviewModal(false)}
+          onSuccess={() => {
+            setShowReviewModal(false);
+            setHasReviewed(true);
+          }}
+        />
+      )}
     </div>
-    <div>
-      <p className="text-[13px] font-bold text-gray-900">Giao dịch hoàn tất! 🎉</p>
-      <p className="text-[11px] text-gray-500 mt-0.5">
-        {isSeller ? 'Cảm ơn bạn đã đăng bán trên Lụm!' : 'Cảm ơn bạn đã mua sắm trên Lụm!'}
-      </p>
-    </div>
-    <button className="flex items-center gap-1.5 px-4 py-2 mt-1 rounded-xl bg-yellow-50 border border-yellow-200 text-[12px] font-semibold text-yellow-700 hover:bg-yellow-100 transition-all cursor-pointer">
-      <Star size={13} className="fill-yellow-400 text-yellow-400" />
-      Đánh giá {isSeller ? 'người mua' : 'người bán'}
-    </button>
-  </div>
-);
+  );
+};
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 const TransactionActionCard = ({
-  transaction, relatedPost, isSeller, sellerName, buyerName,
+  transaction, relatedPost, isSeller, sellerName, buyerName, currentUserId,
   onSellerSetMeetup, onBuyerConfirmMeetup,
   onBuyerConfirmPayment, onSellerConfirmPayment,
   onCancel,
@@ -416,7 +455,12 @@ const TransactionActionCard = ({
         {/* ── Step Content ── */}
         <CardSection>
           {isCompleted ? (
-            <CompletedStep isSeller={isSeller} />
+            <CompletedStep
+              isSeller={isSeller}
+              transactionId={transaction.id}
+              sellerName={sellerName}
+              currentUserId={currentUserId}
+            />
           ) : currentStep === 0 ? (
             <MeetupStep
               transaction={transaction}

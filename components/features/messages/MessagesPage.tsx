@@ -1230,6 +1230,7 @@ const MessagesPage = () => {
                                 isSeller={isSeller}
                                 sellerName={isSeller ? 'Bạn' : activeConversation.participant.name}
                                 buyerName={!isSeller ? 'Bạn' : activeConversation.participant.name}
+                                currentUserId={currentUserId}
                                 onSellerSetMeetup={handleSellerSetMeetup}
                                 onBuyerConfirmMeetup={handleBuyerConfirmMeetup}
                                 onBuyerConfirmPayment={handleBuyerConfirmPayment}
