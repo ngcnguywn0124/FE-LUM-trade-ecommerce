@@ -17,6 +17,7 @@ export interface ChatConversationResponse {
   lastMessagePreview: string | null;
   lastMessageAt: string | null;
   isUnread: boolean;
+  unreadCount?: number;
   isPinned: boolean;
   joinedAt: string;
   transactionId?: string | null;
@@ -47,6 +48,7 @@ export interface ChatMessageResponse {
   sellerConfirmedMeetup?: boolean | null;
   buyerConfirmedPayment?: boolean | null;
   sellerConfirmedPayment?: boolean | null;
+  isReviewed?: boolean | null;
 }
 
 export interface SpringPage<T> {

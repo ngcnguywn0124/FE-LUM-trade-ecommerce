@@ -49,6 +49,7 @@ export interface ApiTransactionResponse {
   sellerConfirmedMeetup: boolean;
   buyerConfirmedPayment: boolean;
   sellerConfirmedPayment: boolean;
+  isReviewed: boolean | null;
   // Cancel
   cancellationReason: string | null;
   cancelledBy: string | null;

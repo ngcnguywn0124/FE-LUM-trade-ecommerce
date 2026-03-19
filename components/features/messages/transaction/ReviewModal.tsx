@@ -89,7 +89,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactionId, sellerName, on
               onChange={(e) => setComment(e.target.value)}
               placeholder="Chia sẻ trải nghiệm của bạn (không bắt buộc)..."
               rows={3}
-              className="w-full p-3 rounded-xl border border-gray-200 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none resize-none"
+              className="w-full p-3 rounded-xl border border-gray-200 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-gray-700 outline-none resize-none"
             />
           </div>
 

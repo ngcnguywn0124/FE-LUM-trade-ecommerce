@@ -422,7 +422,7 @@ const TransactionActionCard = ({
               </span>
             </div>
           </div>
-          <span className="text-[10px] text-emerald-100/80">#{transaction.id}</span>
+          {/* <span className="text-[10px] text-emerald-100/80">#{transaction.id}</span> */}
         </div>
 
         {/* ── Product summary ── */}

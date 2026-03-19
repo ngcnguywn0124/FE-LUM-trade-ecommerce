@@ -36,6 +36,7 @@ export interface ConversationTransaction {
   cancellationReason?: string;
   cancelledBy?: string;
   notes?: string;
+  isReviewed?: boolean;
   createdAt: string;
   updatedAt: string;
 }

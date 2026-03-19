@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { MessageCircleWarning } from 'lucide-react';
@@ -125,7 +126,7 @@ const mapApiConversation = (conversation: ChatConversationResponse): Conversatio
       sellerId: conversation.sellerId || '',
     },
     messages: [previewMessage],
-    unreadCount: conversation.isUnread ? 1 : 0,
+    unreadCount: conversation.unreadCount ?? (conversation.isUnread ? 1 : 0),
     isPinned: conversation.isPinned,
     transaction: conversation.transactionId ? {
       id: conversation.transactionId,
@@ -149,6 +150,7 @@ const mapApiTxToConversationTx = (tx: ApiTransactionResponse): ConversationTrans
   sellerConfirmedMeetup: tx.sellerConfirmedMeetup,
   buyerConfirmedPayment: tx.buyerConfirmedPayment,
   sellerConfirmedPayment: tx.sellerConfirmedPayment,
+  isReviewed: tx.isReviewed ?? false,
   cancellationReason: tx.cancellationReason ?? undefined,
   cancelledBy: tx.cancelledBy ?? undefined,
   notes: tx.notes ?? undefined,
@@ -161,6 +163,8 @@ const MessagesPage = () => {
   const { setTotalUnreadCount } = useChatStore();
   const { addRealtimeNotification } = useNotificationStore();
   const currentUserId = user?.userId || '';
+  const searchParams = useSearchParams();
+  const initChatId = searchParams.get('id');
   const wsClientRef = useRef<Client | null>(null);
   const loadedConversationIdsRef = useRef<Set<string>>(new Set());
   const [isSubmittingTransaction, setIsSubmittingTransaction] = useState(false);
@@ -189,6 +193,11 @@ const MessagesPage = () => {
     const postSellerId = normalizeId(activeConversation.relatedPost.sellerId);
     return postSellerId === normalizeId(currentUserId);
   }, [activeConversation, currentUserId]);
+  
+  const latestTxEventMessageId = useMemo(() => {
+    if (!activeConversation) return null;
+    return [...activeConversation.messages].reverse().find(m => m.transactionEvent != null)?.id;
+  }, [activeConversation]);
 
   // ─── Transaction state helpers ────────────────────────────────────────────
 
@@ -558,18 +567,20 @@ const MessagesPage = () => {
             let updatedMessages = conversation.messages;
             if (isFromMe && !alreadyExists) {
               // Find a temp message from me with same content
-              const tempMessageIndex = updatedMessages.findLastIndex(
+              const tempMessageIndex = [...updatedMessages].reverse().findIndex(
                 (m) => isTempMessageId(m.id) &&
                   normalizeId(m.senderId) === currentUserIdNormalized &&
                   m.content === incomingMessage.content
               );
+              // Because we reversed, the real index is length - 1 - reversedIndex
+              const actualIndex = tempMessageIndex !== -1 ? updatedMessages.length - 1 - tempMessageIndex : -1;
 
-              if (tempMessageIndex !== -1) {
+              if (actualIndex !== -1) {
                 // Replace temp message with real one to prevent jumping/flicker
                 updatedMessages = [
-                  ...updatedMessages.slice(0, tempMessageIndex),
+                  ...updatedMessages.slice(0, actualIndex),
                   incomingMessage,
-                  ...updatedMessages.slice(tempMessageIndex + 1)
+                  ...updatedMessages.slice(actualIndex + 1)
                 ];
               } else {
                 updatedMessages = [...updatedMessages.filter(m => !String(m.id).startsWith('preview-')), incomingMessage];
@@ -604,6 +615,7 @@ const MessagesPage = () => {
                 sellerConfirmedMeetup: parsed.sellerConfirmedMeetup ?? conversation.transaction?.sellerConfirmedMeetup,
                 buyerConfirmedPayment: parsed.buyerConfirmedPayment ?? conversation.transaction?.buyerConfirmedPayment,
                 sellerConfirmedPayment: parsed.sellerConfirmedPayment ?? conversation.transaction?.sellerConfirmedPayment,
+                isReviewed: parsed.isReviewed ?? conversation.transaction?.isReviewed,
                 updatedAt: new Date().toISOString(),
               };
             }
@@ -612,7 +624,7 @@ const MessagesPage = () => {
             return {
               ...conversation,
               messages: updatedMessages,
-              unreadCount: isActive ? 0 : (conversation.unreadCount || 0) + (isFromMe ? 0 : 1),
+              unreadCount: isActive ? 0 : (isFromMe ? 0 : (conversation.unreadCount || 0) + 1),
               transaction: updatedTransaction,
             };
           });
@@ -683,6 +695,15 @@ const MessagesPage = () => {
       setActiveConversationId(null);
     });
   }, [currentUserId, loadConversations]);
+
+  // Handle auto-select from URL
+  useEffect(() => {
+    if (initChatId && conversations.length > 0 && !activeConversationId) {
+      if (conversations.some(c => String(c.id) === initChatId)) {
+        handleSelectConversation(initChatId);
+      }
+    }
+  }, [initChatId, conversations, activeConversationId]);
 
   useEffect(() => {
     if (!activeConversationId) return;
@@ -1139,7 +1160,7 @@ const MessagesPage = () => {
                   onBuyerCancelRequest={handleBuyerCancelRequest}
                   onSellerConfirm={handleSellerConfirm}
                   onSellerReject={handleSellerReject}
-                />
+                      />
 
                 <div className="relative flex-1 overflow-hidden">
                   {/* Background Image with Opacity */}
@@ -1210,6 +1231,29 @@ const MessagesPage = () => {
                                         recipientAvatar={isLastSeenMarker ? activeConversation.participant.avatar : undefined}
                                       />
                                     )}
+
+                                    {/* 4. Action Card for active transactions - embedded chronologically */}
+                                    {normalizeId(message.id) === normalizeId(latestTxEventMessageId) && activeConversation.transaction &&
+                                      ['buyer_requested', 'seller_confirmed', 'meetup_confirmed', 'payment_pending', 'completed', 'cancelled'].includes(
+                                        activeConversation.transaction.status
+                                      ) && (
+                                        <div className="mt-3 w-full max-w-[90%] sm:max-w-2xl mx-auto shrink-0 z-10">
+                                          <TransactionActionCard
+                                            key={activeConversation.transaction.updatedAt}
+                                            transaction={activeConversation.transaction}
+                                            relatedPost={activeConversation.relatedPost}
+                                            isSeller={isSeller}
+                                            sellerName={isSeller ? 'Bạn' : activeConversation.participant.name}
+                                            buyerName={!isSeller ? 'Bạn' : activeConversation.participant.name}
+                                            currentUserId={currentUserId}
+                                            onSellerSetMeetup={handleSellerSetMeetup}
+                                            onBuyerConfirmMeetup={handleBuyerConfirmMeetup}
+                                            onBuyerConfirmPayment={handleBuyerConfirmPayment}
+                                            onSellerConfirmPayment={handleSellerConfirmPayment}
+                                            onCancel={() => handleCancelTransaction()}
+                                          />
+                                        </div>
+                                      )}
                                   </div>
                                 );
                               })}
@@ -1217,12 +1261,12 @@ const MessagesPage = () => {
                           );
                         })()}
 
-                        {/* 4. Action Card for active transactions */}
-                        {activeConversation.transaction &&
+                        {/* Fallback Action Card (only if NO system messages exist) */}
+                        {!latestTxEventMessageId && activeConversation.transaction &&
                           ['buyer_requested', 'seller_confirmed', 'meetup_confirmed', 'payment_pending', 'completed', 'cancelled'].includes(
                             activeConversation.transaction.status
                           ) && (
-                            <div className="my-2 order-last"> {/* Pushes it further "up" in the history visual */}
+                            <div className="my-2 order-last shrink-0 z-10 w-full max-w-2xl mx-auto">
                               <TransactionActionCard
                                 key={activeConversation.transaction.updatedAt}
                                 transaction={activeConversation.transaction}

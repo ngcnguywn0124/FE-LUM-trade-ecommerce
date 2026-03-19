@@ -20,6 +20,7 @@ import NotificationsDropdown from "../features/notifications/NotificationsDropdo
 
 import { NotificationItemData } from "@/types/notifications";
 import { useAuthStore } from "@/stores/authStore";
+import { useNotificationStore } from "@/stores/notificationStore";
 import { useChatStore } from "@/stores/chatStore";
 import { useLocation } from "@/providers/LocationProvider";
 import { getUniversities } from "@/services/universityService";
@@ -61,7 +62,7 @@ const Header = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationItemData[]>([]);
+  const { notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead, addRealtimeNotification } = useNotificationStore();
   const [universities, setUniversities] = useState<UniversityResponse[]>([]);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -179,13 +180,15 @@ const Header = () => {
     };
   }, [isAuthenticated, user?.userId, setTotalUnreadCount]);
 
+  // Fetch notifications on mount if authenticated
+  useEffect(() => {
+    if (isAuthenticated && user?.userId) {
+      fetchNotifications(String(user.userId));
+    }
+  }, [isAuthenticated, user?.userId, fetchNotifications]);
+
   // Kiểm tra xem có đang ở trang chủ không
   const isHomePage = pathname === "/";
-
-  const unreadCount = useMemo(
-    () => notifications.filter((item) => !item.isRead).length,
-    [notifications]
-  );
 
   const previewNotifications = useMemo(
     () =>
@@ -271,20 +274,15 @@ const Header = () => {
   };
 
   const handleMarkRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              isRead: true,
-            }
-          : item
-      )
-    );
+    if (user?.userId) {
+      markAsRead(String(user.userId), id);
+    }
   };
 
   const handleMarkAllRead = () => {
-    setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
+    if (user?.userId) {
+      markAllAsRead(String(user.userId));
+    }
   };
 
   const handleBellClick = () => {

@@ -9,6 +9,7 @@ import { PackageOpen, Clock, AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, X
 import Breadcrumb from '@/components/shared/Breadcrumb';
 import Pagination from '@/components/shared/Pagination';
 import { useRouter } from 'next/navigation';
+import { chatService } from '@/services/chatService';
 
 const TransactionHistoryPage = () => {
   const { user } = useAuthStore();
@@ -34,6 +35,22 @@ const TransactionHistoryPage = () => {
   }, [user?.userId]);
 
   const router = useRouter();
+
+  const handleChatNavigation = async (tx: ApiTransactionResponse) => {
+    if (!user) return;
+    const isSeller = tx.sellerId === user.userId;
+    const otherUserId = isSeller ? tx.buyerId : tx.sellerId;
+    try {
+      const conv = await chatService.createOrGetConversation(user.userId, { 
+        targetUserId: otherUserId, 
+        productId: tx.productId 
+      });
+      router.push(`/tin-nhan?id=${conv.conversationId}`);
+    } catch (e) {
+      console.error('Failed to get conversation:', e);
+      router.push('/tin-nhan');
+    }
+  };
 
   const filtered = useMemo(() => {
     if (!data) return [] as ApiTransactionResponse[];
@@ -140,10 +157,10 @@ const TransactionHistoryPage = () => {
                     return (
                       <div
                         key={tx.transactionId}
-                        onClick={() => router.push('/tin-nhan')}
+                        onClick={() => handleChatNavigation(tx)}
                         role="button"
                         tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/tin-nhan'); }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleChatNavigation(tx); }}
                         className={`bg-white rounded-2xl border border-gray-100 p-5 transition-colors ${tx.status === 'completed' ? 'ring-2 ring-emerald-50 shadow' : ''} ${tx.status === 'cancelled' ? 'opacity-50' : 'shadow-sm hover:border-emerald-200'} cursor-pointer`}
                       >
                         <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
@@ -162,9 +179,9 @@ const TransactionHistoryPage = () => {
                             <Image src={tx.productImageUrl || '/template.png'} alt={tx.productTitle} fill className="object-cover" />
                           </div>
                           <div className="flex-1">
-                            <Link href={`/tin-nhan`} className="block group" onClick={(e) => e.stopPropagation()}>
+                            <div className="block group cursor-pointer" onClick={(e) => { e.stopPropagation(); handleChatNavigation(tx); }}>
                               <h3 className="text-lg font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">{tx.productTitle}</h3>
-                            </Link>
+                            </div>
                             <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-600">
                               <div className="flex flex-col">
                                 <span className="text-xs text-gray-400 font-medium">Người mua</span>
@@ -206,10 +223,10 @@ const TransactionHistoryPage = () => {
                     return (
                       <div
                         key={tx.transactionId}
-                        onClick={() => router.push('/tin-nhan')}
+                        onClick={() => handleChatNavigation(tx)}
                         role="button"
                         tabIndex={0}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push('/tin-nhan'); }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleChatNavigation(tx); }}
                         className={`bg-white rounded-2xl border border-gray-100 p-5 transition-colors ${tx.status === 'completed' ? 'ring-2 ring-emerald-50 shadow' : ''} ${tx.status === 'cancelled' ? 'opacity-50' : 'shadow-sm hover:border-emerald-200'} cursor-pointer`}
                       >
                         <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
@@ -228,9 +245,9 @@ const TransactionHistoryPage = () => {
                             <Image src={tx.productImageUrl || '/template.png'} alt={tx.productTitle} fill className="object-cover" />
                           </div>
                           <div className="flex-1">
-                            <Link href={`/tin-nhan`} className="block group" onClick={(e) => e.stopPropagation()}>
+                            <div className="block group cursor-pointer" onClick={(e) => { e.stopPropagation(); handleChatNavigation(tx); }}>
                               <h3 className="text-lg font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">{tx.productTitle}</h3>
-                            </Link>
+                            </div>
                             <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-600">
                               <div className="flex flex-col">
                                 <span className="text-xs text-gray-400 font-medium">{isSeller ? "Người mua" : "Người bán"}</span>
