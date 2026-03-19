@@ -1,12 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Breadcrumb from '@/components/shared/Breadcrumb';
 import CustomSelect, { SelectOption } from '@/components/shared/CustomSelect';
-import { mockNotifications } from '@/lib/mockNotifications';
-import { NotificationFilter, NotificationItemData } from '@/types/notifications';
+import { NotificationFilter } from '@/types/notifications';
 import NotificationTabs from './NotificationTabs';
 import NotificationSection from './NotificationSection';
+import { useNotificationStore } from '@/stores/notificationStore';
+import { useAuthStore } from '@/stores/authStore';
 
 type SortOption = 'newest' | 'oldest';
 
@@ -16,18 +17,33 @@ const sortOptions: SelectOption[] = [
 ];
 
 const NotificationsPage = () => {
-  const [notifications, setNotifications] = useState<NotificationItemData[]>(mockNotifications);
+  const { user } = useAuthStore();
+  const userId = user?.userId ?? '';
+
+  const {
+    notifications,
+    isLoading,
+    hasMore,
+    fetchNotifications,
+    fetchMoreNotifications,
+    markAsRead,
+    markAllAsRead,
+  } = useNotificationStore();
+
   const [activeFilter, setActiveFilter] = useState<NotificationFilter>('all');
   const [sortOption, setSortOption] = useState<SortOption>('newest');
 
-  const stats = useMemo(() => {
-    return {
-      total: notifications.length,
-      unread: notifications.filter((item) => !item.isRead).length,
-      message: notifications.filter((item) => item.type === 'message').length,
-      post: notifications.filter((item) => item.type === 'post').length,
-    };
-  }, [notifications]);
+  useEffect(() => {
+    if (userId) fetchNotifications(userId);
+  }, [userId, fetchNotifications]);
+
+  const stats = useMemo(() => ({
+    total: notifications.length,
+    unread: notifications.filter((n) => !n.isRead).length,
+    message: notifications.filter((n) => n.type === 'message').length,
+    post: notifications.filter((n) => n.type === 'post').length,
+    transaction: notifications.filter((n) => n.type === 'transaction').length,
+  }), [notifications]);
 
   const filteredNotifications = useMemo(() => {
     const byFilter = notifications.filter((item) => {
@@ -35,30 +51,19 @@ const NotificationsPage = () => {
       if (activeFilter === 'unread') return !item.isRead;
       return item.type === activeFilter;
     });
-
-    return byFilter.sort((first, second) => {
-      const firstTime = new Date(first.createdAt).getTime();
-      const secondTime = new Date(second.createdAt).getTime();
-
-      return sortOption === 'newest' ? secondTime - firstTime : firstTime - secondTime;
+    return byFilter.slice().sort((a, b) => {
+      const aT = new Date(a.createdAt).getTime();
+      const bT = new Date(b.createdAt).getTime();
+      return sortOption === 'newest' ? bT - aT : aT - bT;
     });
   }, [notifications, activeFilter, sortOption]);
 
-  const handleMarkRead = (id: number) => {
-    setNotifications((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              isRead: true,
-            }
-          : item
-      )
-    );
+  const handleMarkRead = (id: string) => {
+    if (userId) markAsRead(userId, id);
   };
 
   const handleMarkAllRead = () => {
-    setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
+    if (userId) markAllAsRead(userId);
   };
 
   return (
@@ -70,7 +75,7 @@ const NotificationsPage = () => {
           <div className="mb-5 flex flex-col gap-3 border-b border-gray-100 pb-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-xl font-bold text-gray-900 md:text-2xl">Thông báo của bạn</h1>
-              <p className="mt-1 text-sm text-gray-500">Theo dõi cập nhật mới nhất từ tin nhắn, tin đăng và hệ thống.</p>
+              <p className="mt-1 text-sm text-gray-500">Theo dõi cập nhật mới nhất từ tin nhắn, giao dịch và hệ thống.</p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -80,7 +85,6 @@ const NotificationsPage = () => {
                 options={sortOptions}
                 className="w-40"
               />
-
               <button
                 type="button"
                 onClick={handleMarkAllRead}
@@ -101,7 +105,33 @@ const NotificationsPage = () => {
           />
 
           <div className="mt-4">
-            <NotificationSection notifications={filteredNotifications} onMarkRead={handleMarkRead} />
+            {isLoading && notifications.length === 0 ? (
+              <div className="flex justify-center py-12">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-orange-500" />
+              </div>
+            ) : (
+              <>
+                <NotificationSection notifications={filteredNotifications} onMarkRead={handleMarkRead} />
+
+                {hasMore && !isLoading && (
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => userId && fetchMoreNotifications(userId)}
+                      className="rounded-lg border border-gray-300 px-5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Tải thêm
+                    </button>
+                  </div>
+                )}
+
+                {isLoading && notifications.length > 0 && (
+                  <div className="mt-4 flex justify-center">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-orange-500" />
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

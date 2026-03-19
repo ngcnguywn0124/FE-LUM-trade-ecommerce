@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
@@ -91,7 +91,7 @@ const IconInput = ({
 /* ─────────────────────────────────────────────
    Main Page
 ───────────────────────────────────────────── */
-const EditProfilePage = () => {
+const EditProfileContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("redirect");
@@ -708,6 +708,18 @@ const EditProfilePage = () => {
         </form>
       </div>
     </div>
+  );
+};
+
+const EditProfilePage = () => {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    }>
+      <EditProfileContent />
+    </Suspense>
   );
 };
 

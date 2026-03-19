@@ -60,6 +60,20 @@ const PostItemPage = ({ productId }: PostItemPageProps) => {
     user?.universityId && user?.campusId && user?.studentId && user?.fullName && user?.phoneNumber,
   );
 
+  // Prefill form from profile when creating new post
+  useEffect(() => {
+    if (!productId && !isAuthLoading && user && hasRequiredStudentInfo) {
+      setFormData({
+        ...initialFormData,
+        schoolId: user.universityId || '',
+        campusId: user.campusId || '',
+        contactName: user.fullName || '',
+        contactPhone: user.phoneNumber || '',
+        transactionType: 'meetup' as const,
+      });
+    }
+  }, [user, isAuthLoading, productId, hasRequiredStudentInfo]);
+
   // Kiểm tra thông tin sinh viên trước khi cho phép đăng tin
   useEffect(() => {
     if (!isAuthLoading && user && !hasRequiredStudentInfo) {
