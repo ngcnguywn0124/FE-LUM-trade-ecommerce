@@ -1,54 +1,89 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { 
-  Calendar, 
-  User, 
-  Clock, 
+import {
+  Calendar,
+  User,
+  Clock,
   Tag,
   TrendingUp,
   BookOpen,
   Heart,
   Search,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
-import {
-  BLOG_CATEGORY_FILTERS,
-  BLOG_POSTS,
-  TRENDING_TOPICS,
-  getBlogListingPosts,
-  getFeaturedBlogPost,
-} from "@/lib/blogData";
+import { getBlogPosts, TRENDING_TOPICS, type BlogPostSummary } from "@/lib/blogApi";
+
+const ALL_CATEGORY = "all";
 
 const BlogPage = () => {
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY);
   const [searchQuery, setSearchQuery] = useState("");
+  const [posts, setPosts] = useState<BlogPostSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000";
-  const featuredPost = getFeaturedBlogPost();
-  const blogPosts = getBlogListingPosts();
 
-  const categories = BLOG_CATEGORY_FILTERS.map((category) => {
-    if (category.id === "all") {
-      return {
-        ...category,
-        count: BLOG_POSTS.length,
-      };
-    }
-
-    return {
-      ...category,
-      count: BLOG_POSTS.filter((post) => post.category === category.name).length,
+  useEffect(() => {
+    const loadBlogs = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getBlogPosts();
+        setPosts(data);
+      } catch (fetchError) {
+        setError(fetchError instanceof Error ? fetchError.message : "Không thể tải dữ liệu blog");
+      } finally {
+        setLoading(false);
+      }
     };
-  });
 
-  const filteredPosts = blogPosts.filter(post => {
+    void loadBlogs();
+  }, []);
+
+  const featuredPost = useMemo(
+    () => posts.find((post) => post.isFeatured) || posts[0],
+    [posts],
+  );
+
+  const blogPosts = useMemo(() => {
+    if (!featuredPost) {
+      return posts;
+    }
+    return posts.filter((post) => post.id !== featuredPost.id);
+  }, [featuredPost, posts]);
+
+  const categories = useMemo(() => {
+    const categoryCount = posts.reduce<Record<string, number>>((acc, post) => {
+      acc[post.category] = (acc[post.category] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    const dynamicCategories = Object.entries(categoryCount).map(([name, count]) => ({
+      id: name.toLowerCase().replace(/\s+/g, "-"),
+      name,
+      count,
+    }));
+
+    return [
+      {
+        id: ALL_CATEGORY,
+        name: "Tất cả",
+        count: posts.length,
+      },
+      ...dynamicCategories,
+    ];
+  }, [posts]);
+
+  const filteredPosts = blogPosts.filter((post) => {
     const selectedCategoryName = categories.find((category) => category.id === selectedCategory)?.name;
-    const matchesCategory =
-      selectedCategory === "all" || post.category === selectedCategoryName;
-    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === ALL_CATEGORY || post.category === selectedCategoryName;
+    const matchesSearch =
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -58,7 +93,7 @@ const BlogPage = () => {
     name: "Blog Sinh Viên Lụm",
     description: "Chia sẻ kiến thức, kinh nghiệm và câu chuyện từ cộng đồng sinh viên.",
     inLanguage: "vi-VN",
-    blogPost: BLOG_POSTS.map((post) => ({
+    blogPost: posts.map((post) => ({
       "@type": "BlogPosting",
       headline: post.title,
       description: post.excerpt,
@@ -88,6 +123,14 @@ const BlogPage = () => {
             Chia sẻ kiến thức, kinh nghiệm và câu chuyện từ cộng đồng sinh viên
           </p>
         </header>
+
+        {loading && (
+          <div className="text-center py-10 text-gray-600">Đang tải bài viết...</div>
+        )}
+
+        {error && (
+          <div className="mb-8 rounded-xl bg-red-50 px-4 py-3 text-center text-red-600">{error}</div>
+        )}
 
         {/* Search Bar - Enhanced */}
         <section className="max-w-3xl mx-auto mb-12" aria-labelledby="blog-search-heading">
@@ -157,83 +200,85 @@ const BlogPage = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            
+
             {/* Featured Post */}
-            <div className="mb-12">
-              <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="text-[#FFBA00]" size={24} />
-                <h2 className="text-2xl font-bold text-gray-900">Bài viết nổi bật</h2>
-              </div>
-              
-              <article className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 group">
-                <div className="relative h-64 sm:h-80 bg-gradient-to-br from-[#8cceae]/20 to-[#FFBA00]/20 flex items-center justify-center">
-                  <Image
-                    src={featuredPost.image}
-                    alt={featuredPost.title}
-                    fill
-                    className="object-cover"
-                    priority
-                    sizes="(max-width: 640px) 100vw, 66vw"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className="px-4 py-1.5 bg-[#FFBA00] text-gray-900 rounded-full text-sm font-bold">
-                      {featuredPost.category}
-                    </span>
-                  </div>
+            {featuredPost && (
+              <div className="mb-12">
+                <div className="flex items-center gap-2 mb-4">
+                  <TrendingUp className="text-[#FFBA00]" size={24} />
+                  <h2 className="text-2xl font-bold text-gray-900">Bài viết nổi bật</h2>
                 </div>
-                
-                <div className="p-6 sm:p-8">
-                  <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 group-hover:text-[#8cceae] transition-colors">
-                    {featuredPost.title}
-                  </h3>
-                  <p className="text-gray-600 mb-4 leading-relaxed">
-                    {featuredPost.excerpt}
-                  </p>
-                  
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1.5">
-                        <User size={16} />
-                        <span>{featuredPost.author}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Calendar size={16} />
-                        <span>{featuredPost.date}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Clock size={16} />
-                        <span>{featuredPost.readTime}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Heart size={16} className="text-red-500" />
-                        {featuredPost.likes}
+
+                <article className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 group">
+                  <div className="relative h-64 sm:h-80 bg-gradient-to-br from-[#8cceae]/20 to-[#FFBA00]/20 flex items-center justify-center">
+                    <Image
+                      src={featuredPost.image}
+                      alt={featuredPost.title}
+                      fill
+                      className="object-cover"
+                      priority
+                      sizes="(max-width: 640px) 100vw, 66vw"
+                    />
+                    <div className="absolute top-4 left-4">
+                      <span className="px-4 py-1.5 bg-[#FFBA00] text-gray-900 rounded-full text-sm font-bold">
+                        {featuredPost.category}
                       </span>
-                      <span>{featuredPost.views} lượt xem</span>
                     </div>
-                    <Link
-                      href={`/blog/${featuredPost.id}`}
-                      aria-label={`Đọc bài viết ${featuredPost.title}`}
-                      className="flex items-center gap-2 px-6 py-2 bg-gray-900 text-[#FFBA00] rounded-lg font-bold hover:bg-gray-800 transition-colors"
-                    >
-                      Đọc ngay
-                      <ChevronRight size={18} />
-                    </Link>
                   </div>
-                </div>
-              </article>
-            </div>
+
+                  <div className="p-6 sm:p-8">
+                    <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 group-hover:text-[#8cceae] transition-colors">
+                      {featuredPost.title}
+                    </h3>
+                    <p className="text-gray-600 mb-4 leading-relaxed">{featuredPost.excerpt}</p>
+
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1.5">
+                          <User size={16} />
+                          <span>{featuredPost.author}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Calendar size={16} />
+                          <span>{featuredPost.date}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Clock size={16} />
+                          <span>{featuredPost.readTime}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Heart size={16} className="text-red-500" />
+                          {featuredPost.likes}
+                        </span>
+                        <span>{featuredPost.views} lượt xem</span>
+                      </div>
+                      <Link
+                        href={`/blog/${featuredPost.id}`}
+                        aria-label={`Đọc bài viết ${featuredPost.title}`}
+                        className="flex items-center gap-2 px-6 py-2 bg-gray-900 text-[#FFBA00] rounded-lg font-bold hover:bg-gray-800 transition-colors"
+                      >
+                        Đọc ngay
+                        <ChevronRight size={18} />
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            )}
 
             {/* Blog Posts Grid */}
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-900">
-                {selectedCategory === "all" ? "Tất cả bài viết" : categories.find(c => c.id === selectedCategory)?.name}
+                {selectedCategory === ALL_CATEGORY
+                  ? "Tất cả bài viết"
+                  : categories.find((category) => category.id === selectedCategory)?.name}
               </h2>
-              
+
               {filteredPosts.length === 0 ? (
                 <div className="text-center py-12">
                   <BookOpen size={64} className="mx-auto text-gray-300 mb-4" />
@@ -350,6 +395,15 @@ const BlogPage = () => {
             <div className="bg-white rounded-xl shadow-md p-6">
               <h3 className="font-bold text-lg text-gray-900 mb-4">Liên kết nhanh</h3>
               <div className="space-y-2">
+                <Link href="/blog/gui-bai" className="block text-gray-600 hover:text-[#8cceae] transition-colors">
+                  → Gửi bài Blog
+                </Link>
+                <Link href="/blog/bai-cua-toi" className="block text-gray-600 hover:text-[#8cceae] transition-colors">
+                  → Bài viết của tôi
+                </Link>
+                <Link href="/blog/duyet-bai" className="block text-gray-600 hover:text-[#8cceae] transition-colors">
+                  → Duyệt bài (Moderation)
+                </Link>
                 <Link href="/ve-chung-toi" className="block text-gray-600 hover:text-[#8cceae] transition-colors">
                   → Về chúng tôi
                 </Link>
@@ -367,7 +421,6 @@ const BlogPage = () => {
 
           </div>
         </div>
-
       </div>
     </main>
   );

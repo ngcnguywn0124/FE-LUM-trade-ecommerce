@@ -1,38 +1,78 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { 
-  Calendar, 
-  User, 
-  Clock, 
+import {
+  Calendar,
+  User,
+  Clock,
   Tag,
   Heart,
   Share2,
   BookOpen,
   ChevronLeft,
   MessageCircle,
-  Eye
+  Eye,
 } from "lucide-react";
 import {
-  FEATURED_BLOG_ID,
-  getBlogPostDetailById,
+  getBlogPostById,
   getRelatedBlogPosts,
-} from "@/lib/blogData";
+  type BlogPostDetail,
+  type BlogPostSummary,
+} from "@/lib/blogApi";
 
 const BlogDetailPage = () => {
   const params = useParams<{ id: string }>();
   const blogId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const blogPost =
-    getBlogPostDetailById(blogId ?? FEATURED_BLOG_ID) ||
-    getBlogPostDetailById(FEATURED_BLOG_ID)!;
-  const relatedPosts = getRelatedBlogPosts(blogPost.id, 3);
+
+  const [blogPost, setBlogPost] = useState<BlogPostDetail | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<BlogPostSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000";
-  const currentUrl = `${siteUrl}/blog/${String(blogPost.id)}`;
+
+  useEffect(() => {
+    if (!blogId) {
+      setError("Bài viết không hợp lệ");
+      setLoading(false);
+      return;
+    }
+
+    const loadBlogDetail = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const [detail, related] = await Promise.all([
+          getBlogPostById(blogId),
+          getRelatedBlogPosts(blogId, 3),
+        ]);
+
+        setBlogPost(detail);
+        setRelatedPosts(related);
+      } catch (fetchError) {
+        setError(fetchError instanceof Error ? fetchError.message : "Không thể tải chi tiết bài viết");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadBlogDetail();
+  }, [blogId]);
+
+  const currentUrl = `${siteUrl}/blog/${String(blogId ?? "")}`;
   const [isLiked, setIsLiked] = useState(false);
-  const [likes, setLikes] = useState(blogPost.likes);
+  const [likes, setLikes] = useState(0);
+
+  useEffect(() => {
+    if (blogPost) {
+      setLikes(blogPost.likes);
+      setIsLiked(false);
+    }
+  }, [blogPost]);
 
   const handleLike = () => {
     if (isLiked) {
@@ -42,6 +82,29 @@ const BlogDetailPage = () => {
     }
     setIsLiked(!isLiked);
   };
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-gradient-to-b from-[#f0fdf7] to-white pt-24 pb-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center text-gray-600">
+          Đang tải chi tiết bài viết...
+        </div>
+      </main>
+    );
+  }
+
+  if (error || !blogPost) {
+    return (
+      <main className="min-h-screen bg-gradient-to-b from-[#f0fdf7] to-white pt-24 pb-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <p className="text-red-600 mb-4">{error || "Không tìm thấy bài viết"}</p>
+          <Link href="/blog" className="text-[#8cceae] font-semibold hover:underline">
+            Quay lại trang Blog
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   const handleShare = () => {
     if (navigator.share) {
@@ -271,7 +334,7 @@ const BlogDetailPage = () => {
               </h2>
               <p className="text-[#8cceae] font-medium mb-2">{blogPost.authorProfile.role}</p>
               <p className="text-gray-600 leading-relaxed">
-                Chuyên viên nội dung tại Lụm, đam mê chia sẻ kiến thức và kinh nghiệm 
+                Chuyên viên nội dung tại Lụm, đam mê chia sẻ kiến thức và kinh nghiệm
                 về mua bán đồ cũ an toàn cho cộng đồng sinh viên.
               </p>
             </div>
