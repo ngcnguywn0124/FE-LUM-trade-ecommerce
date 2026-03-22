@@ -89,3 +89,12 @@ export interface ChangePasswordRequest {
 export interface RefreshTokenRequest {
   refreshToken: string;
 }
+
+export interface VerifyEmailRequest {
+  email: string;
+  otp: string;
+}
+
+export interface ResendOtpRequest {
+  email: string;
+}

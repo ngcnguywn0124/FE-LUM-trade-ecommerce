@@ -4,9 +4,11 @@ import type {
   ChangePasswordRequest,
   ForgotPasswordRequest,
   LoginRequest,
+  ResendOtpRequest,
   RegisterRequest,
   ResetPasswordRequest,
   UserResponse,
+  VerifyEmailRequest,
 } from '@/types/auth';
 
 /**
@@ -20,6 +22,21 @@ export async function register(data: RegisterRequest): Promise<UserResponse> {
     data,
   );
   return res.data.data;
+}
+
+/**
+ * POST /api/v1/auth/verify-email
+ */
+export async function verifyEmail(data: VerifyEmailRequest): Promise<UserResponse> {
+  const res = await apiClient.post<ApiResponse<UserResponse>>('/auth/verify-email', data);
+  return res.data.data;
+}
+
+/**
+ * POST /api/v1/auth/resend-otp
+ */
+export async function resendOtp(data: ResendOtpRequest): Promise<void> {
+  await apiClient.post('/auth/resend-otp', data);
 }
 
 /**

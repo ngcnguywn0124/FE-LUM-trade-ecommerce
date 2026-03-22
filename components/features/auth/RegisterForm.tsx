@@ -7,13 +7,14 @@ import { useAuthStore } from '@/stores/authStore';
 
 interface RegisterFormProps {
   onSuccess?: () => void;
+  onRequireVerifyEmail?: (email: string) => void;
 }
 
 const PHONE_REGEX = /^(\+84|0)[3-9]\d{8}$/;
 const PASSWORD_REGEX =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
+const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, onRequireVerifyEmail }) => {
   const { register, isLoading } = useAuthStore();
 
   const [formData, setFormData] = useState({
@@ -100,7 +101,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
         password: formData.password,
         acceptTerms: formData.acceptTerms,
       });
-      toast.success('Đăng ký tài khoản thành công!');
+      const registeredEmail = formData.email.trim();
+      toast.success('Đăng ký thành công, vui lòng nhập mã OTP đã gửi về email.');
+      onRequireVerifyEmail?.(registeredEmail);
       onSuccess?.();
     } catch {
       toast.error('Đăng ký thất bại. Vui lòng thử lại.');
