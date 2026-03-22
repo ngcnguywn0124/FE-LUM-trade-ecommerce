@@ -64,6 +64,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSuccess, onRe
         typeof (error as { response?: { data?: { message?: unknown } } }).response?.data?.message === 'string'
           ? ((error as { response?: { data?: { message?: string } } }).response?.data?.message as string)
           : '';
+      if (maybeCode === 4004) {
+        toast.error('Email này đã đăng nhập bằng mạng xã hội. Vui lòng sử dụng phương thức đăng nhập mạng xã hội hoặc đặt lại mật khẩu nếu muốn đăng nhập bằng email.');
+        return;
+      }
+      if (maybeCode === 1014) {
+        toast.error('Tài khoản đang bị tạm khoá do nhập sai mật khẩu quá nhiều lần. Vui lòng thử lại sau.');
+        return;
+      }
 
       if (maybeCode === 1013 || maybeMessage.toLowerCase().includes('xác thực email')) {
         const identifier = formData.identifier.trim();
