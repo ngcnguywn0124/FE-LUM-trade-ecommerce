@@ -8,9 +8,10 @@ import { useAuthStore } from '@/stores/authStore';
 interface LoginFormProps {
   onForgotPassword: () => void;
   onSuccess?: () => void;
+  onRequireVerifyEmail?: (email: string) => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSuccess }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSuccess, onRequireVerifyEmail }) => {
   const { login, isLoading } = useAuthStore();
   const [formData, setFormData] = useState({
     identifier: '',
@@ -47,7 +48,32 @@ const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword, onSuccess }) =>
       });
       toast.success('Đăng nhập thành công!');
       onSuccess?.();
-    } catch {
+    } catch (error: unknown) {
+      const maybeCode =
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof (error as { response?: { data?: { code?: unknown } } }).response?.data?.code === 'number'
+          ? ((error as { response?: { data?: { code?: number } } }).response?.data?.code as number)
+          : null;
+
+      const maybeMessage =
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof (error as { response?: { data?: { message?: unknown } } }).response?.data?.message === 'string'
+          ? ((error as { response?: { data?: { message?: string } } }).response?.data?.message as string)
+          : '';
+
+      if (maybeCode === 1013 || maybeMessage.toLowerCase().includes('xác thực email')) {
+        const identifier = formData.identifier.trim();
+        if (identifier.includes('@')) {
+          toast.info('Tài khoản chưa xác thực email. Vui lòng nhập OTP để tiếp tục.');
+          onRequireVerifyEmail?.(identifier);
+          return;
+        }
+      }
+
       toast.error('Email/SĐT hoặc mật khẩu không chính xác');
     }
   };

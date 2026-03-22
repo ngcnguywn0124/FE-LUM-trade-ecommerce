@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 import SocialLogin from './SocialLogin';
 import ForgotPasswordForm from './ForgotPasswordForm';
+import VerifyEmailForm from './VerifyEmailForm';
+import { useAuthStore } from '@/stores/authStore';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -15,14 +17,9 @@ interface AuthModalProps {
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'login' }) => {
-  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>(defaultTab);
-
-  // Reset tab when modal opens/closes or defaultTab changes
-  useEffect(() => {
-    if (isOpen) {
-        setActiveTab(defaultTab);
-    }
-  }, [isOpen, defaultTab]);
+  const pendingVerificationEmail = useAuthStore((state) => state.pendingVerificationEmail);
+  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot' | 'verify'>(defaultTab);
+  const [verifyEmail, setVerifyEmail] = useState<string>(pendingVerificationEmail || '');
 
   // Prevent scrolling when modal is open
   useEffect(() => {
@@ -59,7 +56,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
 
         <div className="p-6 sm:p-8">
             {/* Tabs - Hidden in forgot password mode */}
-            {activeTab !== 'forgot' && (
+            {activeTab !== 'forgot' && activeTab !== 'verify' && (
                 <div className="flex w-full border-b border-gray-100 mb-6">
                     <button
                         onClick={() => setActiveTab('login')}
@@ -112,6 +109,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
 
             {activeTab === 'forgot' ? (
                 <ForgotPasswordForm onBack={() => setActiveTab('login')} />
+            ) : activeTab === 'verify' ? (
+                <VerifyEmailForm
+                    email={verifyEmail}
+                    onBack={() => setActiveTab('login')}
+                    onVerified={() => setActiveTab('login')}
+                />
             ) : (
                 <>
                     {/* Header Title */}
@@ -129,9 +132,21 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'lo
 
                     {/* Forms */}
                     {activeTab === 'login' ? (
-                        <LoginForm onForgotPassword={() => setActiveTab('forgot')} onSuccess={onClose} />
+                        <LoginForm
+                            onForgotPassword={() => setActiveTab('forgot')}
+                            onSuccess={onClose}
+                            onRequireVerifyEmail={(email) => {
+                                setVerifyEmail(email);
+                                setActiveTab('verify');
+                            }}
+                        />
                     ) : (
-                        <RegisterForm onSuccess={onClose} />
+                        <RegisterForm
+                            onRequireVerifyEmail={(email) => {
+                                setVerifyEmail(email);
+                                setActiveTab('verify');
+                            }}
+                        />
                     )}
 
                     {/* Social Login */}

@@ -7,9 +7,11 @@ import type {
   ChangePasswordRequest,
   ForgotPasswordRequest,
   LoginRequest,
+  ResendOtpRequest,
   RegisterRequest,
   ResetPasswordRequest,
   UserResponse,
+  VerifyEmailRequest,
 } from '@/types/auth';
 import type {
   SendVerificationCodeRequest,
@@ -28,6 +30,14 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
+function getApiErrorCode(error: unknown): number | null {
+  if (error instanceof AxiosError) {
+    const code = error.response?.data?.code;
+    return typeof code === 'number' ? code : null;
+  }
+  return null;
+}
+
 // ── State shape ────────────────────────────────────────────────────────────
 
 interface AuthState {
@@ -36,11 +46,14 @@ interface AuthState {
   isLoading: boolean;
   isInitialized: boolean;
   error: string | null;
+  pendingVerificationEmail: string | null;
 
   // Actions
   initialize: () => Promise<void>;
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
+  verifyEmail: (data: VerifyEmailRequest) => Promise<void>;
+  resendOtp: (data: ResendOtpRequest) => Promise<void>;
   logout: () => Promise<void>;
   fetchCurrentUser: () => Promise<void>;
   forgotPassword: (data: ForgotPasswordRequest) => Promise<void>;
@@ -66,6 +79,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: true, // Default to true until checked
   isInitialized: false,
   error: null,
+  pendingVerificationEmail: null,
 
   /**
    * Gọi GET /auth/me để kiểm tra cookie còn hợp lệ không.
@@ -87,11 +101,17 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const user = await authService.login(data);
-      set({ user, isAuthenticated: true, isLoading: false, error: null });
+      set({ user, isAuthenticated: true, isLoading: false, error: null, pendingVerificationEmail: null });
     } catch (error) {
+      const message = getApiErrorMessage(error, 'Đăng nhập thất bại');
+      const errorCode = getApiErrorCode(error);
+      const shouldVerifyEmail = errorCode === 1013 || message.toLowerCase().includes('xác thực email');
       set({
         isLoading: false,
-        error: getApiErrorMessage(error, 'Đăng nhập thất bại'),
+        error: message,
+        pendingVerificationEmail: shouldVerifyEmail && data.identifier.includes('@')
+          ? data.identifier.trim()
+          : null,
       });
       throw error;
     }
@@ -101,12 +121,46 @@ export const useAuthStore = create<AuthState>((set) => ({
   register: async (data) => {
     set({ isLoading: true, error: null });
     try {
-      const user = await authService.register(data);
-      set({ user, isAuthenticated: true, isLoading: false, error: null });
+      await authService.register(data);
+      set({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null,
+        pendingVerificationEmail: data.email,
+      });
     } catch (error) {
       set({
         isLoading: false,
         error: getApiErrorMessage(error, 'Đăng ký thất bại'),
+      });
+      throw error;
+    }
+  },
+
+  verifyEmail: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      await authService.verifyEmail(data);
+      set({ isLoading: false, error: null, pendingVerificationEmail: null });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: getApiErrorMessage(error, 'Xác thực email thất bại'),
+      });
+      throw error;
+    }
+  },
+
+  resendOtp: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      await authService.resendOtp(data);
+      set({ isLoading: false, error: null });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: getApiErrorMessage(error, 'Không thể gửi lại mã OTP'),
       });
       throw error;
     }
