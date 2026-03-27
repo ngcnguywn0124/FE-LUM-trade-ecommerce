@@ -12,6 +12,7 @@ export interface ProductStatusEvent {
   productId: string;
   newStatus: string;
   message: string;
+  previousStatus?: string;
 }
 
 /**

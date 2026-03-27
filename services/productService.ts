@@ -279,7 +279,7 @@ export async function toggleHidden(id: string): Promise<ProductDetailDto> {
 }
 
 export async function renewProduct(id: string, days = 30): Promise<ProductDetailDto> {
-  const res = await apiClient.patch<ProductDetailApiResponse>(`/products/${id}/renew`, null, {
+  const res = await apiClient.patch<ProductDetailApiResponse>(`/products/${id}/renew`, undefined, {
     params: { days },
   });
   return res.data.data;
