@@ -6,6 +6,7 @@ import {
   UserCheck,
   SlidersHorizontal,
   FileText,
+  Newspaper,
 } from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
 
@@ -50,5 +51,10 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     href: '/admin/xac-thuc-sinh-vien',
     label: 'Xác thực sinh viên',
     icon: UserCheck,
+  },
+  {
+    href: '/admin/blog',
+    label: 'Quản lý Blog',
+    icon: Newspaper,
   },
 ];
