@@ -27,6 +27,7 @@ const statusToManageStatus = (status: string): PostStatus => {
   if (status === 'admin_hidden') return 'admin_hidden';
   if (status === 'expired') return 'expired';
   if (status === 'sold') return 'sold';
+  if (status === 'deleted') return 'deleted';
   return 'active';
 };
 
@@ -282,6 +283,11 @@ export async function renewProduct(id: string, days = 30): Promise<ProductDetail
   const res = await apiClient.patch<ProductDetailApiResponse>(`/products/${id}/renew`, undefined, {
     params: { days },
   });
+  return res.data.data;
+}
+
+export async function restoreProduct(id: string): Promise<ProductDetailDto> {
+  const res = await apiClient.patch<ProductDetailApiResponse>(`/products/${id}/restore`);
   return res.data.data;
 }
 

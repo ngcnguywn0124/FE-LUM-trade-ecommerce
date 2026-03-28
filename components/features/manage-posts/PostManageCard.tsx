@@ -50,6 +50,12 @@ const STATUS_CONFIG: Record<
     text: 'text-red-700',
     dot: 'bg-red-500',
   },
+  deleted: {
+    label: 'Đã xóa',
+    bg: 'bg-gray-200',
+    text: 'text-gray-500',
+    dot: 'bg-gray-400',
+  },
 };
 
 const CONDITION_LABELS: Record<ManagedPost['condition'], string> = {
@@ -133,7 +139,7 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
   onDeleteRequest,
   onView,
 }) => {
-  const status = STATUS_CONFIG[post.status];
+  const status = STATUS_CONFIG[post.status] || STATUS_CONFIG.active;
   const daysLeft = getDaysLeft(post.expiresAt);
   const isExpired = post.status === 'expired';
   const isUrgent = post.status === 'active' && daysLeft <= 3;

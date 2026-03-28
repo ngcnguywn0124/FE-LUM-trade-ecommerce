@@ -1,6 +1,6 @@
 // Types for Manage Posts feature
 
-export type PostStatus = 'active' | 'expired' | 'pending' | 'hidden' | 'sold' | 'admin_hidden';
+export type PostStatus = 'active' | 'expired' | 'pending' | 'hidden' | 'sold' | 'admin_hidden' | 'deleted';
 
 export interface ManagedPost {
   id: string;
