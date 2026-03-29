@@ -7,6 +7,15 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export const uploadBlogImage = async (file: File): Promise<string> => {
+  const data = new FormData();
+  data.append("file", file);
+  const response = await apiClient.post<ApiResponse<string>>("/blogs/upload-image", data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data.data;
+};
+
 export const createBlogPost = async (formData: BlogFormData): Promise<BlogPost> => {
   const data = new FormData();
   data.append("title", formData.title);

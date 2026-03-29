@@ -229,14 +229,17 @@ export default function BlogDetailPage() {
               className="prose prose-emerald max-w-none prose-p:text-gray-600 prose-p:leading-relaxed prose-p:text-lg prose-headings:font-black prose-headings:text-gray-900 prose-blockquote:border-emerald-500 prose-blockquote:bg-emerald-50 prose-blockquote:rounded-2xl prose-blockquote:py-1"
             >
                {/* Excerpt */}
-               <p className="text-xl md:text-2xl font-bold text-gray-800 leading-relaxed mb-12 italic border-l-4 border-emerald-500 pl-8 py-2 bg-emerald-50/30 rounded-r-3xl">
-                  {blog.excerpt}
-               </p>
-
-               {/* Main Content (rendering as HTML if possible, or whitespace-pre-wrap string) */}
-               <div className="text-gray-700 text-lg md:text-xl leading-[1.8] whitespace-pre-wrap font-medium">
-                  {blog.content}
+               <div className="mb-12 border-l-4 border-emerald-500 pl-8 py-2 bg-emerald-50/30 rounded-r-3xl overflow-hidden">
+                 <p className="text-xl md:text-2xl font-bold text-gray-800 leading-relaxed italic break-words break-all">
+                    {blog.excerpt}
+                 </p>
                </div>
+
+               {/* Main Content (rendering as HTML) */}
+               <div 
+                  className="text-gray-700 text-lg md:text-xl leading-[1.8] font-medium break-words overflow-hidden [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-2xl [&_img]:shadow-md [&_p]:mb-4"
+                  dangerouslySetInnerHTML={{ __html: blog.content }}
+               />
 
                {/* Bottom Tags (Mocked tags from category) */}
                <div className="mt-16 pt-10 border-t border-gray-100 flex flex-wrap gap-3">
@@ -333,29 +336,7 @@ export default function BlogDetailPage() {
         </section>
       )}
 
-      {/* ────────── Newsletter / CTA ────────── */}
-      <section className="px-4 py-20">
-        <div className="max-w-5xl mx-auto bg-gray-900 rounded-[3rem] p-8 md:p-16 text-center relative overflow-hidden">
-           <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-              <div className="absolute top-10 left-10 w-20 h-20 border-4 border-white rounded-full animate-bounce" />
-              <div className="absolute bottom-20 right-20 w-32 h-32 border-4 border-emerald-500 rounded-[2rem] rotate-12" />
-           </div>
-           
-           <h2 className="text-3xl md:text-5xl font-black text-white mb-6 relative z-10 leading-tight">
-             Cùng xây dựng cộng đồng<br /><span className="text-emerald-400">Sinh viên Lụm.vn</span>
-           </h2>
-           <p className="text-gray-400 text-lg mb-10 max-w-xl mx-auto relative z-10">
-             Nơi mỗi bài viết không chỉ là kiến thức, mà còn là sự kết nối giữa hàng nghìn sinh viên.
-           </p>
-           <Link 
-             href="/blog/dang-bai"
-             className="inline-flex items-center gap-3 px-10 py-5 bg-emerald-500 text-white rounded-full text-xl font-black hover:bg-emerald-400 transition-all shadow-2xl relative z-10"
-           >
-             Đăng bài ngay hôm nay
-             <ArrowRight size={24} />
-           </Link>
-        </div>
-      </section>
+
     </main>
   );
 }

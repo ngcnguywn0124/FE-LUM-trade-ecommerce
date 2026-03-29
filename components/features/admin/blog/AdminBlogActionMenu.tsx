@@ -12,8 +12,6 @@ interface AdminBlogActionMenuProps {
   isOpen: boolean;
   onToggle: () => void;
   onClose: () => void;
-  onApprove: (id: string, title: string) => void;
-  onReject: (id: string, title: string) => void;
   onDelete: (id: string, title: string) => void;
   onViewDetail: () => void;
 }
@@ -23,8 +21,6 @@ const AdminBlogActionMenu: React.FC<AdminBlogActionMenuProps> = ({
   isOpen,
   onToggle,
   onClose,
-  onApprove,
-  onReject,
   onDelete,
   onViewDetail,
 }) => {
@@ -73,33 +69,6 @@ const AdminBlogActionMenu: React.FC<AdminBlogActionMenuProps> = ({
               <ExternalLink size={15} className="text-gray-400" />
               Xem trên web
             </a>
-
-            {blog.status === 'pending' && (
-              <>
-                <button 
-                  onClick={(e) => { 
-                      e.stopPropagation(); 
-                      onApprove(blogId, blog.title); 
-                      onClose(); 
-                  }}
-                  className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
-                >
-                  <CheckCircle size={15} />
-                  Duyệt bài
-                </button>
-                <button 
-                   onClick={(e) => { 
-                       e.stopPropagation(); 
-                       onReject(blogId, blog.title); 
-                       onClose(); 
-                   }}
-                   className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                >
-                  <XCircle size={15} />
-                  Từ chối bài
-                </button>
-              </>
-            )}
 
             <div className="h-px bg-gray-100 my-1" />
 

@@ -31,15 +31,14 @@ const AdminBlogManagement: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   
-  const [status, setStatus] = useState<string>('pending');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  const fetchBlogs = useCallback(async (page: number, currentStatus: string) => {
+  const fetchBlogs = useCallback(async (page: number) => {
     setIsLoading(true);
     try {
-      const data = await getAllBlogsForAdmin(currentStatus || undefined, page, 10);
+      const data = await getAllBlogsForAdmin(undefined, page, 10);
       setBlogs(data.content);
       setTotalElements(data.totalElements);
       setTotalPages(data.totalPages);
@@ -52,31 +51,8 @@ const AdminBlogManagement: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchBlogs(currentPage, status);
-  }, [currentPage, status, fetchBlogs]);
-
-  const handleApprove = async (id: string, title: string) => {
-    try {
-      await updateBlogStatus(id, 'approved');
-      toast.success(`Đã duyệt bài viết: ${title}`);
-      fetchBlogs(currentPage, status);
-    } catch (error) {
-      toast.error('Duyệt bài viết thất bại');
-    }
-  };
-
-  const handleReject = async (id: string, title: string) => {
-    const reason = window.prompt("Nhập lý do từ chối bài viết:");
-    if (reason === null) return; // user cancelled
-
-    try {
-      await updateBlogStatus(id, 'rejected', reason || "Nội dung chưa phù hợp");
-      toast.success(`Đã từ chối bài viết: ${title}`);
-      fetchBlogs(currentPage, status);
-    } catch (error) {
-      toast.error('Từ chối bài viết thất bại');
-    }
-  };
+    fetchBlogs(currentPage);
+  }, [currentPage, fetchBlogs]);
 
   const handleDelete = async (id: string, title: string) => {
     if (!window.confirm(`Bạn có chắc muốn xóa bài viết "${title}"?`)) return;
@@ -84,24 +60,9 @@ const AdminBlogManagement: React.FC = () => {
     try {
       await deleteBlog(id);
       toast.success(`Đã xóa bài viết: ${title}`);
-      fetchBlogs(currentPage, status);
+      fetchBlogs(currentPage);
     } catch (error) {
       toast.error('Xóa bài viết thất bại');
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 font-inter">Đã duyệt</span>;
-      case 'pending':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 font-inter">Chờ duyệt</span>;
-      case 'rejected':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-700 font-inter">Từ chối</span>;
-      case 'hidden':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 font-inter">Đang ẩn</span>;
-      default:
-        return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 font-inter">{status}</span>;
     }
   };
 
@@ -135,36 +96,17 @@ const AdminBlogManagement: React.FC = () => {
                 <AlertCircle size={18} />
                 <span className="text-sm font-medium">{totalElements} bài viết</span>
             </div>
+            <a 
+               href="/admin/blog/create" 
+               className="bg-emerald-600 border border-emerald-600 px-4 py-2 rounded-xl text-white flex items-center gap-2 hover:bg-emerald-700 transition shadow-sm"
+            >
+               <Newspaper size={18} />
+               <span className="text-sm font-medium">Tạo bài viết</span>
+            </a>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-visible shadow-sm">
-        {/* Filters */}
-        <div className="p-4 border-b border-gray-50 flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-4 w-full justify-between">
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide py-2">
-               {['pending', 'approved', 'rejected', ''].map((s) => (
-                 <button
-                    key={s}
-                    onClick={() => {
-                        setStatus(s);
-                        setCurrentPage(0);
-                    }}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-                        status === s 
-                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-100' 
-                        : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-                    }`}
-                 >
-                    {s === 'pending' ? 'Bản thảo chờ duyệt' : 
-                     s === 'approved' ? 'Đã xuất bản' : 
-                     s === 'rejected' ? 'Đã từ chối' : 'Tất cả'}
-                 </button>
-               ))}
-            </div>
-          </div>
-        </div>
-
         {/* Table */}
         <div className="overflow-visible min-h-[350px]">
           <table className="w-full text-left border-collapse">
@@ -173,7 +115,6 @@ const AdminBlogManagement: React.FC = () => {
                 <th className="px-6 py-4">Bài viết</th>
                 <th className="px-6 py-4">Tác giả</th>
                 <th className="px-6 py-4">Chuyên mục</th>
-                <th className="px-6 py-4">Trạng thái</th>
                 <th className="px-6 py-4 text-right">Thao tác</th>
               </tr>
             </thead>
@@ -181,12 +122,12 @@ const AdminBlogManagement: React.FC = () => {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan={5} className="px-6 py-8"><div className="h-10 bg-gray-50 rounded-lg w-full" /></td>
+                    <td colSpan={4} className="px-6 py-8"><div className="h-10 bg-gray-50 rounded-lg w-full" /></td>
                   </tr>
                 ))
               ) : blogs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400">Không tìm thấy bài viết nào</td>
+                  <td colSpan={4} className="px-6 py-12 text-center text-gray-400">Không tìm thấy bài viết nào</td>
                 </tr>
               ) : (
                 blogs.map((blog) => (
@@ -229,14 +170,6 @@ const AdminBlogManagement: React.FC = () => {
                         <span>{BLOG_CATEGORIES.find(c => c.slug === blog.category)?.name || blog.category}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1">
-                        {getStatusBadge(blog.status || 'pending')}
-                        {blog.status === 'rejected' && blog.rejectionReason && (
-                          <p className="text-[10px] text-rose-500 max-w-[150px] italic">Lý do: {blog.rejectionReason}</p>
-                        )}
-                      </div>
-                    </td>
                     <td className="px-6 py-4 text-right overflow-visible relative">
                       <div className="flex items-center justify-end">
                         <AdminBlogActionMenu
@@ -244,8 +177,6 @@ const AdminBlogManagement: React.FC = () => {
                            isOpen={openMenuId === (blog.blogId || blog.id)}
                            onToggle={() => setOpenMenuId(openMenuId === (blog.blogId || blog.id) ? null : (blog.blogId || blog.id) || null)}
                            onClose={() => setOpenMenuId(null)}
-                           onApprove={handleApprove}
-                           onReject={handleReject}
                            onDelete={handleDelete}
                            onViewDetail={() => {
                               setSelectedBlog(blog);
@@ -292,14 +223,6 @@ const AdminBlogManagement: React.FC = () => {
         onClose={() => {
           setIsDetailOpen(false);
           setSelectedBlog(null);
-        }}
-        onApprove={(id, title) => {
-          handleApprove(id, title);
-          setIsDetailOpen(false);
-        }}
-        onReject={(id, title) => {
-          handleReject(id, title);
-          setIsDetailOpen(false);
         }}
       />
     </div>

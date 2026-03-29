@@ -28,8 +28,19 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { BlogFormData, BlogErrors } from "@/types/blog";
 import { useAuthStore } from "@/stores/authStore";
-import { createBlogPost } from "@/services/blogService";
+import { createBlogPost, uploadBlogImage } from "@/services/blogService";
 import { Loader2, Crop } from "lucide-react";
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
+
+const ReactQuill = dynamic(
+  async () => {
+    const { default: RQ } = await import("react-quill-new");
+    // eslint-disable-next-line react/display-name
+    return ({ forwardedRef, ...props }: any) => <RQ ref={forwardedRef} {...props} />;
+  },
+  { ssr: false }
+);
 import ImageCropModal from "./ImageCropModal";
 
 /* ────────────────────────── Categories ────────────────────────── */
@@ -65,7 +76,52 @@ export default function PostBlogForm() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const quillRef = useRef<any>(null);
   const [formData, setFormData] = useState<BlogFormData>(initialFormData);
+
+  const imageHandler = React.useCallback(() => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files ? input.files[0] : null;
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+             toast.error("Ảnh không được vượt quá 5MB");
+             return;
+        }
+        const toastId = toast.loading("Đang tải ảnh lên...");
+        try {
+          const url = await uploadBlogImage(file);
+          const quill = quillRef.current.getEditor();
+          const range = quill.getSelection(true);
+          quill.insertEmbed(range.index, 'image', url);
+          quill.setSelection(range.index + 1);
+          toast.success("Tải ảnh lên thành công", { id: toastId });
+        } catch (error) {
+          toast.error("Lỗi khi tải ảnh", { id: toastId });
+        }
+      }
+    };
+  }, []);
+
+  const quillModules = React.useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+        [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+        ['link', 'image', 'video'],
+        ['clean']
+      ],
+      handlers: {
+        image: imageHandler
+      }
+    }
+  }), [imageHandler]);
+
   const [errors, setErrors] = useState<BlogErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -75,11 +131,21 @@ export default function PostBlogForm() {
   const [tempImageSrc, setTempImageSrc] = useState("");
 
   useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) {
-      toast.error("Vui lòng đăng nhập để đăng bài viết");
-      router.push("/login?redirect=/blog/dang-bai");
+    if (!isAuthLoading) {
+      if (!isAuthenticated) {
+        toast.error("Vui lòng đăng nhập để đăng bài viết");
+        router.push("/login?redirect=/admin/blog/create");
+      } else {
+        const hasAdminRole = user?.roles?.some(role => 
+          ["ROLE_ADMIN", "ROLE_SUPER_ADMIN", "ROLE_MODERATOR"].includes(role)
+        );
+        if (!hasAdminRole) {
+          toast.error("Chỉ quản trị viên mới có thể đăng bài viết");
+          router.push("/admin/blog");
+        }
+      }
     }
-  }, [isAuthenticated, isAuthLoading, router]);
+  }, [isAuthenticated, isAuthLoading, router, user]);
 
   const onFieldChange = (field: keyof BlogFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -143,8 +209,8 @@ export default function PostBlogForm() {
     setIsSubmitting(true);
     try {
       await createBlogPost(formData);
-      toast.success("Đăng bài thành công! Bài viết đang chờ duyệt.");
-      router.push("/blog");
+      toast.success("Đăng bài thành công!");
+      router.push("/admin/blog");
     } catch (error) {
       toast.error("Có lỗi xảy ra khi đăng bài. Vui lòng thử lại.");
     } finally {
@@ -183,7 +249,7 @@ export default function PostBlogForm() {
       >
         <div>
           <div className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-2">
-            <span className="cursor-pointer hover:text-gray-900" onClick={() => router.push("/blog")}>Blog</span>
+            <span className="cursor-pointer hover:text-gray-900" onClick={() => router.push("/admin/blog")}>Quản lý Blog</span>
             <ChevronRight size={14} />
             <span className="text-[#8cceae]">Đăng bài viết mới</span>
           </div>
@@ -238,41 +304,30 @@ export default function PostBlogForm() {
           </div>
 
           {/* Content Area */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm min-h-[500px] flex flex-col overflow-hidden">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden [&_.ql-toolbar]:border-none [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-gray-100 [&_.ql-container]:border-none [&_.ql-container]:text-lg [&_.ql-container]:font-inter [&_.ql-editor]:text-gray-800 [&_.ql-editor]:min-h-[500px] [&_.ql-editor.ql-blank::before]:text-gray-400 [&_.ql-editor.ql-blank::before]:not-italic">
             <div className="flex items-center gap-4 px-6 py-4 border-b border-gray-50 bg-gray-50/50">
               <span className="flex items-center gap-2 text-sm font-bold text-gray-500">
                 <FileText size={16} /> Nội dung chi tiết
               </span>
-              <div className="h-4 w-[1px] bg-gray-200" />
-              <div className="flex gap-2">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-400 hover:text-gray-900 cursor-not-allowed">
-                    B{i}
-                  </div>
-                ))}
-              </div>
             </div>
-            <textarea 
-              placeholder="Bạn muốn chia sẻ điều gì hôm nay? "
-              className="flex-1 w-full p-8 text-lg text-gray-700 leading-relaxed outline-none resize-none placeholder:text-gray-300"
-              value={formData.content}
-              onChange={(e) => onFieldChange("content", e.target.value)}
-            />
+            <div className="flex-1 w-full relative">
+              <ReactQuill 
+                forwardedRef={quillRef}
+                theme="snow" 
+                value={formData.content} 
+                onChange={(val: string) => onFieldChange("content", val)}
+                modules={quillModules}
+                placeholder="Viết nội dung bài viết và chèn hình ảnh mong muốn..." 
+                className="h-[500px] mb-12"
+              />
+            </div>
             {errors.content && (
-              <div className="px-8 py-3 bg-red-50 border-t border-red-100">
+              <div className="px-8 py-3 bg-red-50 border-t border-red-100 mt-12">
                 <p className="text-xs font-bold text-red-500 flex items-center gap-1">
                   <AlertCircle size={12} /> {errors.content}
                 </p>
               </div>
             )}
-            <div className="px-6 py-3 border-t border-gray-50 bg-gray-50/30 flex justify-between items-center">
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-none">
-                {formData.content.length} ký tự
-              </span>
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-none italic">
-                Tự động lưu...
-              </span>
-            </div>
           </div>
         </motion.div>
 

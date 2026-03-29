@@ -13,8 +13,6 @@ interface AdminBlogDetailModalProps {
   blog: BlogPost | null;
   isOpen: boolean;
   onClose: () => void;
-  onApprove?: (id: string, title: string) => void;
-  onReject?: (id: string, title: string) => void;
 }
 
 const BLOG_CATEGORIES = [
@@ -29,8 +27,6 @@ const AdminBlogDetailModal: React.FC<AdminBlogDetailModalProps> = ({
   blog,
   isOpen,
   onClose,
-  onApprove,
-  onReject,
 }) => {
   if (!blog) return null;
 
@@ -100,8 +96,8 @@ const AdminBlogDetailModal: React.FC<AdminBlogDetailModalProps> = ({
                   </div>
 
                   {/* Excerpt */}
-                  <div className="p-5 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-2xl">
-                    <p className="text-emerald-900 font-semibold italic text-lg leading-relaxed">
+                  <div className="p-5 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-2xl overflow-hidden">
+                    <p className="text-emerald-900 font-semibold italic text-lg leading-relaxed break-words break-all">
                       {blog.excerpt}
                     </p>
                   </div>
@@ -112,9 +108,10 @@ const AdminBlogDetailModal: React.FC<AdminBlogDetailModalProps> = ({
                        <AlertCircle size={18} className="text-emerald-500" />
                        Nội dung chi tiết
                     </h3>
-                    <div className="text-gray-700 leading-relaxed whitespace-pre-wrap font-medium text-base">
-                      {blog.content}
-                    </div>
+                    <div 
+                      className="text-gray-700 leading-relaxed font-medium text-base break-words overflow-hidden [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-2xl [&_img]:shadow-md [&_p]:mb-4"
+                      dangerouslySetInnerHTML={{ __html: blog.content }}
+                    />
                   </div>
                 </div>
 
@@ -161,50 +158,7 @@ const AdminBlogDetailModal: React.FC<AdminBlogDetailModalProps> = ({
                        <span className="font-bold text-gray-900">{blog.viewCount || 0}</span>
                     </div>
 
-                    <div className="flex items-center justify-between text-sm py-2 border-b border-gray-50">
-                       <div className="flex items-center gap-2 text-gray-500">
-                         <Tag size={14} />
-                         <span>Trạng thái</span>
-                       </div>
-                       <div className="flex flex-col items-end gap-1">
-                          <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${
-                             blog.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                             blog.status === 'rejected' ? 'bg-rose-100 text-rose-700' :
-                             'bg-amber-100 text-amber-700'
-                          }`}>
-                            {blog.status === 'approved' ? 'Đã duyệt' : 
-                             blog.status === 'rejected' ? 'Đã từ chối' : 'Chờ duyệt'}
-                          </span>
-                       </div>
-                    </div>
-
-                    {blog.status === 'rejected' && blog.rejectionReason && (
-                       <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl">
-                          <p className="text-[10px] font-bold text-rose-400 uppercase tracking-tighter mb-1">Lý do từ chối:</p>
-                          <p className="text-xs text-rose-700 italic font-medium">{blog.rejectionReason}</p>
-                       </div>
-                    )}
                   </div>
-
-                  {/* Admin Actions in Sidebar */}
-                  {blog.status === 'pending' && onApprove && onReject && (
-                    <div className="space-y-3 pt-4">
-                      <button
-                        onClick={() => onApprove(blogId, blog.title)}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200"
-                      >
-                        <CheckCircle size={20} />
-                        Duyệt bài này
-                      </button>
-                      <button
-                        onClick={() => onReject(blogId, blog.title)}
-                        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-rose-50 text-rose-600 border border-rose-100 rounded-2xl font-bold hover:bg-rose-100 transition-all"
-                      >
-                        <XCircle size={20} />
-                        Từ chối bài
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -215,16 +169,14 @@ const AdminBlogDetailModal: React.FC<AdminBlogDetailModalProps> = ({
                 <ShieldCheck size={14} />
                 Hệ thống kiểm soát nội dung cộng đồng sinh viên Lụm.vn
               </p>
-              {blog.status === 'approved' && (
-                <a 
-                  href={`/blog/${blog.slug}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs font-bold text-emerald-600 hover:underline"
-                >
-                  Xem thực tế trên web &rarr;
-                </a>
-              )}
+              <a 
+                href={`/blog/${blog.slug}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-bold text-emerald-600 hover:underline"
+              >
+                Xem thực tế trên web &rarr;
+              </a>
             </div>
           </motion.div>
         </div>

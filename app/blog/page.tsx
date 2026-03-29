@@ -170,15 +170,7 @@ export default function BlogPage() {
                 />
               </div>
               
-              <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-                <Link 
-                  href="/blog/dang-bai"
-                  className="inline-flex items-center gap-2 px-8 py-3.5 bg-gray-900 text-white rounded-2xl text-base font-black hover:bg-emerald-600 transition-all shadow-xl hover:shadow-emerald-200"
-                >
-                  Đăng bài viết của bạn
-                  <ChevronRight size={18} />
-                </Link>
-              </div>
+
             </div>
           </motion.div>
         </div>
@@ -381,22 +373,7 @@ export default function BlogPage() {
         </div>
       </section>
 
-      {/* ────────── Bottom CTA ────────── */}
-      <section className="py-24 px-4 bg-gray-900 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-           <h2 className="text-3xl md:text-5xl font-black text-white mb-8">
-             Bạn có câu chuyện thú vị?<br />Đăng ngay trên Lụm.vn
-           </h2>
-           <Link 
-             href="/blog/dang-bai"
-             className="inline-flex items-center gap-3 px-10 py-5 bg-white text-gray-900 rounded-3xl text-xl font-black hover:bg-emerald-400 transition-all shadow-2xl hover:scale-105"
-           >
-             Bắt đầu viết bài
-             <ArrowRight size={24} />
-           </Link>
-        </div>
-      </section>
+
     </main>
   );
 }
