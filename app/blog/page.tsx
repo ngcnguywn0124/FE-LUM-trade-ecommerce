@@ -340,9 +340,13 @@ export default function BlogPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 text-gray-400">
-                           <div className="flex items-center gap-1.5 text-xs font-black">
-                              <Eye size={14} className="text-emerald-500" />
+                        <div className="flex items-center gap-3">
+                           <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-50 rounded-xl text-xs font-black text-red-600 border border-red-100/50">
+                              <Heart size={16} fill="currentColor" />
+                              {post.likeCount || 0}
+                           </div>
+                           <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 rounded-xl text-xs font-black text-emerald-600 border border-emerald-100/50">
+                              <Eye size={16} />
                               {post.viewCount || 0}
                            </div>
                         </div>

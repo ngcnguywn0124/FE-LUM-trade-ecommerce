@@ -21,7 +21,12 @@ import {
   RefreshCw,
   Clock3
 } from "lucide-react";
-import { getBlogPostBySlug, getApprovedBlogs } from "@/services/blogService";
+import { 
+  getBlogPostBySlug, 
+  getApprovedBlogs, 
+  toggleBlogLike, 
+  checkBlogLikeStatus 
+} from "@/services/blogService";
 import { BlogPost } from "@/types/blog";
 import { toast } from "sonner";
 
@@ -72,6 +77,27 @@ export default function BlogDetailPage() {
     fetchDetail();
     window.scrollTo(0, 0);
   }, [slug]);
+
+  useEffect(() => {
+    if (!blog || !blog.id && !blog.blogId) return;
+    const blogId = blog.blogId || blog.id;
+    if (blogId) {
+      checkBlogLikeStatus(blogId).then(res => setLiked(res.liked)).catch(() => {});
+    }
+  }, [blog]);
+
+  const handleToggleLike = async () => {
+    const blogId = blog?.blogId || blog?.id;
+    if (!blogId) return;
+    
+    try {
+      const res = await toggleBlogLike(blogId);
+      setLiked(res.liked);
+      toast.success(res.liked ? "Đã thêm vào yêu thích" : "Đã bỏ yêu thích");
+    } catch (error) {
+      toast.error("Vui lòng đăng nhập để thực hiện tính năng này");
+    }
+  };
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -204,7 +230,7 @@ export default function BlogDetailPage() {
           {/* Left: Share sidebar */}
           <div className="hidden md:flex flex-col gap-6 sticky top-32 h-fit">
             <button 
-                onClick={() => setLiked(!liked)}
+                onClick={handleToggleLike}
                 className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg ${liked ? 'bg-rose-500 text-white shadow-rose-200 scale-110' : 'bg-white text-gray-400 hover:text-rose-500 border border-gray-100'}`}
             >
                 <Heart size={24} fill={liked ? "currentColor" : "none"} />
