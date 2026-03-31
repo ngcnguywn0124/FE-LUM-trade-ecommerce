@@ -3,7 +3,7 @@
 import React from 'react';
 import { 
   X, Calendar, User, Tag, Eye, Clock, 
-  CheckCircle, XCircle, AlertCircle, ShoppingBag, Leaf, Smile, ClipboardCheck, Bell, Newspaper
+  CheckCircle, XCircle, AlertCircle, ShoppingBag, Leaf, Smile, ClipboardCheck, Bell, Newspaper, Edit
 } from 'lucide-react';
 import Image from 'next/image';
 import { BlogPost } from '@/types/blog';
@@ -169,14 +169,24 @@ const AdminBlogDetailModal: React.FC<AdminBlogDetailModalProps> = ({
                 <ShieldCheck size={14} />
                 Hệ thống kiểm soát nội dung cộng đồng sinh viên Lụm.vn
               </p>
-              <a 
-                href={`/blog/${blog.slug}`}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs font-bold text-emerald-600 hover:underline"
-              >
-                Xem thực tế trên web &rarr;
-              </a>
+              <div className="flex items-center gap-4">
+                <a 
+                   href={`/admin/blog/edit/${blogId}`}
+                   className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-amber-100 hover:bg-amber-600 transition-colors"
+                   onClick={onClose}
+                >
+                   <Edit size={14} />
+                   Chỉnh sửa
+                </a>
+                <a 
+                  href={`/blog/${blog.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-bold text-emerald-600 hover:underline"
+                >
+                  Xem thực tế trên web &rarr;
+                </a>
+              </div>
             </div>
           </motion.div>
         </div>

@@ -64,20 +64,24 @@ const fadeUp = {
   }),
 };
 
-const initialFormData: BlogFormData = {
-  title: "",
-  category: "",
-  excerpt: "",
-  content: "",
-  thumbnailPreview: "",
-};
+interface PostBlogFormProps {
+  blogId?: string;
+  isEdit?: boolean;
+}
 
-export default function PostBlogForm() {
+export default function PostBlogForm({ blogId, isEdit = false }: PostBlogFormProps) {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const quillRef = useRef<any>(null);
-  const [formData, setFormData] = useState<BlogFormData>(initialFormData);
+  const [formData, setFormData] = useState<BlogFormData>({
+    title: "",
+    category: "",
+    excerpt: "",
+    content: "",
+    thumbnailPreview: "",
+  });
+  const [isFetchingData, setIsFetchingData] = useState(isEdit);
 
   const imageHandler = React.useCallback(() => {
     const input = document.createElement('input');
@@ -134,18 +138,42 @@ export default function PostBlogForm() {
     if (!isAuthLoading) {
       if (!isAuthenticated) {
         toast.error("Vui lòng đăng nhập để đăng bài viết");
-        router.push("/login?redirect=/admin/blog/create");
+        router.push(`/login?redirect=/admin/blog/${isEdit ? `edit/${blogId}` : 'create'}`);
       } else {
         const hasAdminRole = user?.roles?.some(role => 
           ["ROLE_ADMIN", "ROLE_SUPER_ADMIN", "ROLE_MODERATOR"].includes(role)
         );
         if (!hasAdminRole) {
-          toast.error("Chỉ quản trị viên mới có thể đăng bài viết");
+          toast.error("Chỉ quản trị viên mới có thể thực hiện thao tác này");
           router.push("/admin/blog");
         }
       }
     }
-  }, [isAuthenticated, isAuthLoading, router, user]);
+  }, [isAuthenticated, isAuthLoading, router, user, isEdit, blogId]);
+
+  useEffect(() => {
+    if (isEdit && blogId) {
+      const fetchBlogData = async () => {
+        try {
+          const { getBlogPostById } = await import("@/services/blogService");
+          const blog = await getBlogPostById(blogId);
+          setFormData({
+            title: blog.title,
+            category: blog.category,
+            excerpt: blog.excerpt,
+            content: blog.content,
+            thumbnailPreview: blog.thumbnail || (blog as any).thumbnailUrl || "",
+          });
+        } catch (error) {
+          toast.error("Không thể tải thông tin bài viết");
+          console.error(error);
+        } finally {
+          setIsFetchingData(false);
+        }
+      };
+      fetchBlogData();
+    }
+  }, [isEdit, blogId]);
 
   const onFieldChange = (field: keyof BlogFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -208,21 +236,27 @@ export default function PostBlogForm() {
 
     setIsSubmitting(true);
     try {
-      await createBlogPost(formData);
-      toast.success("Đăng bài thành công!");
+      const { createBlogPost, updateBlogPost } = await import("@/services/blogService");
+      if (isEdit && blogId) {
+        await updateBlogPost(blogId, formData);
+        toast.success("Cập nhật bài viết thành công!");
+      } else {
+        await createBlogPost(formData);
+        toast.success("Đăng bài thành công!");
+      }
       router.push("/admin/blog");
     } catch (error) {
-      toast.error("Có lỗi xảy ra khi đăng bài. Vui lòng thử lại.");
+      toast.error(isEdit ? "Cập nhật bài viết thất bại" : "Đăng bài viết thất bại");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isAuthLoading || !isAuthenticated) {
+  if (isAuthLoading || !isAuthenticated || isFetchingData) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-[#8cceae]" />
-        <p className="text-gray-500 font-medium">Đang kiểm tra quyền truy cập...</p>
+        <p className="text-gray-500 font-medium">{isFetchingData ? "Đang tải dữ liệu bài viết..." : "Đang kiểm tra quyền truy cập..."}</p>
       </div>
     );
   }
@@ -251,10 +285,10 @@ export default function PostBlogForm() {
           <div className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-2">
             <span className="cursor-pointer hover:text-gray-900" onClick={() => router.push("/admin/blog")}>Quản lý Blog</span>
             <ChevronRight size={14} />
-            <span className="text-[#8cceae]">Đăng bài viết mới</span>
+            <span className="text-[#8cceae]">{isEdit ? "Chỉnh sửa bài viết" : "Đăng bài viết mới"}</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-black text-gray-900 flex items-center gap-3">
-            Sáng tạo <span className="text-[#8cceae]">Nội dung</span>
+            {isEdit ? "Cập nhật" : "Sáng tạo"} <span className="text-[#8cceae]">Nội dung</span>
             <Sparkles className="text-[#FFBA00]" size={28} />
           </h1>
           <p className="text-gray-500 mt-2 max-w-xl">
@@ -534,7 +568,7 @@ export default function PostBlogForm() {
               ) : (
                 <Send size={18} />
               )}
-              <span>Đăng bài viết ngay</span>
+              <span>{isEdit ? "Cập nhật bài viết" : "Đăng bài viết ngay"}</span>
             </motion.button>
           </div>
         </div>

@@ -3,7 +3,7 @@
 import React, { useRef, useEffect } from 'react';
 import { 
   Eye, Trash2, ExternalLink, MoreVertical, 
-  CheckCircle, XCircle 
+  CheckCircle, XCircle, Edit 
 } from 'lucide-react';
 import { BlogPost } from '@/types/blog';
 
@@ -68,6 +68,15 @@ const AdminBlogActionMenu: React.FC<AdminBlogActionMenuProps> = ({
             >
               <ExternalLink size={15} className="text-gray-400" />
               Xem trên web
+            </a>
+
+            <a 
+              href={`/admin/blog/edit/${blogId}`}
+              className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              onClick={() => onClose()}
+            >
+              <Edit size={15} className="text-amber-500" />
+              Chỉnh sửa
             </a>
 
             <div className="h-px bg-gray-100 my-1" />
