@@ -416,15 +416,23 @@ const CompletedStep = ({
   isSeller,
   transactionId,
   sellerName,
-  currentUserId
+  currentUserId,
+  initialHasReviewed,
+  onReviewSuccess,
 }: {
   isSeller: boolean,
   transactionId: string,
   sellerName: string,
-  currentUserId: string
+  currentUserId: string,
+  initialHasReviewed?: boolean,
+  onReviewSuccess?: () => void,
 }) => {
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [hasReviewed, setHasReviewed] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(Boolean(initialHasReviewed));
+
+  useEffect(() => {
+    setHasReviewed(Boolean(initialHasReviewed));
+  }, [initialHasReviewed]);
 
   return (
     <div className="flex flex-col items-center gap-2 py-2 text-center">
@@ -460,6 +468,7 @@ const CompletedStep = ({
           onSuccess={() => {
             setShowReviewModal(false);
             setHasReviewed(true);
+            onReviewSuccess?.();
           }}
         />
       )}
@@ -548,6 +557,7 @@ const TransactionActionCard = ({
               transactionId={transaction.id}
               sellerName={sellerName}
               currentUserId={currentUserId}
+              initialHasReviewed={transaction.isReviewed}
             />
           ) : currentStep === 0 ? (
             <MeetupStep
