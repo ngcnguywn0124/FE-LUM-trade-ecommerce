@@ -136,3 +136,21 @@ export interface RoleRequest {
 export interface AssignPermissionsRequest {
   permissionIds: string[];
 }
+
+export interface BulkIdsRequest {
+  ids: string[];
+}
+
+export interface BulkUserIdsRequest {
+  userIds: string[];
+}
+
+export interface RoleUserResponse {
+  userId: string;
+  email: string;
+  fullName: string;
+  phoneNumber?: string;
+  roles: string[];
+  isActive: boolean;
+  createdAt: string;
+}

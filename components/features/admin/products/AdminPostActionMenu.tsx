@@ -17,6 +17,7 @@ interface AdminPostActionMenuProps {
   onHide: (id: string, title: string) => void;
   onToggleFeatured: (id: string, current: boolean) => void;
   onDelete: (id: string, title: string, isHard?: boolean) => void;
+  onRestore: (id: string, title: string) => void;
 }
 
 const AdminPostActionMenu: React.FC<AdminPostActionMenuProps> = ({
@@ -28,6 +29,7 @@ const AdminPostActionMenu: React.FC<AdminPostActionMenuProps> = ({
   onHide,
   onToggleFeatured,
   onDelete,
+  onRestore,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const { user } = useAuthStore();
@@ -139,6 +141,21 @@ const AdminPostActionMenu: React.FC<AdminPostActionMenuProps> = ({
               >
                 <Trash2 size={15} />
                 Xóa vĩnh viễn 
+              </button>
+            )}
+
+            {/* Restore - Only for Super Admin on Deleted posts */}
+            {isSuperAdmin && product.status === 'deleted' && (
+              <button 
+                onClick={(e) => { 
+                    e.stopPropagation(); 
+                    onRestore(product.productId, product.title); 
+                    onClose(); 
+                }}
+                className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer font-bold border-t border-emerald-100"
+              >
+                <CheckCircle size={15} />
+                Khôi phục tin đăng
               </button>
             )}
           </div>

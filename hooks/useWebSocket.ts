@@ -12,6 +12,7 @@ export interface ProductStatusEvent {
   productId: string;
   newStatus: string;
   message: string;
+  previousStatus?: string;
 }
 
 /**
@@ -64,6 +65,15 @@ export const useWebSocket = (
       const isAdmin = user.roles.some((r: any) => ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN', 'ROLE_MODERATOR'].includes(r));
       if (isAdmin) {
         client.subscribe('/topic/admin/products', (message) => {
+          if (message.body.startsWith('{')) {
+            try {
+              const event = JSON.parse(message.body) as ProductStatusEvent;
+              if (event.type === 'PRODUCT_STATUS_CHANGED' && onProductStatusChanged) {
+                onProductStatusChanged(event);
+                return;
+              }
+            } catch { /* ignore */ }
+          }
           if (onMessageReceived) {
             onMessageReceived(message.body);
           }
