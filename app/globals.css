@@ -26,7 +26,12 @@ body {
   font-family: var(--font-be-vietnam-pro), sans-serif;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-comfortaa), sans-serif;
 }
 
@@ -35,15 +40,19 @@ h1, h2, h3, h4, h5, h6 {
   :root {
     --sb-size: 8px;
     --sb-track: transparent;
-    --sb-thumb: #d1d5db; /* Gray-300 */
-    --sb-thumb-hover: #98FF98; /* Brand Mint */
+    --sb-thumb: #d1d5db;
+    /* Gray-300 */
+    --sb-thumb-hover: #98FF98;
+    /* Brand Mint */
   }
 
   /* Dark mode variables */
   @media (prefers-color-scheme: dark) {
     :root {
-      --sb-thumb: #4b5563; /* Gray-600 */
-      --sb-thumb-hover: #A0E7E5; /* Alternative Mint for Dark mode */
+      --sb-thumb: #4b5563;
+      /* Gray-600 */
+      --sb-thumb-hover: #A0E7E5;
+      /* Alternative Mint for Dark mode */
     }
   }
 
@@ -80,4 +89,29 @@ h1, h2, h3, h4, h5, h6 {
   html {
     scrollbar-gutter: stable;
   }
+}
+
+/* --- Messenger Push Up Animation --- */
+@keyframes msgPushUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+    max-height: 0;
+    margin-bottom: -15px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 600px; /* An toàn đủ cho 1 tin nhắn thường */
+    margin-bottom: 0.75rem; /* Tương ứng mb-3 của Tailwind */
+    padding-top: auto;
+    padding-bottom: auto;
+  }
+}
+
+.animate-messenger-push {
+  animation: msgPushUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  overflow: hidden;
 }

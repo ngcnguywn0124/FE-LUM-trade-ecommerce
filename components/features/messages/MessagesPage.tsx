@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { MessageCircleWarning } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/stores/authStore';
 import { useChatStore } from '@/stores/chatStore';
 import { chatService, ChatConversationResponse, ChatMessageResponse } from '@/services/chatService';
@@ -174,6 +175,12 @@ const MessagesPage = () => {
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [activeConversationId, setActiveConversationId] = useState<string | number | null>(null);
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
+  const isMobileChatOpenRef = useRef(false);
+
+  useEffect(() => {
+    isMobileChatOpenRef.current = isMobileChatOpen;
+  }, [isMobileChatOpen]);
+
   const [draftMessage, setDraftMessage] = useState('');
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [typingUsers, setTypingUsers] = useState<Record<string, { userId: string; timestamp: number }>>({});
@@ -193,7 +200,7 @@ const MessagesPage = () => {
     const postSellerId = normalizeId(activeConversation.relatedPost.sellerId);
     return postSellerId === normalizeId(currentUserId);
   }, [activeConversation, currentUserId]);
-  
+
   const latestTxEventMessageId = useMemo(() => {
     if (!activeConversation) return null;
     return [...activeConversation.messages].reverse().find(m => m.transactionEvent != null)?.id;
@@ -545,15 +552,14 @@ const MessagesPage = () => {
         const isActive = normalizeId(activeConversationId) === incomingConversationId;
         const currentUserIdNormalized = normalizeId(currentUserId);
         const isFromMe = normalizeId(incomingMessage.senderId) === currentUserIdNormalized;
-        let conversationFound = false;
-
         setConversations((prev) => {
+          let found = false;
           const next = prev.map((conversation) => {
             if (normalizeId(conversation.id) !== incomingConversationId) {
               return conversation;
             }
 
-            conversationFound = true;
+            found = true;
             // If background conversation gets a message, trigger initial load to ensure history is ready
             if (!isActive && !loadedConversationIdsRef.current.has(incomingConversationId)) {
               void loadMessagesForConversation(incomingConversationId, { force: true }).catch(() => undefined);
@@ -595,10 +601,10 @@ const MessagesPage = () => {
 
             // Real-time Transaction Status Sync
             let updatedTransaction = conversation.transaction;
-            
+
             // Dùng transactionEvent (đã được map bởi mapApiMessage) để đồng bộ trạng thái giao dịch
             const eventType = incomingMessage.transactionEvent;
-            
+
             if (eventType) {
               // Đọc transaction fields từ `parsed` (raw WebSocket payload - có đầy đủ fields từ backend)
               updatedTransaction = {
@@ -629,18 +635,25 @@ const MessagesPage = () => {
             };
           });
 
-          return conversationFound ? next : prev;
+          if (!found) {
+            setTimeout(() => {
+              loadConversations().catch(console.error);
+            }, 0);
+            return prev;
+          }
+
+          return next;
         });
 
         // Browser handles auto-scrolling to visual bottom (scrollTop 0) in flex-col-reverse naturally
         // when prepending new items to the DOM.
 
-        if (!conversationFound) {
-          await loadConversations();
-        }
-
         // Real-time Seen: If active chat and message is from OTHER person, mark as read immediately
-        if (isActive && !isFromMe && currentUserIdNormalized) {
+        const isWindowFocused = typeof document !== 'undefined' && document.hasFocus() && !document.hidden;
+        const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+        const isChatVisible = isDesktop || isMobileChatOpenRef.current;
+
+        if (isActive && !isFromMe && currentUserIdNormalized && isWindowFocused && isChatVisible) {
           void chatService.markAsRead(currentUserIdNormalized, incomingConversationId).catch(() => undefined);
         }
       } catch {
@@ -686,6 +699,62 @@ const MessagesPage = () => {
       })
     );
   }, [currentUserId]);
+
+  const markActiveConversationAsRead = useCallback(() => {
+    if (!activeConversationId || !currentUserId || !activeConversation) return;
+
+    const isWindowFocused = typeof document !== 'undefined' && document.hasFocus() && !document.hidden;
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+    const isChatVisible = isDesktop || isMobileChatOpenRef.current;
+
+    if (!isWindowFocused || !isChatVisible) return;
+
+    const currentUserIdNormalized = normalizeId(currentUserId);
+    const hasUnreadIncomingMessage = activeConversation.messages.some(
+      (message) => normalizeId(message.senderId) !== currentUserIdNormalized && message.status !== 'seen'
+    );
+
+    if (!hasUnreadIncomingMessage && (activeConversation.unreadCount || 0) <= 0) return;
+
+    const normalizedConversationId = normalizeId(activeConversationId);
+    void chatService.markAsRead(currentUserId, normalizedConversationId).catch(() => undefined);
+    setConversations((prev) =>
+      prev.map((conversation) =>
+        normalizeId(conversation.id) === normalizedConversationId
+          ? { ...conversation, unreadCount: 0 }
+          : conversation
+      )
+    );
+  }, [activeConversationId, activeConversation, currentUserId]);
+
+  // Đánh dấu đã đọc khi người dùng quay lại tab (focus)
+  useEffect(() => {
+    const handleFocus = () => {
+      markActiveConversationAsRead();
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        markActiveConversationAsRead();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [markActiveConversationAsRead]);
+
+  useEffect(() => {
+    markActiveConversationAsRead();
+  }, [
+    markActiveConversationAsRead,
+    activeConversationId,
+    isMobileChatOpen,
+    activeConversation?.messages.length,
+  ]);
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -1160,7 +1229,7 @@ const MessagesPage = () => {
                   onBuyerCancelRequest={handleBuyerCancelRequest}
                   onSellerConfirm={handleSellerConfirm}
                   onSellerReject={handleSellerReject}
-                      />
+                />
 
                 <div className="relative flex-1 overflow-hidden">
                   {/* Background Image with Opacity */}
@@ -1183,80 +1252,102 @@ const MessagesPage = () => {
 
                           return (
                             <>
-                              {/* 1. Typing Indicator at the literal visual BOTTOM (First in DOM order for col-reverse) */}
-                              {typingUsers[normalizeId(activeConversationId)] && (
-                                <div className="flex items-center gap-2 text-gray-400 text-xs italic ml-12 mb-2 shrink-0">
-                                  <div className="flex gap-1 p-2.5 bg-gray-100 rounded-2xl rounded-bl-sm">
-                                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s]" />
-                                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s] [animation-delay:0.2s]" />
-                                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s] [animation-delay:0.4s]" />
-                                  </div>
-                                </div>
-                              )}
+                              <AnimatePresence key={activeConversationId} initial={false}>
+                                {/* 1. Typing Indicator at the literal visual BOTTOM (First in DOM order for col-reverse) */}
+                                {typingUsers[normalizeId(activeConversationId)] && (
+                                  <motion.div
+                                    key="typing-indicator"
+                                    initial={{ opacity: 0, height: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                                    exit={{ opacity: 0, height: 0, scale: 0.95 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="flex items-center gap-2 text-gray-400 text-xs italic ml-12 mb-2 shrink-0 overflow-hidden"
+                                  >
+                                    <div className="flex gap-1 p-2.5 bg-gray-100 rounded-2xl rounded-bl-sm">
+                                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s]" />
+                                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s] [animation-delay:0.2s]" />
+                                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-duration:0.6s] [animation-delay:0.4s]" />
+                                    </div>
+                                  </motion.div>
+                                )}
 
-                              {[...activeConversation.messages].reverse().map((message, index, reversedArr) => {
-                                const nextMessage = reversedArr[index - 1]; // Message that came AFTER this one
-                                const prevMessage = reversedArr[index + 1]; // Message that came BEFORE this one
+                                {[...activeConversation.messages].reverse().map((message, index, reversedArr) => {
+                                  const nextMessage = reversedArr[index - 1]; // Message that came AFTER this one
+                                  const prevMessage = reversedArr[index + 1]; // Message that came BEFORE this one
 
-                                const showDateSeparator = !prevMessage ||
-                                  new Date(prevMessage.sentAt).toDateString() !== new Date(message.sentAt).toDateString();
+                                  const showDateSeparator = !prevMessage ||
+                                    new Date(prevMessage.sentAt).toDateString() !== new Date(message.sentAt).toDateString();
 
-                                const isLastInGroup = !nextMessage || normalizeId(nextMessage.senderId) !== normalizeId(message.senderId);
-                                const isOwn = normalizeId(message.senderId) === normalizeId(currentUserId);
-                                const isLastSeenMarker = isOwn && lastSeenMessageId && normalizeId(message.id) === normalizeId(lastSeenMessageId);
+                                  const isLastInGroup = !nextMessage || normalizeId(nextMessage.senderId) !== normalizeId(message.senderId);
+                                  const isOwn = normalizeId(message.senderId) === normalizeId(currentUserId);
+                                  const isLastSeenMarker = isOwn && lastSeenMessageId && normalizeId(message.id) === normalizeId(lastSeenMessageId);
 
-                                return (
-                                  <div key={message.id} className="mb-3">
-                                    {showDateSeparator && (
-                                      <div className="flex justify-center my-4">
-                                        <span className="px-3 py-1 rounded-full bg-gray-100/80 text-[10px] text-gray-500 font-medium whitespace-nowrap">
-                                          {new Date(message.sentAt).toLocaleDateString('vi-VN', {
-                                            weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
-                                          })}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {message.transactionEvent ? (
-                                      <TransactionSystemMessage
-                                        event={message.transactionEvent}
-                                        actorName={isOwn ? undefined : activeConversation.participant.name}
-                                        sentAt={message.sentAt}
-                                      />
-                                    ) : (
-                                      <MessageBubble
-                                        message={message}
-                                        isOwnMessage={isOwn}
-                                        displayTime={formatMessageTime(message.sentAt)}
-                                        senderAvatar={!isOwn && isLastInGroup ? activeConversation.participant.avatar : undefined}
-                                        recipientAvatar={isLastSeenMarker ? activeConversation.participant.avatar : undefined}
-                                      />
-                                    )}
+                                  let displayStatus = message.status;
+                                  // Nếu người nhận đang online mà tin nhắn mới gửi, lập tức đẩy lên trạng thái Đã nhận (2 tích xám)
+                                  if (isOwn && displayStatus === 'sent' && activeConversation.participant.isOnline) {
+                                    displayStatus = 'delivered';
+                                  }
+                                  const displayMessage = { ...message, status: displayStatus };
 
-                                    {/* 4. Action Card for active transactions - embedded chronologically */}
-                                    {normalizeId(message.id) === normalizeId(latestTxEventMessageId) && activeConversation.transaction &&
-                                      ['buyer_requested', 'seller_confirmed', 'meetup_confirmed', 'payment_pending', 'completed', 'cancelled'].includes(
-                                        activeConversation.transaction.status
-                                      ) && (
-                                        <div className="mt-3 w-full max-w-[90%] sm:max-w-2xl mx-auto shrink-0 z-10">
-                                          <TransactionActionCard
-                                            key={activeConversation.transaction.updatedAt}
-                                            transaction={activeConversation.transaction}
-                                            relatedPost={activeConversation.relatedPost}
-                                            isSeller={isSeller}
-                                            sellerName={isSeller ? 'Bạn' : activeConversation.participant.name}
-                                            buyerName={!isSeller ? 'Bạn' : activeConversation.participant.name}
-                                            currentUserId={currentUserId}
-                                            onSellerSetMeetup={handleSellerSetMeetup}
-                                            onBuyerConfirmMeetup={handleBuyerConfirmMeetup}
-                                            onBuyerConfirmPayment={handleBuyerConfirmPayment}
-                                            onSellerConfirmPayment={handleSellerConfirmPayment}
-                                            onCancel={() => handleCancelTransaction()}
-                                          />
+                                  return (
+                                    <motion.div
+                                      key={message.id}
+                                      initial={{ opacity: 0, height: 0, scale: 0.95, overflow: 'hidden' }}
+                                      animate={{ opacity: 1, height: 'auto', scale: 1, overflow: 'visible' }}
+                                      transition={{ duration: 0.35, ease: 'easeOut' }}
+                                      className="mb-3 flex flex-col"
+                                    >
+                                      {showDateSeparator && (
+                                        <div className="flex justify-center my-4">
+                                          <span className="px-3 py-1 rounded-full bg-gray-100/80 text-[10px] text-gray-500 font-medium whitespace-nowrap">
+                                            {new Date(message.sentAt).toLocaleDateString('vi-VN', {
+                                              weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
+                                            })}
+                                          </span>
                                         </div>
                                       )}
-                                  </div>
-                                );
-                              })}
+                                      {message.transactionEvent ? (
+                                        <TransactionSystemMessage
+                                          event={message.transactionEvent}
+                                          actorName={isOwn ? undefined : activeConversation.participant.name}
+                                          sentAt={message.sentAt}
+                                        />
+                                      ) : (
+                                        <MessageBubble
+                                          message={displayMessage}
+                                          isOwnMessage={isOwn}
+                                          displayTime={formatMessageTime(message.sentAt)}
+                                          senderAvatar={!isOwn && isLastInGroup ? activeConversation.participant.avatar : undefined}
+                                          recipientAvatar={isLastSeenMarker ? activeConversation.participant.avatar : undefined}
+                                        />
+                                      )}
+
+                                      {/* 4. Action Card for active transactions - embedded chronologically */}
+                                      {normalizeId(message.id) === normalizeId(latestTxEventMessageId) && activeConversation.transaction &&
+                                        ['buyer_requested', 'seller_confirmed', 'meetup_confirmed', 'payment_pending', 'completed', 'cancelled'].includes(
+                                          activeConversation.transaction.status
+                                        ) && (
+                                          <div className="mt-3 w-full max-w-[90%] sm:max-w-2xl mx-auto shrink-0 z-10">
+                                            <TransactionActionCard
+                                              key={activeConversation.transaction.updatedAt}
+                                              transaction={activeConversation.transaction}
+                                              relatedPost={activeConversation.relatedPost}
+                                              isSeller={isSeller}
+                                              sellerName={isSeller ? 'Bạn' : activeConversation.participant.name}
+                                              buyerName={!isSeller ? 'Bạn' : activeConversation.participant.name}
+                                              currentUserId={currentUserId}
+                                              onSellerSetMeetup={handleSellerSetMeetup}
+                                              onBuyerConfirmMeetup={handleBuyerConfirmMeetup}
+                                              onBuyerConfirmPayment={handleBuyerConfirmPayment}
+                                              onSellerConfirmPayment={handleSellerConfirmPayment}
+                                              onCancel={() => handleCancelTransaction()}
+                                            />
+                                          </div>
+                                        )}
+                                    </motion.div>
+                                  );
+                                })}
+                              </AnimatePresence>
                             </>
                           );
                         })()}
