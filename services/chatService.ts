@@ -12,6 +12,7 @@ export interface ChatConversationResponse {
   productImageUrl: string | null;
   productSlug: string | null;
   productPrice: number | null;
+  meetingPoint?: string | null;
   sellerId: string | null;
   sellerPhone: string | null;
   lastMessagePreview: string | null;
