@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { BadgeCheck, Star } from "lucide-react";
 import { UserReview } from "@/types/profile";
@@ -47,6 +47,10 @@ const UserReviewsSection = ({ reviews }: UserReviewsSectionProps) => {
   const visibleReviews = useMemo(() => {
     return filteredReviews.slice(0, visibleCount);
   }, [filteredReviews, visibleCount]);
+
+  useEffect(() => {
+    setVisibleCount(5);
+  }, [ratingFilter, sortMode]);
 
   const hasMore = visibleCount < filteredReviews.length;
 
@@ -117,7 +121,7 @@ const UserReviewsSection = ({ reviews }: UserReviewsSectionProps) => {
               <div className="flex items-start gap-4">
                 <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-white bg-white">
                   <Image 
-                    src="/user/avatar-user-profile-default.png" // Cập nhật sau khi có dữ liệu avatar thực tế trong mock
+                    src={review.reviewerAvatar || "/user/avatar-user-profile-default.png"}
                     alt={review.reviewerName}
                     fill
                     className="object-cover"
