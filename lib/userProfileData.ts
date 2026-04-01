@@ -25,7 +25,7 @@ const normalizeId = (value: string | number | undefined | null): string => {
 const isCountableListingStatus = (status?: string) => {
   if (!status) return true;
   const normalizedStatus = status.trim().toLowerCase();
-  return normalizedStatus !== "deleted" && normalizedStatus !== "hidden" && normalizedStatus !== "admin_hidden";
+  return normalizedStatus !== "deleted" && normalizedStatus !== "admin_hidden";
 };
 
 const buildRatingBreakdown = (reviews: UserReview[]): Record<number, number> => {
@@ -76,6 +76,24 @@ export const getUserProfileData = (
   const ratingBreakdown = buildRatingBreakdown(reviews);
   const averageRating = getAverageRating(reviews);
 
+  const backendRating = Number(profileResponse.rating ?? 0);
+  const resolvedRating = backendRating > 0
+    ? backendRating
+    : Number(profileResponse.reputationScore ?? 0) > 0
+      ? Number(profileResponse.reputationScore)
+      : averageRating;
+
+  const reviewCountFromApi = Number(profileResponse.reviewCount ?? 0);
+  const resolvedReviewCount = Math.max(reviewCountFromApi, reviews.length);
+
+  const totalListingsFromApi = Number(profileResponse.totalListings ?? 0);
+  const resolvedTotalListings = Math.max(totalListingsFromApi, visibleListings.length);
+
+  const totalSales = Number(profileResponse.totalSales ?? 0);
+  const totalPurchases = Number(profileResponse.totalPurchases ?? 0);
+  const totalSoldFromApi = Number(profileResponse.totalSold ?? 0);
+  const resolvedTotalTransactions = Math.max(totalSoldFromApi, totalSales + totalPurchases);
+
   const createdAt = profileResponse.createdAt ? new Date(profileResponse.createdAt) : null;
   const joinDate = createdAt && !Number.isNaN(createdAt.getTime())
     ? `Tháng ${createdAt.getMonth() + 1}/${createdAt.getFullYear()}`
@@ -98,10 +116,10 @@ export const getUserProfileData = (
     name: profileResponse.fullName,
     avatar: profileResponse.avatarUrl || primaryListing?.seller?.avatar,
     cover: profileResponse.coverUrl || undefined,
-    rating: profileResponse.rating ?? averageRating,
-    reviewCount: profileResponse.reviewCount ?? reviews.length,
-    totalListings: profileResponse.totalListings ?? visibleListings.length,
-    totalSold: profileResponse.totalSold ?? profileResponse.totalSales ?? 0,
+    rating: resolvedRating,
+    reviewCount: resolvedReviewCount,
+    totalListings: resolvedTotalListings,
+    totalSold: resolvedTotalTransactions,
     followers: profileResponse.followersCount || 0,
     responseRate: Number(profileResponse.responseRate || 0),
     responseTime: profileResponse.responseTime || "Chưa cập nhật",
