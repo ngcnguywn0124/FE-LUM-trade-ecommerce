@@ -98,6 +98,15 @@ export interface SpringPage<T> {
   empty: boolean;
 }
 
+export interface GetMyTransactionsParams {
+  page?: number;
+  size?: number;
+  role?: 'buyer' | 'seller' | 'all';
+  status?: TransactionStatus | 'all';
+  fromDate?: string;
+  toDate?: string;
+}
+
 // ─── Axios client ─────────────────────────────────────────────────────────────
 
 const txApiClient = axios.create({
@@ -126,12 +135,27 @@ export const transactionService = {
   /** Danh sách giao dịch của tôi (buyer & seller) */
   async getMyTransactions(
     userId: string,
-    page = 0,
-    size = 20,
+    params: GetMyTransactionsParams = {},
   ): Promise<SpringPage<ApiTransactionResponse>> {
+    const {
+      page = 0,
+      size = 20,
+      role = 'all',
+      status,
+      fromDate,
+      toDate,
+    } = params;
+
     const res = await txApiClient.get<SpringPage<ApiTransactionResponse>>('', {
       ...headers(userId),
-      params: { page, size },
+      params: {
+        page,
+        size,
+        ...(role && role !== 'all' ? { role } : {}),
+        ...(status && status !== 'all' ? { status } : {}),
+        ...(fromDate ? { fromDate } : {}),
+        ...(toDate ? { toDate } : {}),
+      },
     });
     return res.data;
   },
