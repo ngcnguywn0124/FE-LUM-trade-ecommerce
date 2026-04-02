@@ -25,6 +25,7 @@ const TransactionHistoryPage = () => {
     if (!user?.userId) return;
     setIsLoading(true);
     try {
+      // pageIndex là 0-based (backend), Pagination component dùng 1-based
       const result = await transactionService.getMyTransactions(user.userId, pageIndex, 10);
       setData(result);
     } catch (error) {
@@ -88,6 +89,11 @@ const TransactionHistoryPage = () => {
   useEffect(() => {
     fetchTransactions(page);
   }, [page, fetchTransactions]);
+
+  // Khi Pagination gọi onPageChange với số 1-based, ta phải convert sang 0-based
+  const handlePageChange = useCallback((oneBased: number) => {
+    setPage(oneBased - 1);
+  }, []);
 
   if (!user) return null;
 
@@ -283,9 +289,9 @@ const TransactionHistoryPage = () => {
 
             {data && data.totalPages > 1 && (
               <Pagination 
-                currentPage={data.number + 1} 
+                currentPage={data.number + 1}  // convert 0-based → 1-based cho Pagination
                 totalPages={data.totalPages} 
-                onPageChange={setPage} 
+                onPageChange={handlePageChange} 
               />
             )}
           </div>
