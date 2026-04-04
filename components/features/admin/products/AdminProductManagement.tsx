@@ -1,11 +1,12 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Search, CheckCircle, XCircle, Eye, 
   Trash2, Filter, MoreVertical, 
   ChevronLeft, ChevronRight, Star,
-  AlertCircle, ExternalLink, ShieldCheck
+  AlertCircle, ExternalLink, ShieldCheck,
+  RotateCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
@@ -16,7 +17,8 @@ import {
   hideProductByAdmin,
   toggleFeatured,
   deleteProductById,
-  hardDeleteProductById
+  hardDeleteProductById,
+  restoreProduct
 } from '@/services/productService';
 import type { ProductSummaryDto } from '@/types/product-api';
 import Breadcrumb from '@/components/shared/Breadcrumb';
@@ -38,52 +40,6 @@ const AdminProductManagement: React.FC = () => {
   const [keyword, setKeyword] = useState('');
   const [status, setStatus] = useState<string>(''); // empty means all for admin
   const [searchTerm, setSearchTerm] = useState('');
-
-  // 1. Hook WebSocket để nhận thông báo tin mới
-  const handleNewProduct = useCallback((message: string) => {
-    if (message === 'NEW_PRODUCT_CREATED') {
-      toast('Có tin đăng mới!', {
-        description: 'Vừa có người dùng đăng tin mới, hãy kiểm duyệt ngay.',
-        action: {
-          label: 'Làm mới',
-          onClick: () => fetchProducts(currentPage, status, keyword)
-        },
-        duration: 10000,
-      });
-      // Tự động load trang đầu nếu admin đang ở tab "Tất cả" hoặc "Chờ duyệt"
-      if (currentPage === 0 && (status === '' || status === 'pending')) {
-        fetchProducts(0, status, keyword);
-      }
-    }
-  }, [currentPage, status, keyword]);
-
-  useWebSocket(handleNewProduct);
-  
-  // State for Confirm Modal
-  const [confirmModal, setConfirmModal] = useState<{
-    isOpen: boolean;
-    productId: string;
-    productTitle: string;
-    isHardDelete: boolean;
-  }>({
-    isOpen: false,
-    productId: '',
-    productTitle: '',
-    isHardDelete: false
-  });
-  
-  // State for Dropdown Menu
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-
-  const formatPrice = (price: number) => {
-    if (price >= 1000000000) {
-      return `${(price / 1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tỷ`;
-    }
-    if (price >= 1000000) {
-      return `${(price / 1000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} triệu`;
-    }
-    return `${price.toLocaleString('vi-VN')}đ`;
-  };
 
   const fetchProducts = useCallback(async (page: number, currentStatus: string, currentKeyword: string) => {
     setIsLoading(true);
@@ -110,7 +66,59 @@ const AdminProductManagement: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  }, [isSuperAdmin]);
+
+  // State for Confirm Modal
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    productId: string;
+    productTitle: string;
+    isHardDelete: boolean;
+  }>({
+    isOpen: false,
+    productId: '',
+    productTitle: '',
+    isHardDelete: false
+  });
+  
+  // State for Dropdown Menu
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  const formatPrice = (price: number) => {
+    if (price >= 1000000000) {
+      return `${(price / 1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} tỷ`;
+    }
+    if (price >= 1000000) {
+      return `${(price / 1000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} triệu`;
+    }
+    return `${price.toLocaleString('vi-VN')}đ`;
+  };
+
+  // 1. Hook WebSocket để nhận thông báo tin mới
+  const handleNewProduct = useCallback((message: string) => {
+    if (message === 'NEW_PRODUCT_CREATED') {
+      toast('Có tin đăng mới!', {
+        description: 'Vừa có người dùng đăng tin mới, hãy kiểm duyệt ngay.',
+        action: {
+          label: 'Làm mới',
+          onClick: () => fetchProducts(currentPage, status, keyword)
+        },
+        duration: 10000,
+      });
+      // Tự động load trang đầu nếu admin đang ở tab "Tất cả" hoặc "Chờ duyệt"
+      if (currentPage === 0 && (status === '' || status === 'pending')) {
+        fetchProducts(0, status, keyword);
+      }
+    }
+  }, [currentPage, status, keyword, fetchProducts]);
+
+  const handleProductStatusChanged = useCallback((event: any) => {
+    setProducts(prev => prev.map(p => 
+      p.productId === event.productId ? { ...p, status: event.newStatus } : p
+    ));
   }, []);
+
+  useWebSocket(handleNewProduct, undefined, handleProductStatusChanged);
 
   // Debounced search logic
   useEffect(() => {
@@ -159,6 +167,16 @@ const AdminProductManagement: React.FC = () => {
       fetchProducts(currentPage, status, keyword);
     } catch (error) {
       toast.error('Cập nhật trạng thái nổi bật thất bại');
+    }
+  };
+
+  const handleRestore = async (id: string, title: string) => {
+    try {
+      await restoreProduct(id);
+      toast.success(`Đã khôi phục tin: ${title}`);
+      fetchProducts(currentPage, status, keyword);
+    } catch (error) {
+      toast.error('Khôi phục tin thất bại. Bạn có quyền SUPER_ADMIN không?');
     }
   };
 
@@ -226,6 +244,15 @@ const AdminProductManagement: React.FC = () => {
                 <AlertCircle size={18} />
                 <span className="text-sm font-medium">{totalElements} tổng số tin</span>
             </div>
+            
+            <button 
+                onClick={() => fetchProducts(currentPage, status, keyword)}
+                disabled={isLoading}
+                className="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                title="Tải lại danh sách"
+            >
+                <RotateCw size={20} className={isLoading ? 'animate-spin' : ''} />
+            </button>
         </div>
       </div>
 
@@ -341,6 +368,7 @@ const AdminProductManagement: React.FC = () => {
                            onHide={handleHide}
                            onToggleFeatured={handleToggleFeatured}
                            onDelete={handleDelete}
+                           onRestore={handleRestore}
                         />
                       </div>
                     </td>

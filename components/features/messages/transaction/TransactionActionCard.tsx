@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import {
   MapPin, Clock, CreditCard, Banknote, CheckCircle2,
@@ -80,20 +80,106 @@ const ActionButton = ({
   );
 };
 
+const VIETNAM_TIME_ZONE = 'Asia/Ho_Chi_Minh';
+
+const normalizePriceInput = (value: number | string | undefined) =>
+  String(value ?? '').replace(/[^\d]/g, '');
+
+const formatVietnamDateTime = (value?: string) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat('vi-VN', {
+    timeZone: VIETNAM_TIME_ZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date);
+};
+
+const toVietnamDateTimeInputValue = (value?: string) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const formatted = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: VIETNAM_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
+
+  return formatted.replace(' ', 'T');
+};
+
+const vietnamInputToIso = (value: string) => {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+  if (!match) {
+    throw new Error('Invalid Vietnam datetime-local value');
+  }
+
+  const [, year, month, day, hour, minute] = match;
+  const utcMillis = Date.UTC(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour) - 7,
+    Number(minute),
+    0,
+    0,
+  );
+
+  return new Date(utcMillis).toISOString();
+};
+
 // ─── Step 0: Hẹn gặp ────────────────────────────────────────────────────────
 
 const MeetupStep = ({
-  transaction, isSeller, sellerName, buyerName, relatedPostPrice,
+  transaction, isSeller, sellerName, buyerName, relatedPostPrice, relatedPostMeetingPoint,
   onSellerSetMeetup, onBuyerConfirmMeetup,
-}: Pick<TransactionActionCardProps, 'transaction' | 'isSeller' | 'sellerName' | 'buyerName' | 'onSellerSetMeetup' | 'onBuyerConfirmMeetup'> & { relatedPostPrice: number | string }) => {
-  const [location, setLocation] = useState(transaction.meetupLocation ?? '');
-  const [meetTime, setMeetTime] = useState(transaction.meetupTime ? transaction.meetupTime.substring(0, 16) : '');
-  const [agreedPriceStr, setAgreedPriceStr] = useState(transaction.agreedPrice ?? relatedPostPrice.toString());
+}: Pick<TransactionActionCardProps, 'transaction' | 'isSeller' | 'sellerName' | 'buyerName' | 'onSellerSetMeetup' | 'onBuyerConfirmMeetup'> & {
+  relatedPostPrice: number | string;
+  relatedPostMeetingPoint?: string;
+}) => {
+  const sellerDefaultMeetingPoint = isSeller
+    ? (transaction.meetupLocation ?? relatedPostMeetingPoint ?? '')
+    : '';
+  const initialPrice = useMemo(
+    () => normalizePriceInput(transaction.agreedPrice ?? relatedPostPrice),
+    [transaction.agreedPrice, relatedPostPrice],
+  );
+  const initialMeetTime = useMemo(
+    () => toVietnamDateTimeInputValue(transaction.meetupTime),
+    [transaction.meetupTime],
+  );
+  const [location, setLocation] = useState(sellerDefaultMeetingPoint);
+  const [meetTime, setMeetTime] = useState(initialMeetTime);
+  const [agreedPriceStr, setAgreedPriceStr] = useState(initialPrice);
   const [isEditing, setIsEditing] = useState(!transaction.meetupLocation);
   const [paymentMethod, setPaymentMethod] = useState<TransactionPaymentMethod>('cash');
 
   const hasMeetupProposal = !!transaction.meetupLocation;
   const buyerConfirmed = transaction.buyerConfirmedMeetup;
+
+  useEffect(() => {
+    setLocation(sellerDefaultMeetingPoint);
+    setMeetTime(initialMeetTime);
+    setAgreedPriceStr(initialPrice);
+    setIsEditing(!transaction.meetupLocation);
+  }, [
+    sellerDefaultMeetingPoint,
+    transaction.meetupTime,
+    transaction.agreedPrice,
+    transaction.meetupLocation,
+    initialMeetTime,
+    initialPrice,
+  ]);
 
   if (isSeller) {
     /* ─── Seller view ─── */
@@ -140,7 +226,7 @@ const MeetupStep = ({
                 if (location.trim() && meetTime.trim() && agreedPriceStr.trim()) {
                   // Convert local datetime-local value to ISO string for OffsetDateTime backend
                   try {
-                    const isoDate = new Date(meetTime).toISOString();
+                    const isoDate = vietnamInputToIso(meetTime);
                     const numericPrice = Number(agreedPriceStr);
                     onSellerSetMeetup(location.trim(), isoDate, numericPrice);
                     setIsEditing(false);
@@ -164,12 +250,14 @@ const MeetupStep = ({
                 <p className="text-[11px] text-emerald-700 font-semibold">Đề xuất của bạn</p>
                 <p className="text-[12px] text-gray-800 mt-0.5">{transaction.meetupLocation}</p>
                 <p className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
-                  <Clock size={10} /> {transaction.meetupTime}
+                  <Clock size={10} /> {formatVietnamDateTime(transaction.meetupTime)}
                 </p>
               </div>
-              <button onClick={() => setIsEditing(true)} className="text-gray-400 hover:text-emerald-600 cursor-pointer">
-                <Edit3 size={13} />
-              </button>
+              {!buyerConfirmed && (
+                <button onClick={() => setIsEditing(true)} className="text-gray-400 hover:text-emerald-600 cursor-pointer">
+                  <Edit3 size={13} />
+                </button>
+              )}
             </div>
 
             {buyerConfirmed ? (
@@ -205,7 +293,7 @@ const MeetupStep = ({
               <p className="text-[11px] text-blue-700 font-semibold">{sellerName} đề xuất</p>
               <p className="text-[12px] text-gray-800 mt-0.5">{transaction.meetupLocation}</p>
               <p className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
-                <Clock size={10} /> {transaction.meetupTime}
+                <Clock size={10} /> {formatVietnamDateTime(transaction.meetupTime)}
               </p>
             </div>
           </div>
@@ -328,15 +416,23 @@ const CompletedStep = ({
   isSeller,
   transactionId,
   sellerName,
-  currentUserId
+  currentUserId,
+  initialHasReviewed,
+  onReviewSuccess,
 }: {
   isSeller: boolean,
   transactionId: string,
   sellerName: string,
-  currentUserId: string
+  currentUserId: string,
+  initialHasReviewed?: boolean,
+  onReviewSuccess?: () => void,
 }) => {
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [hasReviewed, setHasReviewed] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(Boolean(initialHasReviewed));
+
+  useEffect(() => {
+    setHasReviewed(Boolean(initialHasReviewed));
+  }, [initialHasReviewed]);
 
   return (
     <div className="flex flex-col items-center gap-2 py-2 text-center">
@@ -372,6 +468,7 @@ const CompletedStep = ({
           onSuccess={() => {
             setShowReviewModal(false);
             setHasReviewed(true);
+            onReviewSuccess?.();
           }}
         />
       )}
@@ -460,6 +557,7 @@ const TransactionActionCard = ({
               transactionId={transaction.id}
               sellerName={sellerName}
               currentUserId={currentUserId}
+              initialHasReviewed={transaction.isReviewed}
             />
           ) : currentStep === 0 ? (
             <MeetupStep
@@ -468,6 +566,7 @@ const TransactionActionCard = ({
               sellerName={sellerName}
               buyerName={buyerName}
               relatedPostPrice={relatedPost.price}
+              relatedPostMeetingPoint={relatedPost.meetingPoint}
               onSellerSetMeetup={onSellerSetMeetup}
               onBuyerConfirmMeetup={onBuyerConfirmMeetup}
             />

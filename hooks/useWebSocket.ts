@@ -64,10 +64,10 @@ export const useWebSocket = (
       }
 
       // 2. Kênh Admin (nếu là admin/mod)
-      const isAdmin = user?.roles?.some((r: any) => 
+      const isAdmin = user?.roles?.some((r: any) =>
         ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN', 'ROLE_MODERATOR'].includes(r)
       );
-      
+
       if (isAdmin) {
         // Thông báo sản phẩm admin
         client.subscribe('/topic/admin/products', (message) => {
@@ -82,10 +82,10 @@ export const useWebSocket = (
           }
           if (onMessageReceived) onMessageReceived(message.body);
         });
-        
+
         // Thông báo Blog/Hệ thống cho admin
         client.subscribe('/topic/admin/notifications', (message) => {
-            if (onMessageReceived) onMessageReceived(message.body);
+          if (onMessageReceived) onMessageReceived(message.body);
         });
       }
 
@@ -103,9 +103,9 @@ export const useWebSocket = (
 
       // 4. Tuyến tin Blog công khai (Realtime cho cả khách xem)
       client.subscribe('/topic/blogs', (message) => {
-          if (onBlogEvent) {
-              onBlogEvent(message.body);
-          }
+        if (onBlogEvent) {
+          onBlogEvent(message.body);
+        }
       });
     };
 

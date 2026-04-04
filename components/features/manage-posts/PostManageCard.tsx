@@ -1,11 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ManagedPost, PostStatus } from '@/types/manage-posts';
 import {
   Eye, Heart, MessageCircle, RefreshCw,
-  Edit2, Clock, Images, CheckCircle2,AlertCircle
+  Edit2, Clock, Images, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import PostActionMenu from './PostActionMenu';
 
@@ -50,6 +50,12 @@ const STATUS_CONFIG: Record<
     text: 'text-red-700',
     dot: 'bg-red-500',
   },
+  deleted: {
+    label: 'Đã xóa',
+    bg: 'bg-gray-200',
+    text: 'text-gray-500',
+    dot: 'bg-gray-400',
+  },
 };
 
 const CONDITION_LABELS: Record<ManagedPost['condition'], string> = {
@@ -72,6 +78,19 @@ function formatDate(iso: string): string {
 function getDaysLeft(iso: string): number {
   const diff = new Date(iso).getTime() - Date.now();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+function formatCountdown(iso: string): string {
+  const diff = new Date(iso).getTime() - Date.now();
+  if (diff <= 0) return 'Đã hết hạn';
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  if (days > 0) return `${days} ngày ${hours}g ${minutes}p`;
+  if (hours > 0) return `${hours}g ${minutes}p ${seconds}s`;
+  if (minutes > 0) return `${minutes}p ${seconds}s`;
+  return `${seconds}s`;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -120,10 +139,21 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
   onDeleteRequest,
   onView,
 }) => {
-  const status = STATUS_CONFIG[post.status];
+  const status = STATUS_CONFIG[post.status] || STATUS_CONFIG.active;
   const daysLeft = getDaysLeft(post.expiresAt);
   const isExpired = post.status === 'expired';
   const isUrgent = post.status === 'active' && daysLeft <= 3;
+
+  const [countdown, setCountdown] = useState(() => formatCountdown(post.expiresAt));
+
+  useEffect(() => {
+    if (isExpired) return;
+    setCountdown(formatCountdown(post.expiresAt));
+    const timer = setInterval(() => {
+      setCountdown(formatCountdown(post.expiresAt));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [post.expiresAt, isExpired]);
 
   return (
     <div
@@ -162,7 +192,7 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
       {/* ── Urgent / Expiry warning ribbon ── */}
       {isUrgent && (
         <div className="absolute top-0 right-12 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-b-md z-10">
-          Hết hạn sau {daysLeft} ngày!
+          Hết hạn sau {countdown}!
         </div>
       )}
 
@@ -187,16 +217,15 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
           )}
           {/* Overlay for expired/hidden/admin_hidden */}
           {(post.status === 'expired' || post.status === 'hidden' || post.status === 'admin_hidden') && (
-            <div className={`absolute inset-0 flex items-center justify-center ${
-              post.status === 'admin_hidden' 
-                ? (post.previousStatus === 'pending' ? 'bg-amber-900/40' : 'bg-rose-900/40') 
+            <div className={`absolute inset-0 flex items-center justify-center ${post.status === 'admin_hidden'
+                ? (post.previousStatus === 'pending' ? 'bg-amber-900/40' : 'bg-rose-900/40')
                 : 'bg-black/30'
-            }`}>
+              }`}>
               <span className="text-white text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded backdrop-blur-[2px]">
-                {post.status === 'expired' 
-                  ? 'Hết hạn' 
-                  : post.status === 'admin_hidden' 
-                    ? (post.previousStatus === 'pending' ? 'Cảnh báo' : 'Vi phạm') 
+                {post.status === 'expired'
+                  ? 'Hết hạn'
+                  : post.status === 'admin_hidden'
+                    ? (post.previousStatus === 'pending' ? 'Cảnh báo' : 'Vi phạm')
                     : 'Đã ẩn'}
               </span>
             </div>
@@ -288,41 +317,41 @@ const PostManageCard: React.FC<PostManageCardProps> = ({
 
       {/* ── Quick Action Footer ── */}
       <div className="border-t border-gray-100 px-3.5 py-2 flex items-center gap-2">
-        {((post.status !== 'sold' && post.status !== 'expired' && post.status !== 'hidden' && post.status !== 'admin_hidden') || 
-         (post.status === 'admin_hidden' && post.previousStatus === 'pending')) && (
-          <button
-            onClick={() => onEdit(post.id)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
-          >
-            <Edit2 size={13} />
-            Chỉnh sửa
-          </button>
-        )}
+        {((post.status !== 'sold' && post.status !== 'expired' && post.status !== 'hidden' && post.status !== 'admin_hidden') ||
+          (post.status === 'admin_hidden' && post.previousStatus === 'pending')) && (
+            <button
+              onClick={() => onEdit(post.id)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
+            >
+              <Edit2 size={13} />
+              Chỉnh sửa
+            </button>
+          )}
         {post.status === 'admin_hidden' ? (
-           <div className="flex items-center gap-1.5 flex-1 group/tooltip relative">
-              {post.previousStatus === 'pending' ? (
-                 <>
-                    <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 text-amber-600 rounded-lg border border-amber-100 cursor-help transition-colors hover:bg-amber-100">
-                       <AlertCircle size={14} className="shrink-0" />
-                    </div>
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full left-0 mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-20 shadow-xl border border-gray-800">
-                       <div className="font-bold mb-1 flex items-center gap-1 text-amber-400">
-                          <AlertCircle size={10} />
-                          THÔNG BÁO ADMIN
-                       </div>
-                       Tin đăng của bạn có nội dung chưa phù hợp. Vui lòng chỉnh sửa lại để hệ thống có thể duyệt bài.
-                       <div className="absolute top-full left-6 -mt-1 border-8 border-transparent border-t-gray-900" />
-                    </div>
-                 </>
-              ) : (
-                 <span className="text-[10px] uppercase font-bold tracking-wider bg-rose-50 text-rose-600 px-2 py-1 rounded border border-rose-100">Tin vi phạm</span>
-              )}
-           </div>
+          <div className="flex items-center gap-1.5 flex-1 group/tooltip relative">
+            {post.previousStatus === 'pending' ? (
+              <>
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 text-amber-600 rounded-lg border border-amber-100 cursor-help transition-colors hover:bg-amber-100">
+                  <AlertCircle size={14} className="shrink-0" />
+                </div>
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-0 mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-20 shadow-xl border border-gray-800">
+                  <div className="font-bold mb-1 flex items-center gap-1 text-amber-400">
+                    <AlertCircle size={10} />
+                    THÔNG BÁO ADMIN
+                  </div>
+                  Tin đăng của bạn có nội dung chưa phù hợp. Vui lòng chỉnh sửa lại để hệ thống có thể duyệt bài.
+                  <div className="absolute top-full left-6 -mt-1 border-8 border-transparent border-t-gray-900" />
+                </div>
+              </>
+            ) : (
+              <span className="text-[10px] uppercase font-bold tracking-wider bg-rose-50 text-rose-600 px-2 py-1 rounded border border-rose-100">Tin vi phạm</span>
+            )}
+          </div>
         ) : post.status === 'hidden' && (
-           <div className="flex items-center gap-1.5 flex-1">
-              <span className="text-[10px] uppercase font-bold tracking-wider bg-gray-50 text-gray-500 px-2 py-1 rounded border border-gray-100 italic">Tin đang ẩn</span>
-           </div>
+          <div className="flex items-center gap-1.5 flex-1">
+            <span className="text-[10px] uppercase font-bold tracking-wider bg-gray-50 text-gray-500 px-2 py-1 rounded border border-gray-100 italic">Tin đang ẩn</span>
+          </div>
         )}
         {post.status === 'expired' && (
           <button

@@ -82,6 +82,7 @@ export interface MessageRelatedPost {
   price: string;
   image: string;
   sellerId: string;
+  meetingPoint?: string;
 }
 
 export interface Conversation {

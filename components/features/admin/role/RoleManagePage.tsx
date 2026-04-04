@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
-import { Plus, Loader2, ShieldCheck } from 'lucide-react';
+import { Plus, Loader2, ShieldCheck, Trash2 } from 'lucide-react';
 import * as roleService from '@/services/roleService';
 import type { RoleResponse, PermissionResponse } from '@/types/admin';
 import { useAuthStore } from '@/stores/authStore';
@@ -13,6 +13,7 @@ import RoleModal from './components/RoleModal';
 import AssignPermissionsModal from './components/AssignPermissionsModal';
 import ConfirmRoleDelete from './components/ConfirmRoleDelete';
 import RoleCard from './components/RoleCard';
+import RoleUsersModal from './components/RoleUsersModal';
 
 function apiErrMsg(err: unknown, fallback: string) {
   if (err instanceof AxiosError) return err.response?.data?.message ?? fallback;
@@ -31,8 +32,12 @@ export default function RoleManagePage() {
     open: false,
   });
   const [permModal, setPermModal] = useState<RoleResponse | null>(null);
+  const [usersModal, setUsersModal] = useState<RoleResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RoleResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
+  
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -87,6 +92,30 @@ export default function RoleManagePage() {
     }
   }
 
+  async function handleBulkDelete() {
+    if (!selectedRoles.length) return;
+    if (!confirm(`Bạn có chắc muốn xóa ${selectedRoles.length} role đã chọn?`)) return;
+    setBulkDeleting(true);
+    try {
+      await roleService.bulkDeleteRoles({ ids: selectedRoles });
+      setRoles(prev => prev.filter(r => !selectedRoles.includes(r.id)));
+      setSelectedRoles([]);
+      toast.success('Đã xóa các role được chọn');
+    } catch (err) {
+      toast.error(apiErrMsg(err, 'Xóa hàng loạt thất bại'));
+    } finally {
+      setBulkDeleting(false);
+    }
+  }
+
+  function toggleSelectRole(roleId: string, checked: boolean) {
+    if (checked) {
+      setSelectedRoles(prev => [...prev, roleId]);
+    } else {
+      setSelectedRoles(prev => prev.filter(id => id !== roleId));
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-2">
       {/* Header */}
@@ -103,13 +132,25 @@ export default function RoleManagePage() {
           </div>
         </div>
         {isSuperAdmin && (
-          <button
-            onClick={() => setRoleModal({ open: true, data: null })}
-            className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-xl font-semibold text-sm hover:bg-orange-600 transition-colors shadow-sm"
-          >
-            <Plus size={16} />
-            Tạo role mới
-          </button>
+          <div className="flex items-center gap-2">
+            {selectedRoles.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                disabled={bulkDeleting}
+                className="flex items-center gap-2 px-4 py-2.5 bg-red-50 text-red-600 rounded-xl font-semibold text-sm border border-red-200 hover:bg-red-100 transition-colors"
+              >
+                {bulkDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                Xóa {selectedRoles.length} role
+              </button>
+            )}
+            <button
+              onClick={() => setRoleModal({ open: true, data: null })}
+              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-xl font-semibold text-sm hover:bg-orange-600 transition-colors shadow-sm"
+            >
+              <Plus size={16} />
+              Tạo role mới
+            </button>
+          </div>
         )}
       </div>
 
@@ -126,9 +167,12 @@ export default function RoleManagePage() {
               key={role.id}
               role={role}
               isSuperAdmin={isSuperAdmin}
+              selected={selectedRoles.includes(role.id)}
+              onSelect={(checked) => toggleSelectRole(role.id, checked)}
               onEdit={(r) => setRoleModal({ open: true, data: r })}
               onDelete={setDeleteTarget}
               onManagePermissions={setPermModal}
+              onManageUsers={setUsersModal}
             />
           ))}
         </div>
@@ -149,6 +193,13 @@ export default function RoleManagePage() {
           allPermissions={allPermissions}
           onClose={() => setPermModal(null)}
           onSaved={handlePermSaved}
+        />
+      )}
+
+      {usersModal && (
+        <RoleUsersModal
+          role={usersModal}
+          onClose={() => setUsersModal(null)}
         />
       )}
 

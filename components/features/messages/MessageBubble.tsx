@@ -66,14 +66,14 @@ const MessageBubble = ({ message, isOwnMessage, displayTime, senderAvatar, recip
           <div className="flex flex-col gap-1">
             <div className={`relative flex ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} items-center pt-2 px-1 mb-2 h-36 md:h-40`}>
               {message.images.slice(0, 4).map((img, idx) => (
-                <div 
-                  key={idx} 
+                <div
+                  key={idx}
                   className={`
                     absolute overflow-hidden rounded-xl border-2 border-white shadow-md 
                     w-32 h-32 md:w-36 md:h-36 transition-all hover:scale-105 hover:z-50 cursor-pointer
                     ${message.status === 'error' ? 'grayscale opacity-50' : ''}
                   `}
-                  style={{ 
+                  style={{
                     zIndex: 40 - idx,
                     transform: `rotate(${idx % 2 === 0 ? '-2deg' : '2deg'})`,
                     [isOwnMessage ? 'right' : 'left']: `${idx * 16}px`
@@ -93,10 +93,10 @@ const MessageBubble = ({ message, isOwnMessage, displayTime, senderAvatar, recip
                 </div>
               ))}
             </div>
-            
+
             <div className={`flex items-center gap-1.5 px-1 text-[11px] text-gray-400 font-medium ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
               {message.status === 'error' && (
-                <button 
+                <button
                   onClick={() => onRetry?.(message)}
                   className="flex items-center gap-1 text-red-500 hover:text-red-600 cursor-pointer"
                 >
@@ -110,24 +110,22 @@ const MessageBubble = ({ message, isOwnMessage, displayTime, senderAvatar, recip
               {isOwnMessage && statusIcon()}
             </div>
 
-            <ImageModal 
-               images={message.images}
-               initialIndex={initialIndex}
-               isOpen={isModalOpen}
-               onClose={() => setIsModalOpen(false)}
+            <ImageModal
+              images={message.images}
+              initialIndex={initialIndex}
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
             />
           </div>
         ) : (
           <div className="relative group">
-            <div className={`px-3 py-2 shadow-sm rounded-2xl ${
-              isOwnMessage
+            <div className={`px-3 py-2 shadow-sm rounded-2xl ${isOwnMessage
                 ? message.status === 'error' ? 'bg-red-50 text-red-900 border border-red-100' : 'bg-emerald-600 text-white'
                 : 'bg-white text-gray-800 border border-gray-100'
-            } ${
-              isOwnMessage 
-                ? senderAvatar ? 'rounded-br-md' : 'rounded-br-2xl' 
+              } ${isOwnMessage
+                ? senderAvatar ? 'rounded-br-md' : 'rounded-br-2xl'
                 : senderAvatar ? 'rounded-bl-md' : 'rounded-bl-2xl'
-            } transition-opacity`}>
+              } transition-opacity`}>
               <p className={`text-sm leading-relaxed whitespace-pre-wrap wrap-break-word`}>
                 {message.content}
               </p>
@@ -138,9 +136,9 @@ const MessageBubble = ({ message, isOwnMessage, displayTime, senderAvatar, recip
                 {isOwnMessage && statusIcon()}
               </div>
             </div>
-            
+
             {isOwnMessage && message.status === 'error' && (
-              <button 
+              <button
                 onClick={() => onRetry?.(message)}
                 className="absolute -left-8 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-red-50 text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
                 title="Thử gửi lại"
@@ -155,9 +153,9 @@ const MessageBubble = ({ message, isOwnMessage, displayTime, senderAvatar, recip
         {isOwnMessage && message.status === 'seen' && recipientAvatar && (
           <div className="flex justify-end mt-1 px-1">
             <div className="w-4 h-4 rounded-full overflow-hidden border border-white shadow-sm">
-              <img 
-                src={recipientAvatar} 
-                alt="seen by" 
+              <img
+                src={recipientAvatar}
+                alt="seen by"
                 className="w-full h-full object-cover"
               />
             </div>

@@ -111,11 +111,11 @@ const ManagePostsPage: React.FC = () => {
     const q = filters.search.toLowerCase().trim();
     const searched = q
       ? result.filter(
-          (p) =>
-            p.title.toLowerCase().includes(q) ||
-            p.category.toLowerCase().includes(q) ||
-            p.subcategory.toLowerCase().includes(q),
-        )
+        (p) =>
+          p.title.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          p.subcategory.toLowerCase().includes(q),
+      )
       : result;
 
     switch (filters.sortBy) {
@@ -233,12 +233,12 @@ const ManagePostsPage: React.FC = () => {
 
   const handleRenew = useCallback(async (id: string) => {
     try {
-      const updated = await renewProduct(id, 7);
+      const updated = await renewProduct(id, 30);
       const updatedPost = mapSummaryToManagedPost(updated as any);
       const updateFn = (p: ManagedPost) => (p.id === id ? updatedPost : p);
       setPosts((prev) => prev.map(updateFn));
       setAllPosts((prev) => prev.map(updateFn));
-      toast.success('Gia hạn tin đăng thành công 7 ngày');
+      toast.success('Gia hạn tin đăng thành công 30 ngày');
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Không thể gia hạn tin đăng';
       toast.error(msg);
@@ -272,7 +272,7 @@ const ManagePostsPage: React.FC = () => {
       };
       const uiStatus = apiToUiStatus[event.newStatus] ?? (event.newStatus as ManagedPost['status']);
       const updateFn = (p: ManagedPost) =>
-        p.id === event.productId ? ({ ...p, status: uiStatus } as ManagedPost) : p;
+        p.id === event.productId ? ({ ...p, status: uiStatus, previousStatus: event.previousStatus } as ManagedPost) : p;
       setPosts((prev) => prev.map(updateFn));
       setAllPosts((prev) => prev.map(updateFn));
 
@@ -315,7 +315,7 @@ const ManagePostsPage: React.FC = () => {
   const handleBulkHide = useCallback(async () => {
     const ids = [...selectedIds];
     const postsToHide = posts.filter(p => selectedIds.has(p.id));
-    
+
     // Kiểm tra xem có bài nào đang chờ duyệt không
     const hasPending = postsToHide.some(p => p.status === 'pending');
     if (hasPending) {
@@ -334,7 +334,11 @@ const ManagePostsPage: React.FC = () => {
       toast.success(`Đã cập nhật hiển thị ${selectedIds.size} tin đăng.`);
       handleDeselectAll();
     } catch {
+      if(postsToHide.some(p => p.status === 'sold')) {
+        toast.error('Không thể cập nhật hiển thị cho tin đã bán!');
+      }else {
       toast.error('Không thể cập nhật hiển thị hàng loạt');
+    }
     }
   }, [selectedIds, handleDeselectAll, posts]);
 
@@ -421,9 +425,8 @@ const ManagePostsPage: React.FC = () => {
               </div>
               <ChevronDown
                 size={14}
-                className={`text-gray-400 shrink-0 transition-transform ${
-                  isSortOpen ? 'rotate-180' : ''
-                }`}
+                className={`text-gray-400 shrink-0 transition-transform ${isSortOpen ? 'rotate-180' : ''
+                  }`}
               />
             </button>
             {isSortOpen && (
@@ -435,11 +438,10 @@ const ManagePostsPage: React.FC = () => {
                       setFilters((prev) => ({ ...prev, sortBy: opt.value }));
                       setIsSortOpen(false);
                     }}
-                    className={`w-full px-3.5 py-2.5 text-left text-sm transition-colors cursor-pointer ${
-                      filters.sortBy === opt.value
+                    className={`w-full px-3.5 py-2.5 text-left text-sm transition-colors cursor-pointer ${filters.sortBy === opt.value
                         ? 'bg-emerald-50 text-emerald-700 font-semibold'
                         : 'text-gray-700 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     {opt.label}
                   </button>
@@ -451,22 +453,20 @@ const ManagePostsPage: React.FC = () => {
           <div className="hidden sm:flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden h-10">
             <button
               onClick={() => setViewMode('grid')}
-              className={`px-3.5 h-full cursor-pointer transition-colors ${
-                viewMode === 'grid'
+              className={`px-3.5 h-full cursor-pointer transition-colors ${viewMode === 'grid'
                   ? 'bg-gray-50 text-gray-800'
                   : 'text-gray-400 hover:text-gray-600'
-              }`}
+                }`}
               title="Xem lưới"
             >
               <LayoutGrid size={16} />
-            </button>            
+            </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`px-3.5 h-full cursor-pointer transition-colors border-r border-gray-100 last:border-0 ${
-                viewMode === 'list'
+              className={`px-3.5 h-full cursor-pointer transition-colors border-r border-gray-100 last:border-0 ${viewMode === 'list'
                   ? 'bg-gray-50 text-gray-800'
                   : 'text-gray-400 hover:text-gray-600'
-              }`}
+                }`}
               title="Xem danh sách"
             >
               <List size={16} />

@@ -105,10 +105,37 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, onRequireVerifyE
       toast.success('Đăng ký thành công, vui lòng nhập mã OTP đã gửi về email.');
       onRequireVerifyEmail?.(registeredEmail);
       onSuccess?.();
-    } catch {
-      toast.error('Đăng ký thất bại. Vui lòng thử lại.');
-    }
-  };
+    } catch (error: unknown) {
+          const maybeCode =
+            typeof error === 'object' &&
+            error !== null &&
+            'response' in error &&
+            typeof (error as { response?: { data?: { code?: unknown } } }).response?.data?.code === 'number'
+              ? ((error as { response?: { data?: { code?: number } } }).response?.data?.code as number)
+              : null;
+    
+          const maybeMessage =
+            typeof error === 'object' &&
+            error !== null &&
+            'response' in error &&
+            typeof (error as { response?: { data?: { message?: unknown } } }).response?.data?.message === 'string'
+              ? ((error as { response?: { data?: { message?: string } } }).response?.data?.message as string)
+              : '';
+    
+          if (maybeCode === 1001) {
+            toast.error('Email đã tồn tại. Vui lòng sử dụng email khác.');
+            return;
+          }
+            if (maybeCode === 1002) {
+              toast.error('Số điện thoại đã tồn tại. Vui lòng sử dụng số điện thoại khác.');
+              return;
+            }
+    
+        toast.error('Đăng ký thất bại. Vui lòng thử lại.');
+        }
+        
+    };
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value, type, checked } = e.target;

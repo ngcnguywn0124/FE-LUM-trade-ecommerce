@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Lock, Pencil, Trash2, KeyRound, ChevronUp, ChevronDown } from 'lucide-react';
+import { Lock, Pencil, Trash2, KeyRound, ChevronUp, ChevronDown, Users } from 'lucide-react';
 import type { RoleResponse } from '@/types/admin';
 
 const ROLE_COLORS: Record<string, string> = {
@@ -18,17 +18,23 @@ function roleBadge(name: string) {
 interface RoleCardProps {
   role: RoleResponse;
   isSuperAdmin: boolean;
+  selected?: boolean;
+  onSelect?: (checked: boolean) => void;
   onEdit: (r: RoleResponse) => void;
   onDelete: (r: RoleResponse) => void;
   onManagePermissions: (r: RoleResponse) => void;
+  onManageUsers: (r: RoleResponse) => void;
 }
 
 export default function RoleCard({
   role,
   isSuperAdmin,
+  selected = false,
+  onSelect,
   onEdit,
   onDelete,
   onManagePermissions,
+  onManageUsers,
 }: RoleCardProps) {
   const [expanded, setExpanded] = useState(false);
   const isSystemRole = [
@@ -41,6 +47,16 @@ export default function RoleCard({
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
       <div className="flex items-start gap-3 p-4">
+        {isSuperAdmin && !isSystemRole && onSelect && (
+          <div className="pt-1">
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={(e) => onSelect(e.target.checked)}
+              className="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500"
+            />
+          </div>
+        )}
         <div className="flex-shrink-0 p-2 rounded-xl bg-orange-50 mt-0.5">
           <Lock size={16} className="text-orange-500" />
         </div>
@@ -61,6 +77,13 @@ export default function RoleCard({
           <p className="text-xs text-gray-400 mt-1">{role.permissions.length} permissions</p>
         </div>
         <div className="flex items-center gap-1">
+          <button
+            onClick={() => onManageUsers(role)}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            title="Quản lý Users"
+          >
+            <Users size={15} />
+          </button>
           <button
             onClick={() => onManagePermissions(role)}
             className="p-1.5 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors"
