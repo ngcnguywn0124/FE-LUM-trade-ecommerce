@@ -378,8 +378,8 @@ const Header = () => {
               {!isScrolled ? (
                 /* CENTER: Danh mục nhanh (Khi ở Top) */
                 <div className="hidden xl:flex items-center space-x-10 text-sm font-heading font-bold text-gray-800">
-                  <a href="#" className="hover:text-white transition-colors">Lụm</a>
-                  <a href="#" className="hover:text-white transition-colors">Về chúng tôi</a>
+                  <Link href="/" className="hover:text-white transition-colors">Lụm</Link>
+                  <Link href="/gioi-thieu" className="hover:text-white transition-colors">Về chúng tôi</Link>
                   <a href="#" className="hover:text-white transition-colors">Xếp hạng</a>
                   <a href="#" className="hover:text-white transition-colors">Blog</a>
                 </div>
@@ -717,7 +717,7 @@ const Header = () => {
 
             {/* Other Links */}
             <div className="pt-4 border-t border-gray-100 space-y-2">
-              <a href="#" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Về chúng tôi</a>
+              <Link href="/gioi-thieu" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900" onClick={() => setIsMobileMenuOpen(false)}>Về chúng tôi</Link>
               <a href="#" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Quy định đăng tin</a>
               <a href="#" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Blog sinh viên</a>
             </div>
