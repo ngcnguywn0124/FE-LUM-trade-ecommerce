@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface ProductDetailTabsProps {
@@ -15,6 +15,14 @@ const ProductDetailTabs = ({ description, specs }: ProductDetailTabsProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
 
   const maxHeight = 480; // Tương đương max-h-96 (~384px) của section comment
+
+  const normalizedDescription = useMemo(() => {
+    if (!description) return "";
+
+    return description
+      .replace(/&shy;/gi, "")
+      .replace(/[\u00AD\u200B-\u200D\u2060\uFEFF]/g, "");
+  }, [description]);
 
   useEffect(() => {
     if (contentRef.current) {
@@ -58,12 +66,18 @@ const ProductDetailTabs = ({ description, specs }: ProductDetailTabsProps) => {
         style={{ maxHeight: isExpanded ? "none" : `${maxHeight}px` }}
       >
         {activeTab === "description" ? (
-          <div className="prose prose-slate prose-sm max-w-none text-gray-700">
+           <div className="prose prose-slate prose-sm max-w-none text-gray-700">
              <div 
-                className="rich-text-content"
-                dangerouslySetInnerHTML={{ __html: description }} 
+               className="rich-text-content"
+                dangerouslySetInnerHTML={{ __html: normalizedDescription }} 
              />
              <style jsx>{`
+                .rich-text-content {
+                  white-space: normal !important;
+                  word-break: normal !important;
+                  overflow-wrap: break-word !important;
+                  hyphens: none !important;
+                }
                 .rich-text-content :global(ul) {
                   list-style-type: disc !important;
                   margin-left: 1.5rem !important;
@@ -106,6 +120,10 @@ const ProductDetailTabs = ({ description, specs }: ProductDetailTabsProps) => {
                 .rich-text-content :global(p) {
                   margin-bottom: 0.75rem !important;
                   line-height: 1.7 !important;
+                  white-space: normal !important;
+                  overflow-wrap: break-word !important;
+                  word-break: normal !important;
+                  hyphens: none !important;
                 }
                 .rich-text-content :global(.ql-indent-1) { padding-left: 3em !important; }
                 .rich-text-content :global(.ql-indent-2) { padding-left: 6em !important; }
@@ -118,17 +136,17 @@ const ProductDetailTabs = ({ description, specs }: ProductDetailTabsProps) => {
           </div>
         ) : (
           <div className="overflow-hidden">
-            <table className="w-full border-collapse">
+            <table className="w-full table-fixed border-collapse">
               <tbody>
                 {specs.map((spec, index) => (
                   <tr 
                     key={spec.label} 
                     className={`${index !== specs.length - 1 ? "border-b border-gray-100" : ""}`}
                   >
-                    <td className="py-4 pr-4 text-sm font-medium text-gray-500 w-1/3">
+                    <td className="w-1/3 py-4 pr-4 align-top text-sm font-medium wrap-break-word whitespace-normal text-gray-500">
                       {spec.label}:
                     </td>
-                    <td className="py-4 text-sm font-semibold text-gray-900">
+                    <td className="py-4 align-top text-sm font-semibold wrap-break-word whitespace-normal text-gray-900">
                       {spec.value}
                     </td>
                   </tr>
@@ -139,7 +157,7 @@ const ProductDetailTabs = ({ description, specs }: ProductDetailTabsProps) => {
         )}
 
         {!isExpanded && showButton && (
-          <div className="absolute bottom-0 left-0 h-24 w-full bg-gradient-to-t from-white to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 h-24 w-full bg-linear-to-t from-white to-transparent pointer-events-none" />
         )}
       </div>
 
