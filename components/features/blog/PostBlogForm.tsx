@@ -28,8 +28,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { BlogFormData, BlogErrors } from "@/types/blog";
 import { useAuthStore } from "@/stores/authStore";
-import { createBlogPost, uploadBlogImage } from "@/services/blogService";
-import { Loader2, Crop } from "lucide-react";
+import { createBlogPost, uploadBlogImage, getBlogPostById, updateBlogPost } from "@/services/blogService";
+import { Loader2, Crop, ArrowLeft } from "lucide-react";
+import Link from "next/link";
+
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
 
@@ -72,12 +74,44 @@ const initialFormData: BlogFormData = {
   thumbnailPreview: "",
 };
 
-export default function PostBlogForm() {
+interface PostBlogFormProps {
+  id?: string;
+}
+
+export default function PostBlogForm({ id }: PostBlogFormProps) {
+  const isEditing = !!id;
+
   const router = useRouter();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const quillRef = useRef<any>(null);
   const [formData, setFormData] = useState<BlogFormData>(initialFormData);
+  const [isDataLoading, setIsDataLoading] = useState(isEditing);
+
+  // Fetch data if editing
+  useEffect(() => {
+    if (isEditing && id) {
+      const fetchData = async () => {
+        try {
+          const blog = await getBlogPostById(id);
+          setFormData({
+            title: blog.title,
+            category: blog.category,
+            excerpt: blog.excerpt,
+            content: blog.content,
+            thumbnailPreview: blog.thumbnail || "",
+          });
+        } catch (error) {
+          toast.error("Không thể tải dữ liệu bài viết");
+          router.push("/admin/blog");
+        } finally {
+          setIsDataLoading(false);
+        }
+      };
+      fetchData();
+    }
+  }, [id, isEditing, router]);
+
 
   const imageHandler = React.useCallback(() => {
     const input = document.createElement('input');
@@ -208,24 +242,33 @@ export default function PostBlogForm() {
 
     setIsSubmitting(true);
     try {
-      await createBlogPost(formData);
-      toast.success("Đăng bài thành công!");
+      if (isEditing && id) {
+        await updateBlogPost(id, formData);
+        toast.success("Cập nhật bài viết thành công!");
+      } else {
+        await createBlogPost(formData);
+        toast.success("Đăng bài thành công!");
+      }
       router.push("/admin/blog");
     } catch (error) {
-      toast.error("Có lỗi xảy ra khi đăng bài. Vui lòng thử lại.");
+      toast.error(isEditing ? "Cập nhật bài viết thất bại" : "Có lỗi xảy ra khi đăng bài");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isAuthLoading || !isAuthenticated) {
+
+  if (isAuthLoading || !isAuthenticated || isDataLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-[#8cceae]" />
-        <p className="text-gray-500 font-medium">Đang kiểm tra quyền truy cập...</p>
+        <p className="text-gray-500 font-medium">
+          {isDataLoading ? "Đang tải dữ liệu bài viết..." : "Đang kiểm tra quyền truy cập..."}
+        </p>
       </div>
     );
   }
+
 
   const completionPercent = Math.round(
     ([
@@ -249,14 +292,17 @@ export default function PostBlogForm() {
       >
         <div>
           <div className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-2">
-            <span className="cursor-pointer hover:text-gray-900" onClick={() => router.push("/admin/blog")}>Quản lý Blog</span>
+            <Link href="/admin/blog" className="hover:text-gray-900 flex items-center gap-1">
+              <ArrowLeft size={14} /> Quản lý Blog
+            </Link>
             <ChevronRight size={14} />
-            <span className="text-[#8cceae]">Đăng bài viết mới</span>
+            <span className="text-[#8cceae]">{isEditing ? "Chỉnh sửa bài viết" : "Đăng bài viết mới"}</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-black text-gray-900 flex items-center gap-3">
-            Sáng tạo <span className="text-[#8cceae]">Nội dung</span>
+            {isEditing ? "Chỉnh sửa" : "Sáng tạo"} <span className="text-[#8cceae]">Nội dung</span>
             <Sparkles className="text-[#FFBA00]" size={28} />
           </h1>
+
           <p className="text-gray-500 mt-2 max-w-xl">
             Chia sẻ kiến thức, kinh nghiệm và những điều thú vị của bạn với cộng đồng sinh viên Lụm.vn.
           </p>
@@ -534,8 +580,9 @@ export default function PostBlogForm() {
               ) : (
                 <Send size={18} />
               )}
-              <span>Đăng bài viết ngay</span>
+              <span>{isEditing ? "Lưu thay đổi" : "Đăng bài viết ngay"}</span>
             </motion.button>
+
           </div>
         </div>
       </motion.div>

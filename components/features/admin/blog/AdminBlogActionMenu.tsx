@@ -3,8 +3,10 @@
 import React, { useRef, useEffect } from 'react';
 import { 
   Eye, Trash2, ExternalLink, MoreVertical, 
-  CheckCircle, XCircle 
+  CheckCircle, XCircle, Edit
 } from 'lucide-react';
+import Link from 'next/link';
+
 import { BlogPost } from '@/types/blog';
 
 interface AdminBlogActionMenuProps {
@@ -51,6 +53,15 @@ const AdminBlogActionMenu: React.FC<AdminBlogActionMenuProps> = ({
       {isOpen && (
         <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-100 z-[9999] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
           <div className="py-1">
+            <Link
+              href={`/admin/blog/edit/${blogId}`}
+              className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              onClick={() => onClose()}
+            >
+              <Edit size={15} className="text-blue-500" />
+              Chỉnh sửa bài viết
+            </Link>
+
             <button 
               onClick={(e) => { e.stopPropagation(); onViewDetail(); onClose(); }}
               className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
@@ -58,6 +69,7 @@ const AdminBlogActionMenu: React.FC<AdminBlogActionMenuProps> = ({
               <Eye size={15} className="text-emerald-500" />
               Xem chi tiết
             </button>
+
 
             <a 
               href={`/blog/${blog.slug}`} 
