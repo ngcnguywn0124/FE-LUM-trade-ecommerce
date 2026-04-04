@@ -9,9 +9,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 interface RelatedProductsProps {
   products: Product[];
   sellerName?: string;
+  sellerId?: string;
 }
 
-const RelatedProducts = ({ products, sellerName }: RelatedProductsProps) => {
+const RelatedProducts = ({ products, sellerName, sellerId }: RelatedProductsProps) => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showPrev, setShowPrev] = useState(false);
@@ -104,9 +105,22 @@ const RelatedProducts = ({ products, sellerName }: RelatedProductsProps) => {
       {/* Nút Xem thêm ở dưới - Chỉ hiện nếu có nhiều hơn 5 sản phẩm */}
       {displayProducts.length > 5 && (
         <div className="mt-2 text-center">
-          <button className="px-10 py-3 rounded-full border-2 border-slate-100 font-bold text-gray-700 hover:bg-slate-50 transition-all hover:border-emerald-500 hover:text-emerald-600 cursor-pointer">
-            Xem Thêm
-          </button>
+          {sellerId ? (
+            <Link
+              href={`/tai-khoan/${sellerId}`}
+              className="inline-flex px-10 py-3 rounded-full border-2 border-slate-100 font-bold text-gray-700 hover:bg-slate-50 transition-all hover:border-emerald-500 hover:text-emerald-600"
+            >
+              Xem Thêm
+            </Link>
+          ) : (
+            <button
+              type="button"
+              className="px-10 py-3 rounded-full border-2 border-slate-100 font-bold text-gray-400 cursor-not-allowed"
+              disabled
+            >
+              Xem Thêm
+            </button>
+          )}
         </div>
       )}
     </section>

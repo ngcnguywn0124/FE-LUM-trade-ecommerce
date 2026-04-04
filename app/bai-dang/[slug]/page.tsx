@@ -266,7 +266,11 @@ const ProductDetailPage = () => {
           </div>
         </div>
 
-        <RelatedProducts products={relatedProducts} sellerName={product.seller?.name} />
+        <RelatedProducts
+          products={relatedProducts}
+          sellerName={product.seller?.name}
+          sellerId={productDetail.sellerId ?? undefined}
+        />
 
         <SimilarProducts
           products={similarProductsPool}

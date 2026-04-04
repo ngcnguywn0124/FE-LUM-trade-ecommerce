@@ -92,7 +92,7 @@ export default function Hero() {
                   </span>
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
-                <Link href="/ve-chung-toi" className="bg-emerald-600 text-brand-dark px-8 py-4 rounded-lg font-heading font-bold hover:bg-brand-mint hover:border-brand-mint transition-all shadow-md hover:shadow-lg hover:scale-105 flex items-center justify-center">
+                <Link href="/gioi-thieu" className="bg-emerald-600 text-brand-dark px-8 py-4 rounded-lg font-heading font-bold hover:bg-brand-mint hover:border-brand-mint transition-all shadow-md hover:shadow-lg hover:scale-105 flex items-center justify-center">
                   Tìm hiểu thêm
                 </Link>
               </div>
