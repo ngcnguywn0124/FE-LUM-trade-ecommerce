@@ -1,12 +1,12 @@
 /**
  * Loại thông báo khớp với backend API
  * DB: new_message | new_offer | transaction_update | product_sold |
- *     product_expired | review_received | wishlist_update | new_follower |
- *     admin_message | system
+ *     product_expired | review_received | review_sent | wishlist_update |
+ *     new_follower | admin_message | system
  * FE tabs nhóm: message → new_message|new_offer
  *               post    → product_sold|product_expired
  *               transaction → transaction_update
- *               system  → admin_message|system|review_received|new_follower
+ *               system  → admin_message|system|review_received|review_sent|new_follower
  */
 export type ApiNotificationType =
   | 'new_message'
@@ -15,6 +15,7 @@ export type ApiNotificationType =
   | 'product_sold'
   | 'product_expired'
   | 'review_received'
+  | 'review_sent'
   | 'wishlist_update'
   | 'new_follower'
   | 'admin_message'

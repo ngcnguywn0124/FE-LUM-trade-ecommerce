@@ -125,6 +125,7 @@ const mapApiConversation = (conversation: ChatConversationResponse): Conversatio
         : 'Giá liên hệ',
       image: conversation.productImageUrl || '/template.png',
       sellerId: conversation.sellerId || '',
+      meetingPoint: conversation.meetingPoint || undefined,
     },
     messages: [previewMessage],
     unreadCount: conversation.unreadCount ?? (conversation.isUnread ? 1 : 0),
@@ -157,6 +158,29 @@ const mapApiTxToConversationTx = (tx: ApiTransactionResponse): ConversationTrans
   notes: tx.notes ?? undefined,
   createdAt: tx.createdAt,
   updatedAt: tx.updatedAt,
+});
+
+const createEmptyConversationTransaction = (
+  id = '',
+  status: ConversationTransaction['status'] = 'idle',
+): ConversationTransaction => ({
+  id,
+  status,
+  agreedPrice: undefined,
+  meetupLocation: undefined,
+  meetupTime: undefined,
+  paymentMethod: undefined,
+  shippingMethod: undefined,
+  buyerConfirmedMeetup: false,
+  sellerConfirmedMeetup: false,
+  buyerConfirmedPayment: false,
+  sellerConfirmedPayment: false,
+  cancellationReason: undefined,
+  cancelledBy: undefined,
+  notes: undefined,
+  isReviewed: false,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 });
 
 const MessagesPage = () => {
@@ -235,15 +259,18 @@ const MessagesPage = () => {
       setConversations((prev) =>
         prev.map((c) => {
           if (normalizeId(c.id) !== normalizeId(convId)) return c;
-          const existing: ConversationTransaction = c.transaction ?? {
-            id: '',
-            status: 'idle' as const,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
+          const existing: ConversationTransaction = c.transaction ?? createEmptyConversationTransaction();
+          const shouldReset = Boolean(patch.id) && normalizeId(patch.id) !== normalizeId(existing.id);
+          const base = shouldReset
+            ? createEmptyConversationTransaction(
+                patch.id || '',
+                (patch.status as ConversationTransaction['status']) || 'idle',
+              )
+            : existing;
+
           return {
             ...c,
-            transaction: { ...existing, ...patch, updatedAt: new Date().toISOString() },
+            transaction: { ...base, ...patch, updatedAt: new Date().toISOString() },
           };
         })
       );
@@ -317,23 +344,14 @@ const MessagesPage = () => {
     async (location: string, time: string, price?: number) => {
       if (!activeConversationId || !activeConversation?.transaction?.id) return;
       const txId = activeConversation.transaction.id;
-      const currentStatus = activeConversation.transaction.status;
       try {
-        // Nếu đã ở seller_confirmed rồi, chỉ cập nhật meetup local (không cần gọi API thêm)
-        // bắt buộc gọi API với seller_confirmed khi chưa có location (lần confirm đầu tiên)
-        if (currentStatus === 'seller_confirmed' && activeConversation.transaction.meetupLocation) {
-          // Đã confirm rồi và đã có location: chỉ cập nhật local state, không đổi status
-          updateTransaction(activeConversationId, { meetupLocation: location, meetupTime: time, agreedPrice: price?.toString() });
-        } else {
-          // Lần đầu tiên gửi đề xuất: gọi API với meetupLocation và agreedPrice đính kèm
-          const tx = await transactionService.updateTransactionStatus(currentUserId, txId, {
-            status: 'seller_confirmed',
-            meetupLocation: location,
-            meetupTime: time,
-            agreedPrice: price,
-          });
-          updateTransaction(activeConversationId, mapApiTxToConversationTx(tx));
-        }
+        const tx = await transactionService.updateTransactionStatus(currentUserId, txId, {
+          status: 'seller_confirmed',
+          meetupLocation: location,
+          meetupTime: time,
+          agreedPrice: price,
+        });
+        updateTransaction(activeConversationId, mapApiTxToConversationTx(tx));
       } catch {
         // Fallback: cập nhật local thôi
         updateTransaction(activeConversationId, { meetupLocation: location, meetupTime: time, agreedPrice: price?.toString() });
@@ -606,22 +624,35 @@ const MessagesPage = () => {
             const eventType = incomingMessage.transactionEvent;
 
             if (eventType) {
+              const hasNewTransactionId =
+                parsed.transactionId &&
+                normalizeId(parsed.transactionId) !== normalizeId(conversation.transaction?.id);
+
+              const txBase = hasNewTransactionId
+                ? createEmptyConversationTransaction(
+                    parsed.transactionId || '',
+                    (parsed.transactionStatus || eventType) as TransactionStatus,
+                  )
+                : (conversation.transaction || {
+                    id: parsed.transactionId || '',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    status: (parsed.transactionStatus || eventType) as TransactionStatus,
+                  });
+
               // Đọc transaction fields từ `parsed` (raw WebSocket payload - có đầy đủ fields từ backend)
               updatedTransaction = {
-                ...(conversation.transaction || {
-                  id: parsed.transactionId || '',
-                  createdAt: new Date().toISOString(),
-                }),
-                id: parsed.transactionId || conversation.transaction?.id || '',
+                ...txBase,
+                id: parsed.transactionId || txBase.id || '',
                 status: (parsed.transactionStatus || eventType) as TransactionStatus,
-                meetupLocation: parsed.meetupLocation ?? conversation.transaction?.meetupLocation,
-                meetupTime: parsed.meetupTime ?? conversation.transaction?.meetupTime,
-                agreedPrice: parsed.agreedPrice != null ? String(parsed.agreedPrice) : conversation.transaction?.agreedPrice,
-                buyerConfirmedMeetup: parsed.buyerConfirmedMeetup ?? conversation.transaction?.buyerConfirmedMeetup,
-                sellerConfirmedMeetup: parsed.sellerConfirmedMeetup ?? conversation.transaction?.sellerConfirmedMeetup,
-                buyerConfirmedPayment: parsed.buyerConfirmedPayment ?? conversation.transaction?.buyerConfirmedPayment,
-                sellerConfirmedPayment: parsed.sellerConfirmedPayment ?? conversation.transaction?.sellerConfirmedPayment,
-                isReviewed: parsed.isReviewed ?? conversation.transaction?.isReviewed,
+                meetupLocation: parsed.meetupLocation ?? txBase.meetupLocation,
+                meetupTime: parsed.meetupTime ?? txBase.meetupTime,
+                agreedPrice: parsed.agreedPrice != null ? String(parsed.agreedPrice) : txBase.agreedPrice,
+                buyerConfirmedMeetup: parsed.buyerConfirmedMeetup ?? txBase.buyerConfirmedMeetup,
+                sellerConfirmedMeetup: parsed.sellerConfirmedMeetup ?? txBase.sellerConfirmedMeetup,
+                buyerConfirmedPayment: parsed.buyerConfirmedPayment ?? txBase.buyerConfirmedPayment,
+                sellerConfirmedPayment: parsed.sellerConfirmedPayment ?? txBase.sellerConfirmedPayment,
+                isReviewed: parsed.isReviewed ?? txBase.isReviewed,
                 updatedAt: new Date().toISOString(),
               };
             }
@@ -718,13 +749,35 @@ const MessagesPage = () => {
 
     const normalizedConversationId = normalizeId(activeConversationId);
     void chatService.markAsRead(currentUserId, normalizedConversationId).catch(() => undefined);
-    setConversations((prev) =>
-      prev.map((conversation) =>
-        normalizeId(conversation.id) === normalizedConversationId
-          ? { ...conversation, unreadCount: 0 }
-          : conversation
-      )
-    );
+    setConversations((prev) => {
+      let didChange = false;
+
+      const next = prev.map((conversation) => {
+        if (normalizeId(conversation.id) !== normalizedConversationId) {
+          return conversation;
+        }
+
+        const nextMessages = conversation.messages.map((message) => {
+          const isIncoming = normalizeId(message.senderId) !== currentUserIdNormalized;
+          if (!isIncoming || message.status === 'seen') return message;
+          didChange = true;
+          return { ...message, status: 'seen' as const };
+        });
+
+        if ((conversation.unreadCount || 0) === 0 && nextMessages === conversation.messages) {
+          return conversation;
+        }
+
+        didChange = true;
+        return {
+          ...conversation,
+          unreadCount: 0,
+          messages: nextMessages,
+        };
+      });
+
+      return didChange ? next : prev;
+    });
   }, [activeConversationId, activeConversation, currentUserId]);
 
   // Đánh dấu đã đọc khi người dùng quay lại tab (focus)

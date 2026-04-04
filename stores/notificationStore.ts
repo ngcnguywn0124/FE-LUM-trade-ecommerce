@@ -56,12 +56,15 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
   fetchNotifications: async (userId) => {
     set({ isLoading: true });
     try {
-      const page = await notificationService.getNotifications(userId, 0, 20);
+      const [page, unreadCount] = await Promise.all([
+        notificationService.getNotifications(userId, 0, 20),
+        notificationService.getUnreadCount(userId),
+      ]);
       set({
         notifications: page.content.map(mapApiToItem),
         hasMore: !page.last,
         currentPage: 0,
-        unreadCount: page.content.filter((n) => !n.isRead).length,
+        unreadCount,
       });
     } catch (err) {
       console.error('Failed to fetch notifications:', err);

@@ -8,28 +8,47 @@ import UserProfileHeader from "@/components/features/user-profile/UserProfileHea
 import UserReviewsSection from "@/components/features/user-profile/UserReviewsSection";
 import UserListingsSection from "@/components/features/user-profile/UserListingsSection";
 import { getProducts, mapSummaryToCardProduct } from "@/services/productService";
-import { getUserProfileData } from "@/lib/mockUserProfile";
+import { reviewService } from "@/services/reviewService";
+import { getUserProfileData, mapReviewResponseToUserReview } from "@/lib/userProfileData";
 import { getCurrentUser } from "@/services/authService";
 import { getPublicProfile } from "@/services/profileService";
-import type { ProfileResponse } from "@/types/profile";
+import type { ProfileResponse, UserReview } from "@/types/profile";
 
 const UserProfilePage = () => {
   const params = useParams<{ id: string }>();
   const userId = params.id;
 
   const [allProducts, setAllProducts] = useState<ReturnType<typeof mapSummaryToCardProduct>[]>([]);
+  const [reviews, setReviews] = useState<UserReview[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [publicProfile, setPublicProfile] = useState<ProfileResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const loadAllReviews = async (targetUserId: string): Promise<UserReview[]> => {
+    const pageSize = 50;
+    let page = 0;
+    let hasMore = true;
+    const all: UserReview[] = [];
+
+    while (hasMore) {
+      const result = await reviewService.getUserReviews(targetUserId, page, pageSize);
+      all.push(...result.content.map(mapReviewResponseToUserReview));
+      hasMore = !result.last;
+      page += 1;
+    }
+
+    return all;
+  };
 
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
 
       try {
-        const [profileRes, productsPage, me] = await Promise.allSettled([
+        const [profileRes, productsPage, reviewsPage, me] = await Promise.allSettled([
           getPublicProfile(userId),
           getProducts({ page: 0, size: 150, sort: "createdAt,desc" }),
+          loadAllReviews(userId),
           getCurrentUser(),
         ]);
 
@@ -43,6 +62,12 @@ const UserProfilePage = () => {
           setAllProducts(productsPage.value.content.map(mapSummaryToCardProduct));
         } else {
           setAllProducts([]);
+        }
+
+        if (reviewsPage.status === "fulfilled") {
+          setReviews(reviewsPage.value);
+        } else {
+          setReviews([]);
         }
 
         if (me.status === "fulfilled") {
@@ -62,8 +87,8 @@ const UserProfilePage = () => {
     if (!publicProfile) {
       return null;
     }
-    return getUserProfileData(publicProfile, allProducts);
-  }, [allProducts, publicProfile]);
+    return getUserProfileData(publicProfile, allProducts, reviews);
+  }, [allProducts, publicProfile, reviews]);
 
   if (isLoading) {
     return <div className="min-h-screen bg-gray-50 pt-24 pb-12" />;
@@ -99,7 +124,7 @@ const UserProfilePage = () => {
     );
   }
 
-  const { profile, listings, reviews } = userData;
+  const { profile, listings, reviews: profileReviews } = userData;
   const isOwnProfile = userId === currentUserId;
 
   return (
@@ -110,7 +135,7 @@ const UserProfilePage = () => {
 
           <div className="space-y-4">
             <UserListingsSection listings={listings} />
-            <UserReviewsSection reviews={reviews} />
+            <UserReviewsSection reviews={profileReviews} />
           </div>
         </div>
       </div>
