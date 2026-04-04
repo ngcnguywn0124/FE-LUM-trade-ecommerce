@@ -59,13 +59,20 @@ async function handler(
       forwardedHeaders.set('ngrok-skip-browser-warning', 'true');
     }
 
+    // Prepare body for non-GET/HEAD methods
+    let body: any = undefined;
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      try {
+        body = await request.clone().arrayBuffer();
+      } catch (e) {
+        console.error('[Proxy] Body read error:', e);
+      }
+    }
+
     const backendResponse = await fetch(backendUrl, {
       method: request.method,
       headers: forwardedHeaders,
-      body:
-        request.method !== 'GET' && request.method !== 'HEAD'
-          ? await request.arrayBuffer()
-          : undefined,
+      body,
       redirect: 'manual', // ← QUAN TRỌNG: bắt redirect thay vì follow
       cache: 'no-store',
     });

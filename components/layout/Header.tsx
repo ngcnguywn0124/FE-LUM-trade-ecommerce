@@ -155,8 +155,26 @@ const Header = () => {
         } catch (e) { /* ignore */ }
       });
 
-      // Notification stream for this user
+
+      // Listener for notifications
       client.subscribe(`/topic/user-${userId}/notifications`, (message) => {
+        try {
+          const notification = JSON.parse(message.body);
+          addRealtimeNotification(notification);
+          // Optional: toast to alert user
+          toast(notification.title, {
+            description: notification.content,
+            action: notification.targetHref ? {
+              label: "Xem ngay",
+              onClick: () => router.push(notification.targetHref)
+            } : undefined
+          });
+        } catch (e) { /* ignore */ }
+      });
+
+      // Listener for global unread count updates (if backend sends it)
+      client.subscribe('/user/queue/unread-count-sync', (message) => {
+
         try {
           const n = JSON.parse(message.body);
           if (!n?.notificationId) return;
@@ -210,8 +228,6 @@ const Header = () => {
   }, [isAuthenticated, user?.userId, fetchNotifications]);
 
   // Kiểm tra xem có đang ở trang chủ không
-  const isHomePage = pathname === "/";
-
   const previewNotifications = useMemo(
     () =>
       [...notifications]
@@ -220,9 +236,12 @@ const Header = () => {
     [notifications]
   );
 
+  // Kiểm tra xem có đang ở trang có Hero (Home hoặc Blog) không
+  const isHeroPage = pathname === "/" || pathname === "/blog";
+
   // Xử lý sticky header khi cuộn
   useEffect(() => {
-    if (!isHomePage) {
+    if (!isHeroPage) {
       setIsScrolled(true);
       return;
     }
@@ -234,7 +253,7 @@ const Header = () => {
     
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [isHomePage]);
+  }, [isHeroPage, pathname]);
 
   useEffect(() => {
     const loadSearchMeta = async () => {
@@ -316,7 +335,13 @@ const Header = () => {
       // lg breakpoint in Tailwind is 1024px
       router.push("/thong-bao");
     } else {
-      setIsNotificationsOpen((prev) => !prev);
+      const nextState = !isNotificationsOpen;
+      setIsNotificationsOpen(nextState);
+      
+      // Nếu mở ra và đang có thông báo chưa đọc, tự động đánh dấu đã đọc hết
+      if (nextState && unreadCount > 0) {
+        handleMarkAllRead();
+      }
     }
   };
 
@@ -364,7 +389,7 @@ const Header = () => {
     <div className="flex flex-col w-full font-sans">
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-            !isHomePage || isScrolled ? "shadow-md bg-[#8cceae]" : "bg-[#b8f3d700]"
+            !isHeroPage || isScrolled ? "shadow-md bg-[#8cceae]" : "bg-[#b8f3d700]"
         } py-3`}
       >
         <div className="max-w-360 mx-auto px-4 sm:px-6 lg:px-8">
@@ -400,10 +425,10 @@ const Header = () => {
               {!isScrolled ? (
                 /* CENTER: Danh mục nhanh (Khi ở Top) */
                 <div className="hidden xl:flex items-center space-x-10 text-sm font-heading font-bold text-gray-800">
-                  <a href="#" className="hover:text-white transition-colors">Lụm</a>
-                  <a href="#" className="hover:text-white transition-colors">Về chúng tôi</a>
+                  <Link href="/" className="hover:text-white transition-colors">Lụm</Link>
+                  <Link href="/gioi-thieu" className="hover:text-white transition-colors">Về chúng tôi</Link>
                   <a href="#" className="hover:text-white transition-colors">Xếp hạng</a>
-                  <a href="#" className="hover:text-white transition-colors">Blog</a>
+                  <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
                 </div>
               ) : (
                 /* CENTER: THANH SEARCH (Khi cuộn xuống) */
@@ -739,9 +764,9 @@ const Header = () => {
 
             {/* Other Links */}
             <div className="pt-4 border-t border-gray-100 space-y-2">
-              <a href="#" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Về chúng tôi</a>
+              <Link href="/gioi-thieu" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900" onClick={() => setIsMobileMenuOpen(false)}>Về chúng tôi</Link>
               <a href="#" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Quy định đăng tin</a>
-              <a href="#" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900">Blog sinh viên</a>
+              <Link href="/blog" className="block px-3 py-2 text-sm text-gray-500 hover:text-gray-900" onClick={() => setIsMobileMenuOpen(false)}>Blog sinh viên</Link>
             </div>
           </div>
 

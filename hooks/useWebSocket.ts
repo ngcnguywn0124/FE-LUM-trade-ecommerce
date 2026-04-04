@@ -17,22 +17,23 @@ export interface ProductStatusEvent {
 
 /**
  * Hook WebSocket dùng chung.
- * - onMessageReceived: nhận mọi tin nhắn riêng tư (/user/.../queue/notifications)
+ * - onMessageReceived: nhận mọi tin nhắn riêng tư (/user/.../queue/notifications) hoặc admin
  * - watchProductId: subscribe thêm kênh công khai /topic/products/{watchProductId}
- * - onProductStatusChanged: callback khi nhận event PRODUCT_STATUS_CHANGED từ topic sản phẩm
+ * - onProductStatusChanged: callback khi nhận event từ topic sản phẩm
+ * - onBlogEvent: callback khi có tin blog mới hoặc thay đổi trạng thái blog
  */
 export const useWebSocket = (
   onMessageReceived?: (message: string) => void,
   watchProductId?: string,
   onProductStatusChanged?: (event: ProductStatusEvent) => void,
+  onBlogEvent?: (message: string) => void,
 ) => {
   const { user } = useAuthStore();
   const stompClientRef = useRef<Client | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   const connect = useCallback(() => {
-    if (!user?.userId) return;
-
+    // Cho phép kết nối ngay cả khi chưa đăng nhập để nghe các topic công khai (như Blog)
     const client = new Client({
       webSocketFactory: () => new SockJS(WS_URL),
       reconnectDelay: 5000,
@@ -44,26 +45,31 @@ export const useWebSocket = (
       setIsConnected(true);
       console.log('WebSocket connected: ' + frame);
 
-      // 1. Subscribe kênh topic theo userId (public topic, không cần principal)
-      client.subscribe(`/topic/user-${user.userId}`, (message) => {
-        if (onProductStatusChanged && message.body.startsWith('{')) {
-          try {
-            const event = JSON.parse(message.body) as ProductStatusEvent;
-            if (event.type === 'PRODUCT_STATUS_CHANGED') {
-              onProductStatusChanged(event);
-              return;
-            }
-          } catch { /* ignore parse errors */ }
-        }
-        // Fallback: gọi onMessageReceived cho format cũ (ví dụ PRODUCT_EXPIRED:...)
-        if (onMessageReceived) {
-          onMessageReceived(message.body);
-        }
-      });
+      // 1. Kênh cá nhân (nếu đã đăng nhập)
+      if (user?.userId) {
+        client.subscribe(`/topic/user-${user.userId}`, (message) => {
+          if (onProductStatusChanged && message.body.startsWith('{')) {
+            try {
+              const event = JSON.parse(message.body) as ProductStatusEvent;
+              if (event.type === 'PRODUCT_STATUS_CHANGED') {
+                onProductStatusChanged(event);
+                return;
+              }
+            } catch { /* ignore parse errors */ }
+          }
+          if (onMessageReceived) {
+            onMessageReceived(message.body);
+          }
+        });
+      }
 
-      // 2. Subscribe kênh admin (nếu user là admin/mod)
-      const isAdmin = user.roles.some((r: any) => ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN', 'ROLE_MODERATOR'].includes(r));
+      // 2. Kênh Admin (nếu là admin/mod)
+      const isAdmin = user?.roles?.some((r: any) =>
+        ['ROLE_ADMIN', 'ROLE_SUPER_ADMIN', 'ROLE_MODERATOR'].includes(r)
+      );
+
       if (isAdmin) {
+        // Thông báo sản phẩm admin
         client.subscribe('/topic/admin/products', (message) => {
           if (message.body.startsWith('{')) {
             try {
@@ -74,13 +80,16 @@ export const useWebSocket = (
               }
             } catch { /* ignore */ }
           }
-          if (onMessageReceived) {
-            onMessageReceived(message.body);
-          }
+          if (onMessageReceived) onMessageReceived(message.body);
+        });
+
+        // Thông báo Blog/Hệ thống cho admin
+        client.subscribe('/topic/admin/notifications', (message) => {
+          if (onMessageReceived) onMessageReceived(message.body);
         });
       }
 
-      // 3. Subscribe kênh công khai theo dõi trạng thái sản phẩm cụ thể (nếu có)
+      // 3. Theo dõi sản phẩm cụ thể
       if (watchProductId && onProductStatusChanged) {
         client.subscribe(`/topic/products/${watchProductId}`, (message) => {
           try {
@@ -91,6 +100,13 @@ export const useWebSocket = (
           } catch { /* ignore parse errors */ }
         });
       }
+
+      // 4. Tuyến tin Blog công khai (Realtime cho cả khách xem)
+      client.subscribe('/topic/blogs', (message) => {
+        if (onBlogEvent) {
+          onBlogEvent(message.body);
+        }
+      });
     };
 
     client.onDisconnect = () => {
@@ -103,7 +119,7 @@ export const useWebSocket = (
 
     client.activate();
     stompClientRef.current = client;
-  }, [user?.userId, onMessageReceived, watchProductId, onProductStatusChanged]);
+  }, [user?.userId, user?.roles, onMessageReceived, watchProductId, onProductStatusChanged, onBlogEvent]);
 
   const disconnect = useCallback(() => {
     if (stompClientRef.current) {
