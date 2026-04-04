@@ -21,6 +21,15 @@ interface SearchPageClientProps {
   combinedSlug?: string;
 }
 
+const normalizeVietnamese = (value: string) =>
+  String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase()
+    .trim();
+
 const flattenCategories = (nodes: CategoryResponse[]): CategoryResponse[] => {
   const result: CategoryResponse[] = [];
   const walk = (items: CategoryResponse[]) => {
@@ -312,8 +321,10 @@ const SearchPageClient = ({ combinedSlug }: SearchPageClientProps) => {
   }, [keyword, filters.category, filters.subcategory, filters.school, filters.campus, categoryBySlug]);
 
   const filteredProducts = useMemo(() => {
+    const normalizedKeyword = normalizeVietnamese(keyword);
+
     return allProducts.filter((product) => {
-      if (keyword && !product.name.toLowerCase().includes(keyword.toLowerCase())) {
+      if (normalizedKeyword && !normalizeVietnamese(product.name).includes(normalizedKeyword)) {
         return false;
       }
 

@@ -91,17 +91,17 @@ const TEAM_MEMBERS = [
   {
     name: "Nguyễn Quý Ngọc",
     role: "UI/UX Designer & Frontend",
-    avatar: "/user/avatar-user-profile-default.png",
+    avatar: "/user/ainz.jpg",
   },
   {
     name: "Thân Quang Tuân",
     role: "Fullstack Developer",
-    avatar: "/user/avatar-user-profile-default.png",
+    avatar: "/user/solo.jpg",
   },
   {
     name: "Nguyễn Ái Bình",
     role: "Backend Developer",
-    avatar: "/user/avatar-user-profile-default.png",
+    avatar: "/user/gojjo.png",
   },
 ];
 
@@ -151,7 +151,7 @@ export default function AboutPage() {
                 Về Lụm.vn
               </span>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-tight mb-6">
-                Cũ người mới ta,{" "}
+                Cũ người mới ta,<br></br>{" "}
                 <span className="text-orange-700">Sinh viên</span> chốt giá!
               </h1>
               <p className="text-lg md:text-xl text-gray-800 leading-relaxed max-w-2xl mx-auto lg:mx-0">
@@ -160,21 +160,6 @@ export default function AboutPage() {
                 tôi kết nối cộng đồng, lan tỏa giá trị xanh và giúp mỗi giao
                 dịch trở nên an toàn, nhanh chóng và tiết kiệm.
               </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link
-                  href="/"
-                  className="flex items-center justify-center gap-2 px-8 py-3 bg-gray-900 text-[#FFBA00] font-bold rounded-xl hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-                >
-                  Khám phá ngay
-                  <ArrowRight size={18} />
-                </Link>
-                <a
-                  href="#contact"
-                  className="flex items-center justify-center gap-2 px-8 py-3 bg-white/40 backdrop-blur-sm text-gray-900 font-bold rounded-xl hover:bg-white/60 transition-all border border-white/50"
-                >
-                  Liên hệ
-                </a>
-              </div>
             </motion.div>
 
             {/* Logo / Illustration */}
@@ -190,7 +175,7 @@ export default function AboutPage() {
                 <div className="absolute inset-0 bg-white/30 rounded-3xl -rotate-3 backdrop-blur-sm" />
                 <div className="relative h-full flex items-center justify-center bg-white/40 backdrop-blur-md rounded-3xl shadow-2xl p-8 border border-white/50">
                   <Image
-                    src="/logo/lum-logo.png"
+                    src="/banners/promo-v3.jpg"
                     alt="Logo Lụm.vn - Sàn thương mại điện tử đồ cũ dành cho sinh viên"
                     width={220}
                     height={88}
@@ -466,7 +451,7 @@ export default function AboutPage() {
           </motion.div>
 
           <motion.div
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8"
+            className="flex flex-wrap justify-center gap-6 md:gap-8"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
@@ -476,7 +461,7 @@ export default function AboutPage() {
                 key={member.name}
                 variants={scaleIn}
                 custom={i}
-                className="group text-center"
+                className="group text-center w-[calc(50%-12px)] md:w-40 lg:w-48"
               >
                 <div className="relative w-28 h-28 md:w-36 md:h-36 mx-auto mb-4">
                   <div className="absolute inset-0 bg-gradient-to-br from-[#8cceae] to-[#FFBA00] rounded-2xl rotate-3 group-hover:rotate-6 transition-transform" />
@@ -637,23 +622,6 @@ export default function AboutPage() {
                 <p className="text-gray-400 text-sm">{contact.info}</p>
               </motion.div>
             ))}
-          </motion.div>
-
-          <motion.div
-            className="mt-12 text-center"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            custom={3}
-          >
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#FFBA00] text-black font-bold rounded-xl hover:bg-white transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-            >
-              Bắt đầu mua bán ngay
-              <ArrowRight size={18} />
-            </Link>
           </motion.div>
         </div>
       </section>

@@ -237,7 +237,7 @@ const Header = () => {
   );
 
   // Kiểm tra xem có đang ở trang có Hero (Home hoặc Blog) không
-  const isHeroPage = pathname === "/" || pathname === "/blog";
+  const isHeroPage = pathname === "/" || pathname === "/blog" || pathname === "/gioi-thieu";
 
   // Xử lý sticky header khi cuộn
   useEffect(() => {
@@ -427,7 +427,7 @@ const Header = () => {
                 <div className="hidden xl:flex items-center space-x-10 text-sm font-heading font-bold text-gray-800">
                   <Link href="/" className="hover:text-white transition-colors">Lụm</Link>
                   <Link href="/gioi-thieu" className="hover:text-white transition-colors">Về chúng tôi</Link>
-                  <a href="#" className="hover:text-white transition-colors">Xếp hạng</a>
+                  {/* <a href="#" className="hover:text-white transition-colors">Xếp hạng</a> */}
                   <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
                 </div>
               ) : (
