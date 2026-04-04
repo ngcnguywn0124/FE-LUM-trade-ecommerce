@@ -18,7 +18,7 @@ import CategoryMegaMenu from "../shared/CategoryMegaMenu";
 import AuthModal from "../features/auth/AuthModal";
 import NotificationsDropdown from "../features/notifications/NotificationsDropdown";
 
-import { NotificationItemData } from "@/types/notifications";
+import { NotificationItemData, mapApiTypeToUiType } from "@/types/notifications";
 import { useAuthStore } from "@/stores/authStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { useChatStore } from "@/stores/chatStore";
@@ -30,7 +30,7 @@ import { buildSearchHref } from "@/lib/searchUrl";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 import { favoriteService } from "@/services/favoriteService";
 
-const CHAT_WS_URL = process.env.NEXT_PUBLIC_CHAT_WS_URL || process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8686/ws';
+const CHAT_WS_URL = process.env.NEXT_PUBLIC_CHAT_WS_URL || process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8686/api/v1/ws';
 
 const Header = () => {
   const pathname = usePathname();
@@ -138,11 +138,14 @@ const Header = () => {
     const client = new Client({
       webSocketFactory: () => new SockJS(CHAT_WS_URL),
       reconnectDelay: 5000,
+      connectHeaders: {
+        'user-id': userId,
+      },
     });
 
     client.onConnect = () => {
-      // Listener for direct messages
-      client.subscribe('/user/queue/messages', (message) => {
+      // Node backend publishes direct chat messages to topic by userId
+      client.subscribe(`/topic/user-${userId}`, (message) => {
         try {
           const msg = JSON.parse(message.body);
           // Only increment if message is from someone else and user is NOT on the chat page of that conversation
@@ -152,11 +155,30 @@ const Header = () => {
         } catch (e) { /* ignore */ }
       });
 
-      // Listener for global unread count updates (if backend sends it)
-      client.subscribe('/user/queue/unread-count-sync', (message) => {
+      // Notification stream for this user
+      client.subscribe(`/topic/user-${userId}/notifications`, (message) => {
         try {
-          const count = Number(message.body);
-          if (!isNaN(count)) setTotalUnreadCount(count);
+          const n = JSON.parse(message.body);
+          if (!n?.notificationId) return;
+
+          const item: NotificationItemData = {
+            id: n.notificationId,
+            type: mapApiTypeToUiType(n.notificationType ?? 'system'),
+            apiType: n.notificationType ?? 'system',
+            title: n.title ?? '',
+            content: n.content ?? '',
+            createdAt: n.createdAt ?? new Date().toISOString(),
+            isRead: false,
+            actorId: n.actorId ?? null,
+            actorName: n.actorName ?? null,
+            actorAvatar: n.actorAvatarUrl ?? null,
+            targetHref: n.targetHref ?? null,
+            image: n.imageUrl ?? null,
+            relatedEntityType: n.relatedEntityType ?? null,
+            relatedEntityId: n.relatedEntityId ?? null,
+          };
+
+          addRealtimeNotification(item);
         } catch (e) { /* ignore */ }
       });
     };
