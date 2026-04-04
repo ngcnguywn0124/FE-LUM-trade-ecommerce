@@ -12,6 +12,7 @@ export interface ProductStatusEvent {
   productId: string;
   newStatus: string;
   message: string;
+  previousStatus?: string;
 }
 
 /**
@@ -70,6 +71,15 @@ export const useWebSocket = (
       if (isAdmin) {
         // Thông báo sản phẩm admin
         client.subscribe('/topic/admin/products', (message) => {
+          if (message.body.startsWith('{')) {
+            try {
+              const event = JSON.parse(message.body) as ProductStatusEvent;
+              if (event.type === 'PRODUCT_STATUS_CHANGED' && onProductStatusChanged) {
+                onProductStatusChanged(event);
+                return;
+              }
+            } catch { /* ignore */ }
+          }
           if (onMessageReceived) onMessageReceived(message.body);
         });
         
