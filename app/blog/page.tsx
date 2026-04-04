@@ -132,16 +132,18 @@ export default function BlogPage() {
           </span>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-tight mb-6 tracking-tight">
-            Chia sẻ &{" "}
-            <span className="text-emerald-700">Kết nối</span>
+            Góc nhìn sinh viên<br></br>{" "}
+            <span className="text-emerald-700">Tin mới - mẹo hay - sống chất.</span>
             <br className="hidden sm:block" />
-            trong cộng đồng
           </h1>
 
-          <p className="text-lg md:text-xl text-gray-700 leading-relaxed max-w-2xl mx-auto mb-8 font-medium">
-            Nơi sinh viên chia sẻ kinh nghiệm sống xanh, mẹo mua sắm và những
-            trải nghiệm đời thường.
-          </p>
+<p className="max-w-2xl mx-auto mb-12 
+              text-lg md:text-2xl italic font-light leading-snug text-gray-500 
+              tracking-wide text-center first-letter:text-3xl first-letter:font-serif">
+  Đọc để biết, sẻ chia để kết nối,<br className="hidden md:block" /> 
+  và cùng nhau tạo nên một hành trình đại học rực rỡ!
+</p>
+
 
           <div className="max-w-xl mx-auto">
             <label htmlFor="blog-search" className="sr-only">
