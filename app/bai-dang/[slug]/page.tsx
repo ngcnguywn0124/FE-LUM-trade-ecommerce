@@ -262,7 +262,7 @@ const ProductDetailPage = () => {
             <ProductDetailTabs description={productDescription} specs={specs} />
           </div>
           <div className="lg:col-span-4 lg:sticky lg:top-24">
-            <ProductComments />
+            <ProductComments productId={productDetail.productId} />
           </div>
         </div>
 
