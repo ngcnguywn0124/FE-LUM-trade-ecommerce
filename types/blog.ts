@@ -31,6 +31,7 @@ export interface BlogPost {
   thumbnail: string;
   author?: BlogAuthor;
   createdAt?: string;
+  created_at?: string;
   publishedAt?: string;
   readTime?: string;
   views?: number;

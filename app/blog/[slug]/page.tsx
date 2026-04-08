@@ -104,6 +104,16 @@ export default function BlogDetailPage() {
     toast.success("Đã sao chép liên kết bài viết!");
   };
 
+  const formatBlogDate = (post?: BlogPost | null) => {
+    const rawDate = post?.createdAt || post?.created_at;
+    if (!rawDate) return 'Đang cập nhật';
+
+    const date = new Date(rawDate);
+    if (Number.isNaN(date.getTime())) return 'Đang cập nhật';
+
+    return date.toLocaleDateString('vi-VN');
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white pt-32 px-4">
@@ -188,7 +198,7 @@ export default function BlogDetailPage() {
                <div className="flex items-center gap-5 text-gray-400">
                  <div className="flex items-center gap-1.5 text-xs font-bold">
                     <Calendar size={16} className="text-emerald-500" />
-                    {new Date(blog.createdAt || "").toLocaleDateString("vi-VN")}
+                    {formatBlogDate(blog)}
                  </div>
                  <div className="flex items-center gap-1.5 text-xs font-bold">
                     <Clock3 size={16} className="text-emerald-500" />

@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { BlogCategory, BlogFormData, BlogErrors } from "@/types/blog";
 import { useAuthStore } from "@/stores/authStore";
-import { createBlogPost, getBlogCategories, uploadBlogImage } from "@/services/blogService";
+import { createBlogPost, getBlogCategories, getBlogPostById, updateBlogPost, uploadBlogImage } from "@/services/blogService";
 import { Loader2, Crop } from "lucide-react";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
@@ -56,13 +56,19 @@ const initialFormData: BlogFormData = {
   thumbnailPreview: "",
 };
 
-export default function PostBlogForm() {
+interface PostBlogFormProps {
+  blogId?: string;
+}
+
+export default function PostBlogForm({ blogId }: PostBlogFormProps) {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const quillRef = useRef<any>(null);
   const [formData, setFormData] = useState<BlogFormData>(initialFormData);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
+  const [isLoadingBlog, setIsLoadingBlog] = useState(Boolean(blogId));
+  const isEditMode = Boolean(blogId);
 
   const imageHandler = React.useCallback(() => {
     const input = document.createElement('input');
@@ -118,8 +124,9 @@ export default function PostBlogForm() {
   useEffect(() => {
     if (!isAuthLoading) {
       if (!isAuthenticated) {
-        toast.error("Vui lòng đăng nhập để đăng bài viết");
-        router.push("/login?redirect=/admin/blog/create");
+        toast.error("Vui lòng đăng nhập để tiếp tục");
+        const redirectPath = isEditMode ? `/admin/blog/edit/${blogId}` : '/admin/blog/create';
+        router.push(`/login?redirect=${encodeURIComponent(redirectPath)}`);
       } else {
         const hasAdminRole = user?.roles?.some(role => 
           ["ROLE_ADMIN", "ROLE_SUPER_ADMIN", "ROLE_MODERATOR"].includes(role)
@@ -130,7 +137,7 @@ export default function PostBlogForm() {
         }
       }
     }
-  }, [isAuthenticated, isAuthLoading, router, user]);
+  }, [blogId, isAuthenticated, isAuthLoading, isEditMode, router, user]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -144,6 +151,36 @@ export default function PostBlogForm() {
 
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    const fetchBlogForEdit = async () => {
+      if (!blogId) {
+        setIsLoadingBlog(false);
+        return;
+      }
+
+      try {
+        setIsLoadingBlog(true);
+        const blog = await getBlogPostById(blogId);
+        setFormData((prev) => ({
+          ...prev,
+          title: blog.title || '',
+          categoryId: blog.categoryId || blog.blogCategory?.blogCategoryId || '',
+          excerpt: blog.excerpt || '',
+          content: blog.content || '',
+          thumbnailPreview: blog.thumbnail || '',
+          thumbnail: undefined,
+        }));
+      } catch (error) {
+        toast.error('Không thể tải dữ liệu bài viết để chỉnh sửa');
+        router.push('/admin/blog');
+      } finally {
+        setIsLoadingBlog(false);
+      }
+    };
+
+    fetchBlogForEdit();
+  }, [blogId, router]);
 
   const onFieldChange = (field: keyof BlogFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -206,21 +243,26 @@ export default function PostBlogForm() {
 
     setIsSubmitting(true);
     try {
-      await createBlogPost(formData);
-      toast.success("Đăng bài thành công!");
+      if (isEditMode && blogId) {
+        await updateBlogPost(blogId, formData);
+        toast.success("Cập nhật bài viết thành công!");
+      } else {
+        await createBlogPost(formData);
+        toast.success("Đăng bài thành công!");
+      }
       router.push("/admin/blog");
     } catch (error) {
-      toast.error("Có lỗi xảy ra khi đăng bài. Vui lòng thử lại.");
+      toast.error(isEditMode ? "Có lỗi khi cập nhật bài viết." : "Có lỗi xảy ra khi đăng bài. Vui lòng thử lại.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isAuthLoading || !isAuthenticated) {
+  if (isAuthLoading || !isAuthenticated || isLoadingBlog) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-[#8cceae]" />
-        <p className="text-gray-500 font-medium">Đang kiểm tra quyền truy cập...</p>
+        <p className="text-gray-500 font-medium">Đang tải dữ liệu...</p>
       </div>
     );
   }
@@ -249,14 +291,16 @@ export default function PostBlogForm() {
           <div className="flex items-center gap-2 text-sm font-medium text-gray-500 mb-2">
             <span className="cursor-pointer hover:text-gray-900" onClick={() => router.push("/admin/blog")}>Quản lý Blog</span>
             <ChevronRight size={14} />
-            <span className="text-[#8cceae]">Đăng bài viết mới</span>
+            <span className="text-[#8cceae]">{isEditMode ? 'Chỉnh sửa bài viết' : 'Đăng bài viết mới'}</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-black text-gray-900 flex items-center gap-3">
-            Sáng tạo <span className="text-[#8cceae]">Nội dung</span>
+            {isEditMode ? 'Cập nhật' : 'Sáng tạo'} <span className="text-[#8cceae]">Nội dung</span>
             <Sparkles className="text-[#FFBA00]" size={28} />
           </h1>
           <p className="text-gray-500 mt-2 max-w-xl">
-            Chia sẻ kiến thức, kinh nghiệm và những điều thú vị của bạn với cộng đồng sinh viên Lụm.vn.
+            {isEditMode
+              ? 'Chỉnh sửa nội dung bài viết để cập nhật thông tin mới nhất cho người đọc.'
+              : 'Chia sẻ kiến thức, kinh nghiệm và những điều thú vị của bạn với cộng đồng sinh viên Lụm.vn.'}
           </p>
         </div>
 
@@ -498,7 +542,7 @@ export default function PostBlogForm() {
              </div>
              <div>
                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Trạng thái</p>
-               <p className="text-xs font-bold text-gray-900 leading-none">Nháp (Auto-saved)</p>
+               <p className="text-xs font-bold text-gray-900 leading-none">{isEditMode ? 'Đang chỉnh sửa' : 'Nháp (Auto-saved)'}</p>
              </div>
           </div>
 
@@ -532,7 +576,7 @@ export default function PostBlogForm() {
               ) : (
                 <Send size={18} />
               )}
-              <span>Đăng bài viết ngay</span>
+              <span>{isEditMode ? 'Lưu cập nhật' : 'Đăng bài viết ngay'}</span>
             </motion.button>
           </div>
         </div>

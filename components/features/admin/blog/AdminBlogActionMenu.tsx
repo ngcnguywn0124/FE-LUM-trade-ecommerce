@@ -2,8 +2,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { 
-  Eye, Trash2, ExternalLink, MoreVertical, 
-  CheckCircle, XCircle 
+  Eye, Trash2, ExternalLink, MoreVertical, Edit3, Send, Archive, FileText
 } from 'lucide-react';
 import { BlogPost } from '@/types/blog';
 
@@ -14,6 +13,7 @@ interface AdminBlogActionMenuProps {
   onClose: () => void;
   onDelete: (id: string, title: string) => void;
   onViewDetail: () => void;
+  onChangeStatus: (id: string, status: 'draft' | 'published' | 'archived') => void;
 }
 
 const AdminBlogActionMenu: React.FC<AdminBlogActionMenuProps> = ({
@@ -23,6 +23,7 @@ const AdminBlogActionMenu: React.FC<AdminBlogActionMenuProps> = ({
   onClose,
   onDelete,
   onViewDetail,
+  onChangeStatus,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const blogId = blog.blogId || blog.id || '';
@@ -69,6 +70,56 @@ const AdminBlogActionMenu: React.FC<AdminBlogActionMenuProps> = ({
               <ExternalLink size={15} className="text-gray-400" />
               Xem trên web
             </a>
+
+            <a
+              href={`/admin/blog/edit/${blogId}`}
+              className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              onClick={() => onClose()}
+            >
+              <Edit3 size={15} className="text-emerald-500" />
+              Chỉnh sửa bài viết
+            </a>
+
+            <div className="h-px bg-gray-100 my-1" />
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onChangeStatus(blogId, 'published');
+                onClose();
+              }}
+              disabled={blog.status === 'published'}
+              className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send size={15} />
+              Xuất bản
+            </button>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onChangeStatus(blogId, 'draft');
+                onClose();
+              }}
+              disabled={blog.status === 'draft'}
+              className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-amber-700 hover:bg-amber-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FileText size={15} />
+              Chuyển nháp
+            </button>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onChangeStatus(blogId, 'archived');
+                onClose();
+              }}
+              disabled={blog.status === 'archived'}
+              className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Archive size={15} />
+              Lưu trữ
+            </button>
 
             <div className="h-px bg-gray-100 my-1" />
 

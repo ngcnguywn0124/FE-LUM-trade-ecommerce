@@ -130,6 +130,16 @@ export default function BlogPage() {
 
   const featuredPosts = blogs.filter((p) => p.isFeatured).slice(0, 2);
 
+  const formatBlogDate = (post: BlogPost) => {
+    const rawDate = post.createdAt || post.created_at;
+    if (!rawDate) return 'Đang cập nhật';
+
+    const date = new Date(rawDate);
+    if (Number.isNaN(date.getTime())) return 'Đang cập nhật';
+
+    return date.toLocaleDateString('vi-VN');
+  };
+
   return (
     <main className="min-h-screen font-inter bg-white">
       {/* ────────── Hero ────────── */}
@@ -391,9 +401,7 @@ export default function BlogPage() {
                             {post.author?.fullName || post.author?.name || "Admin"}
                           </p>
                           <p className="text-[11px] text-gray-400 font-medium">
-                            {new Date(
-                              post.createdAt || ""
-                            ).toLocaleDateString("vi-VN")}
+                            {formatBlogDate(post)}
                           </p>
                         </div>
                       </div>

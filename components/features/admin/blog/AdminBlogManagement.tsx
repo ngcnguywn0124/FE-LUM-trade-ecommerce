@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
-import { getAllBlogsForAdmin, deleteBlog } from '@/services/blogService';
+import { getAllBlogsForAdmin, deleteBlog, updateBlogStatus } from '@/services/blogService';
 import { BlogPost } from '@/types/blog';
 import Breadcrumb from '@/components/shared/Breadcrumb';
 import AdminBlogActionMenu from './AdminBlogActionMenu';
@@ -54,6 +54,36 @@ const AdminBlogManagement: React.FC = () => {
     } catch (error) {
       toast.error('Xóa bài viết thất bại');
     }
+  };
+
+  const handleChangeStatus = async (id: string, status: 'draft' | 'published' | 'archived') => {
+    try {
+      await updateBlogStatus(id, status);
+      toast.success('Cập nhật trạng thái bài viết thành công');
+      fetchBlogs(currentPage);
+    } catch (error) {
+      toast.error('Cập nhật trạng thái thất bại');
+    }
+  };
+
+  const renderStatusLabel = (status?: string) => {
+    if (status === 'published') {
+      return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Đã xuất bản</span>;
+    }
+    if (status === 'archived') {
+      return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Đã lưu trữ</span>;
+    }
+    return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Bản nháp</span>;
+  };
+
+  const formatBlogDate = (blog: BlogPost) => {
+    const rawDate = blog.createdAt || blog.created_at;
+    if (!rawDate) return 'Đang cập nhật';
+
+    const date = new Date(rawDate);
+    if (Number.isNaN(date.getTime())) return 'Đang cập nhật';
+
+    return date.toLocaleDateString('vi-VN');
   };
 
   return (
@@ -105,6 +135,7 @@ const AdminBlogManagement: React.FC = () => {
                 <th className="px-6 py-4">Bài viết</th>
                 <th className="px-6 py-4">Tác giả</th>
                 <th className="px-6 py-4">Chuyên mục</th>
+                <th className="px-6 py-4">Trạng thái</th>
                 <th className="px-6 py-4 text-right">Thao tác</th>
               </tr>
             </thead>
@@ -112,12 +143,12 @@ const AdminBlogManagement: React.FC = () => {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan={4} className="px-6 py-8"><div className="h-10 bg-gray-50 rounded-lg w-full" /></td>
+                    <td colSpan={5} className="px-6 py-8"><div className="h-10 bg-gray-50 rounded-lg w-full" /></td>
                   </tr>
                 ))
               ) : blogs.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-400">Không tìm thấy bài viết nào</td>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400">Không tìm thấy bài viết nào</td>
                 </tr>
               ) : (
                 blogs.map((blog) => (
@@ -136,7 +167,7 @@ const AdminBlogManagement: React.FC = () => {
                           <p className="font-semibold text-gray-900 truncate max-w-[300px]" title={blog.title}>
                              {blog.title}
                           </p>
-                          <p className="text-xs text-gray-400 mt-0.5">{new Date(blog.createdAt || '').toLocaleDateString('vi-VN')}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{formatBlogDate(blog)}</p>
                         </div>
                       </div>
                     </td>
@@ -160,6 +191,9 @@ const AdminBlogManagement: React.FC = () => {
                         <span>{blog.blogCategory?.name || 'Chưa phân loại'}</span>
                       </div>
                     </td>
+                    <td className="px-6 py-4">
+                      {renderStatusLabel(blog.status)}
+                    </td>
                     <td className="px-6 py-4 text-right overflow-visible relative">
                       <div className="flex items-center justify-end">
                         <AdminBlogActionMenu
@@ -168,6 +202,7 @@ const AdminBlogManagement: React.FC = () => {
                            onToggle={() => setOpenMenuId(openMenuId === (blog.blogId || blog.id) ? null : (blog.blogId || blog.id) || null)}
                            onClose={() => setOpenMenuId(null)}
                            onDelete={handleDelete}
+                          onChangeStatus={handleChangeStatus}
                            onViewDetail={() => {
                               setSelectedBlog(blog);
                               setIsDetailOpen(true);
