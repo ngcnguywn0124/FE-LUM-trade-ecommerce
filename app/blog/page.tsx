@@ -10,9 +10,10 @@ import {
   Heart,
   Sparkles,
   RefreshCw,
+  Tag,
 } from "lucide-react";
-import { getApprovedBlogs } from "@/services/blogService";
-import { BlogPost } from "@/types/blog";
+import { getApprovedBlogs, getBlogCategories } from "@/services/blogService";
+import { BlogCategory, BlogPost } from "@/types/blog";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { toast } from "sonner";
 
@@ -29,6 +30,7 @@ export default function BlogPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
+  const [blogCategories, setBlogCategories] = useState<BlogCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -39,18 +41,18 @@ export default function BlogPage() {
       try {
         let isFeatured = undefined;
         let sort = "createdAt,desc";
-        let category = undefined;
+        let categoryId = undefined;
 
         if (filterSlug === "featured") {
           isFeatured = true;
         } else if (filterSlug === "most-viewed") {
           sort = "viewCount,desc";
-        } else if (filterSlug !== "all" && filterSlug !== "newest") {
-          category = filterSlug;
+        } else if (filterSlug.startsWith("cat:")) {
+          categoryId = filterSlug.replace("cat:", "");
         }
 
         const data = await getApprovedBlogs({
-          category,
+          categoryId,
           query: query || undefined,
           isFeatured,
           sort,
@@ -96,6 +98,19 @@ export default function BlogPage() {
   );
 
   useWebSocket(undefined, undefined, undefined, handleBlogEvent);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getBlogCategories();
+        setBlogCategories(data);
+      } catch (error) {
+        setBlogCategories([]);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -260,6 +275,26 @@ export default function BlogPage() {
                   </button>
                 );
               })}
+              {blogCategories.map((cat) => {
+                const key = `cat:${cat.blogCategoryId}`;
+                const isActive = activeCategory === key;
+
+                return (
+                  <button
+                    key={cat.blogCategoryId}
+                    onClick={() => setActiveCategory(key)}
+                    aria-pressed={isActive}
+                    aria-label={`Lọc: ${cat.name}`}
+                    className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold transition-colors whitespace-nowrap border ${isActive
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : "bg-white text-gray-600 border-gray-100 hover:border-emerald-200 hover:bg-emerald-50"
+                      }`}
+                  >
+                    <Tag size={18} aria-hidden="true" />
+                    {cat.name}
+                  </button>
+                );
+              })}
             </nav>
           </div>
 
@@ -324,7 +359,7 @@ export default function BlogPage() {
                     />
                     <div className="absolute top-4 left-4">
                       <span className="px-3 py-1 bg-white/90 backdrop-blur-md rounded-lg text-[11px] font-black uppercase text-emerald-800 tracking-wider shadow-sm border border-emerald-100">
-                        {post.category || "General"}
+                        {post.blogCategory?.name || "General"}
                       </span>
                     </div>
                   </Link>
@@ -342,10 +377,10 @@ export default function BlogPage() {
                         <div className="relative w-9 h-9 rounded-xl overflow-hidden border border-emerald-100 shrink-0">
                           <Image
                             src={
-                              post.author.avatar ||
+                              post.author?.avatar ||
                               "/user/avatar-user-profile-default.png"
                             }
-                            alt={post.author.fullName || ""}
+                            alt={post.author?.fullName || ""}
                             fill
                             className="object-cover"
                             sizes="36px"
@@ -353,7 +388,7 @@ export default function BlogPage() {
                         </div>
                         <div className="text-left min-w-0">
                           <p className="text-[13px] font-bold text-gray-900 truncate max-w-[100px]">
-                            {post.author.fullName}
+                            {post.author?.fullName || post.author?.name || "Admin"}
                           </p>
                           <p className="text-[11px] text-gray-400 font-medium">
                             {new Date(

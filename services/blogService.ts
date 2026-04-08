@@ -1,10 +1,28 @@
 import apiClient from "@/lib/apiClient";
-import { BlogPost, BlogFormData } from "@/types/blog";
+import { BlogPost, BlogFormData, BlogCategory, BlogCategoryPayload } from "@/types/blog";
 
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
   data: T;
+}
+
+export interface BlogListParams {
+  categoryId?: string;
+  query?: string;
+  search?: string;
+  isFeatured?: boolean;
+  sort?: string;
+  page?: number;
+  size?: number;
+}
+
+export interface BlogListResponse {
+  content: BlogPost[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
 }
 
 export const uploadBlogImage = async (file: File): Promise<string> => {
@@ -19,7 +37,7 @@ export const uploadBlogImage = async (file: File): Promise<string> => {
 export const createBlogPost = async (formData: BlogFormData): Promise<BlogPost> => {
   const data = new FormData();
   data.append("title", formData.title);
-  data.append("category", formData.category);
+  data.append("categoryId", formData.categoryId);
   data.append("excerpt", formData.excerpt);
   data.append("content", formData.content);
   if (formData.thumbnail) {
@@ -38,7 +56,7 @@ export const createBlogPost = async (formData: BlogFormData): Promise<BlogPost> 
 export const updateBlogPost = async (id: string, formData: BlogFormData): Promise<BlogPost> => {
   const data = new FormData();
   data.append("title", formData.title);
-  data.append("category", formData.category);
+  data.append("categoryId", formData.categoryId);
   data.append("excerpt", formData.excerpt);
   data.append("content", formData.content);
   if (formData.thumbnail) {
@@ -55,8 +73,16 @@ export const updateBlogPost = async (id: string, formData: BlogFormData): Promis
 };
 
 
-export const getApprovedBlogs = async (params?: any): Promise<any> => {
-  const response = await apiClient.get<ApiResponse<any>>("/blogs", { params });
+export const getApprovedBlogs = async (params?: BlogListParams): Promise<BlogListResponse> => {
+  const normalizedParams = {
+    ...params,
+    search: params?.query || params?.search,
+    categoryId: params?.categoryId,
+  };
+
+  delete normalizedParams.query;
+
+  const response = await apiClient.get<ApiResponse<BlogListResponse>>("/blogs", { params: normalizedParams });
   return response.data.data;
 };
 
@@ -81,21 +107,44 @@ export const checkBlogLikeStatus = async (id: string): Promise<{ liked: boolean 
 };
 
 
-export const getAllBlogsForAdmin = async (status?: string, page = 0, size = 10): Promise<any> => {
-  const response = await apiClient.get<ApiResponse<any>>("/blogs/admin", {
+export const getAllBlogsForAdmin = async (status?: string, page = 0, size = 10): Promise<BlogListResponse> => {
+  const response = await apiClient.get<ApiResponse<BlogListResponse>>("/blogs/admin", {
     params: { status, page, size }
   });
   return response.data.data;
 };
 
-export const updateBlogStatus = async (id: string, status: 'approved' | 'rejected', rejectionReason?: string): Promise<BlogPost> => {
+export const updateBlogStatus = async (id: string, status: 'draft' | 'published' | 'archived'): Promise<BlogPost> => {
   const response = await apiClient.patch<ApiResponse<BlogPost>>(`/blogs/${id}/status`, {
-    status,
-    rejectionReason
+    status
   });
   return response.data.data;
 };
 
 export const deleteBlog = async (id: string): Promise<void> => {
   await apiClient.delete(`/blogs/${id}`);
+};
+
+export const getBlogCategories = async (): Promise<BlogCategory[]> => {
+  const response = await apiClient.get<ApiResponse<BlogCategory[]>>('/blog-categories');
+  return response.data.data;
+};
+
+export const getBlogCategoriesForAdmin = async (params?: { keyword?: string; isActive?: boolean }): Promise<BlogCategory[]> => {
+  const response = await apiClient.get<ApiResponse<BlogCategory[]>>('/blog-categories/admin/list', { params });
+  return response.data.data;
+};
+
+export const createBlogCategory = async (payload: BlogCategoryPayload): Promise<BlogCategory> => {
+  const response = await apiClient.post<ApiResponse<BlogCategory>>('/blog-categories', payload);
+  return response.data.data;
+};
+
+export const updateBlogCategory = async (id: string, payload: BlogCategoryPayload): Promise<BlogCategory> => {
+  const response = await apiClient.put<ApiResponse<BlogCategory>>(`/blog-categories/${id}`, payload);
+  return response.data.data;
+};
+
+export const deleteBlogCategory = async (id: string): Promise<void> => {
+  await apiClient.delete(`/blog-categories/${id}`);
 };

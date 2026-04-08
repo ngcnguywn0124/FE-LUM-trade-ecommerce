@@ -11,24 +11,17 @@ import {
   Tag, 
   FileText, 
   Layout, 
-  Search,
   CheckCircle2,
   ChevronRight,
-  BookOpen,
-  ShoppingBag,
-  Leaf,
-  GraduationCap,
-  TrendingUp,
-  Lightbulb,
   AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { BlogFormData, BlogErrors } from "@/types/blog";
+import { BlogCategory, BlogFormData, BlogErrors } from "@/types/blog";
 import { useAuthStore } from "@/stores/authStore";
-import { createBlogPost, uploadBlogImage } from "@/services/blogService";
+import { createBlogPost, getBlogCategories, uploadBlogImage } from "@/services/blogService";
 import { Loader2, Crop } from "lucide-react";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
@@ -42,15 +35,6 @@ const ReactQuill = dynamic(
   { ssr: false }
 );
 import ImageCropModal from "./ImageCropModal";
-
-/* ────────────────────────── Categories ────────────────────────── */
-const CATEGORIES = [
-  { name: "Mẹo mua bán", slug: "meo-mua-ban", icon: ShoppingBag, color: "#FFBA00" },
-  { name: "Sống xanh", slug: "song-xanh", icon: Leaf, color: "#8cceae" },
-  { name: "Đời sống SV", slug: "doi-song-sv", icon: GraduationCap, color: "#6C5CE7" },
-  { name: "Xu hướng", slug: "xu-huong", icon: TrendingUp, color: "#FF7675" },
-  { name: "Chia sẻ kinh nghiệm", slug: "chia-se", icon: Lightbulb, color: "#00B894" },
-];
 
 /* ────────────────────────── Animation Variants ────────────────────────── */
 const easeOutCurve: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -66,7 +50,7 @@ const fadeUp = {
 
 const initialFormData: BlogFormData = {
   title: "",
-  category: "",
+  categoryId: "",
   excerpt: "",
   content: "",
   thumbnailPreview: "",
@@ -78,6 +62,7 @@ export default function PostBlogForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const quillRef = useRef<any>(null);
   const [formData, setFormData] = useState<BlogFormData>(initialFormData);
+  const [categories, setCategories] = useState<BlogCategory[]>([]);
 
   const imageHandler = React.useCallback(() => {
     const input = document.createElement('input');
@@ -147,6 +132,19 @@ export default function PostBlogForm() {
     }
   }, [isAuthenticated, isAuthLoading, router, user]);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getBlogCategories();
+        setCategories(data);
+      } catch (error) {
+        toast.error("Không thể tải danh mục blog");
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   const onFieldChange = (field: keyof BlogFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -190,7 +188,7 @@ export default function PostBlogForm() {
   const validateForm = () => {
     const newErrors: BlogErrors = {};
     if (formData.title.trim().length < 10) newErrors.title = "Tiêu đề cần ít nhất 10 ký tự";
-    if (!formData.category) newErrors.category = "Vui lòng chọn chuyên mục";
+    if (!formData.categoryId) newErrors.categoryId = "Vui lòng chọn chuyên mục";
     if (formData.excerpt.trim().length < 20) newErrors.excerpt = "Mô tả ngắn cần ít nhất 20 ký tự";
     if (formData.content.trim().length < 100) newErrors.content = "Nội dung cần ít nhất 100 ký tự";
     if (!formData.thumbnailPreview) newErrors.thumbnail = "Vui lòng tải lên ảnh bìa";
@@ -230,7 +228,7 @@ export default function PostBlogForm() {
   const completionPercent = Math.round(
     ([
       formData.title.length >= 10,
-      !!formData.category,
+      !!formData.categoryId,
       formData.excerpt.length >= 20,
       formData.content.length >= 100,
       !!formData.thumbnailPreview,
@@ -410,13 +408,13 @@ export default function PostBlogForm() {
               Chuyên mục
             </h3>
             <div className="grid grid-cols-1 gap-2">
-              {CATEGORIES.map((cat) => {
-                const isActive = formData.category === cat.name;
+              {categories.map((cat) => {
+                const isActive = formData.categoryId === cat.blogCategoryId;
                 return (
                   <button
-                    key={cat.slug}
+                    key={cat.blogCategoryId}
                     type="button"
-                    onClick={() => onFieldChange("category", cat.name)}
+                    onClick={() => onFieldChange("categoryId", cat.blogCategoryId)}
                     className={`flex items-center gap-3 p-3 rounded-xl border text-sm font-bold transition-all ${
                       isActive 
                         ? "bg-gray-900 border-gray-900 text-white shadow-md shadow-gray-200 scale-[1.02]" 
@@ -425,9 +423,9 @@ export default function PostBlogForm() {
                   >
                     <div 
                       className="w-8 h-8 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: isActive ? "#ffffff20" : cat.color + "15" }}
+                      style={{ backgroundColor: isActive ? "#ffffff20" : "#8cceae20" }}
                     >
-                      <cat.icon size={16} style={{ color: isActive ? "#fff" : cat.color }} />
+                      <Tag size={16} className={isActive ? "text-white" : "text-[#8cceae]"} />
                     </div>
                     {cat.name}
                     {isActive && <CheckCircle2 size={16} className="ml-auto text-[#8cceae]" />}
@@ -435,9 +433,9 @@ export default function PostBlogForm() {
                 );
               })}
             </div>
-            {errors.category && (
+            {errors.categoryId && (
               <p className="mt-3 text-xs font-bold text-red-500 flex items-center gap-1">
-                <AlertCircle size={12} /> {errors.category}
+                <AlertCircle size={12} /> {errors.categoryId}
               </p>
             )}
           </div>
