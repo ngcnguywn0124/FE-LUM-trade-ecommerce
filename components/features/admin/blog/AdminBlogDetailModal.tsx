@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { 
-  X, Calendar, User, Tag, Eye, Clock, 
-  CheckCircle, XCircle, AlertCircle, ShoppingBag, Leaf, Smile, ClipboardCheck, Bell, Newspaper
+  X, Calendar, Eye, AlertCircle, Newspaper
 } from 'lucide-react';
 import Image from 'next/image';
 import { BlogPost } from '@/types/blog';
@@ -15,14 +14,6 @@ interface AdminBlogDetailModalProps {
   onClose: () => void;
 }
 
-const BLOG_CATEGORIES = [
-  { name: "Mẹo mua bán", slug: "meo-mua-ban", icon: ShoppingBag, color: "#FFBA00" },
-  { name: "Sống xanh", slug: "song-xanh", icon: Leaf, color: "#8cceae" },
-  { name: "Góc đời thường", slug: "goc-doi-thuong", icon: Smile, color: "#92d4da" },
-  { name: "Review đồ", slug: "review-do", icon: ClipboardCheck, color: "#ea8c98" },
-  { name: "Thông báo mới", slug: "thong-bao-moi", icon: Bell, color: "#c1a5e1" },
-];
-
 const AdminBlogDetailModal: React.FC<AdminBlogDetailModalProps> = ({
   blog,
   isOpen,
@@ -30,9 +21,7 @@ const AdminBlogDetailModal: React.FC<AdminBlogDetailModalProps> = ({
 }) => {
   if (!blog) return null;
 
-  const blogId = blog.blogId || blog.id || '';
-  const category = BLOG_CATEGORIES.find(c => c.slug === blog.category);
-  const Icon = category?.icon || Newspaper;
+  const categoryName = blog.blogCategory?.name || 'Chưa phân loại';
 
   return (
     <AnimatePresence>
@@ -59,16 +48,16 @@ const AdminBlogDetailModal: React.FC<AdminBlogDetailModalProps> = ({
               <div className="flex items-center gap-3">
                 <div 
                   className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg"
-                  style={{ backgroundColor: category?.color || '#CBD5E1' }}
+                  style={{ backgroundColor: '#CBD5E1' }}
                 >
-                  <Icon size={20} />
+                  <Newspaper size={20} />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 line-clamp-1">
                     {blog.title}
                   </h2>
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
-                    {category?.name || blog.category}
+                    {categoryName}
                   </p>
                 </div>
               </div>
@@ -123,14 +112,14 @@ const AdminBlogDetailModal: React.FC<AdminBlogDetailModalProps> = ({
                     <div className="flex items-center gap-3">
                       <div className="relative w-12 h-12 rounded-2xl overflow-hidden border-2 border-white shadow-sm">
                         <Image
-                          src={blog.author.avatar || '/user/avatar-user-profile-default.png'}
-                          alt={blog.author.fullName || ''}
+                          src={blog.author?.avatar || '/user/avatar-user-profile-default.png'}
+                          alt={blog.author?.fullName || ''}
                           fill
                           className="object-cover"
                         />
                       </div>
                       <div>
-                        <p className="font-bold text-gray-900 text-sm">{blog.author.fullName || blog.author.name}</p>
+                        <p className="font-bold text-gray-900 text-sm">{blog.author?.fullName || blog.author?.name || 'Admin'}</p>
                         <p className="text-[10px] text-gray-400 font-medium">Sinh viên hệ thống</p>
                       </div>
                     </div>

@@ -62,7 +62,7 @@ export default function BlogDetailPage() {
         
         // Fetch related blogs (same category)
         const related = await getApprovedBlogs({
-           category: data.category,
+            categoryId: data.categoryId,
            size: 3
         });
         setRelatedBlogs(related.content.filter((b: BlogPost) => (b.blogId || b.id) !== (data.blogId || data.id)));
@@ -102,6 +102,16 @@ export default function BlogDetailPage() {
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Đã sao chép liên kết bài viết!");
+  };
+
+  const formatBlogDate = (post?: BlogPost | null) => {
+    const rawDate = post?.createdAt || post?.created_at;
+    if (!rawDate) return 'Đang cập nhật';
+
+    const date = new Date(rawDate);
+    if (Number.isNaN(date.getTime())) return 'Đang cập nhật';
+
+    return date.toLocaleDateString('vi-VN');
   };
 
   if (isLoading) {
@@ -162,7 +172,7 @@ export default function BlogDetailPage() {
             </Link>
 
             <span className="block w-fit px-4 py-1.5 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg mb-6 shadow-lg shadow-emerald-100">
-              {blog.category}
+              {blog.blogCategory?.name || 'Chưa phân loại'}
             </span>
             
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-[1.15] mb-8 tracking-tight">
@@ -173,14 +183,14 @@ export default function BlogDetailPage() {
                <div className="flex items-center gap-3">
                   <div className="relative w-12 h-12 rounded-2xl overflow-hidden border-2 border-white shadow-md">
                      <Image 
-                       src={blog.author.avatar || "/user/avatar-user-profile-default.png"} 
-                       alt={blog.author.fullName || ""} 
+                      src={blog.author?.avatar || "/user/avatar-user-profile-default.png"} 
+                      alt={blog.author?.fullName || ""} 
                        fill 
                        className="object-cover" 
                      />
                   </div>
                   <div>
-                     <p className="text-sm font-black text-gray-900 leading-none mb-1">{blog.author.fullName}</p>
+                    <p className="text-sm font-black text-gray-900 leading-none mb-1">{blog.author?.fullName || blog.author?.name || 'Admin'}</p>
                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-tighter">Tác giả sinh viên</p>
                   </div>
                </div>
@@ -188,7 +198,7 @@ export default function BlogDetailPage() {
                <div className="flex items-center gap-5 text-gray-400">
                  <div className="flex items-center gap-1.5 text-xs font-bold">
                     <Calendar size={16} className="text-emerald-500" />
-                    {new Date(blog.createdAt || "").toLocaleDateString("vi-VN")}
+                    {formatBlogDate(blog)}
                  </div>
                  <div className="flex items-center gap-1.5 text-xs font-bold">
                     <Clock3 size={16} className="text-emerald-500" />
@@ -270,7 +280,7 @@ export default function BlogDetailPage() {
                {/* Bottom Tags (Mocked tags from category) */}
                <div className="mt-16 pt-10 border-t border-gray-100 flex flex-wrap gap-3">
                   <span className="px-4 py-2 bg-gray-50 text-gray-500 text-sm font-bold rounded-xl border border-gray-100 hover:bg-emerald-50 hover:text-emerald-600 transition-colors cursor-default">
-                    # {blog.category}
+                    # {blog.blogCategory?.slug || 'blog'}
                   </span>
                   <span className="px-4 py-2 bg-gray-50 text-gray-500 text-sm font-bold rounded-xl border border-gray-100 hover:bg-emerald-50 hover:text-emerald-600 transition-colors cursor-default">
                     # sinh_vien
@@ -285,14 +295,14 @@ export default function BlogDetailPage() {
             <div className="mt-16 p-8 bg-gray-50 rounded-[2rem] border border-gray-100 flex flex-col sm:flex-row items-center gap-8">
                <div className="relative w-24 h-24 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl flex-shrink-0">
                   <Image 
-                    src={blog.author.avatar || "/user/avatar-user-profile-default.png"} 
-                    alt={blog.author.fullName || ""} 
+                    src={blog.author?.avatar || "/user/avatar-user-profile-default.png"} 
+                    alt={blog.author?.fullName || ""} 
                     fill 
                     className="object-cover" 
                   />
                </div>
                <div className="text-center sm:text-left">
-                  <h4 className="text-xl font-black text-gray-900 mb-2">{blog.author.fullName}</h4>
+                  <h4 className="text-xl font-black text-gray-900 mb-2">{blog.author?.fullName || blog.author?.name || 'Admin'}</h4>
                   <p className="text-gray-500 text-base leading-relaxed mb-4">
                     Thành viên nhiệt huyết của cộng đồng Lụm.vn, chuyên chia sẻ những bí kíp mua sắm thông minh và lối sống bền vững cho sinh viên.
                   </p>
@@ -347,9 +357,9 @@ export default function BlogDetailPage() {
                         <div className="flex items-center justify-between">
                            <div className="flex items-center gap-2">
                               <div className="relative w-6 h-6 rounded-lg overflow-hidden border border-gray-100">
-                                 <Image src={post.author.avatar || "/user/avatar-user-profile-default.png"} alt="" fill className="object-cover" />
+                                 <Image src={post.author?.avatar || "/user/avatar-user-profile-default.png"} alt="" fill className="object-cover" />
                               </div>
-                              <span className="text-[11px] font-bold text-gray-500">{post.author.fullName}</span>
+                              <span className="text-[11px] font-bold text-gray-500">{post.author?.fullName || post.author?.name || 'Admin'}</span>
                            </div>
                            <ChevronRight size={16} className="text-gray-300 group-hover:text-emerald-500 transition-colors group-hover:translate-x-1" />
                         </div>

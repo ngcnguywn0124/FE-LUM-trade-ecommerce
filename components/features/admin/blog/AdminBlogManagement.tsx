@@ -2,27 +2,17 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Search, CheckCircle, XCircle, 
-  Trash2, Filter, 
   ChevronLeft, ChevronRight,
   AlertCircle,  ShieldCheck,
-  ShoppingBag, Leaf, Smile, ClipboardCheck, Bell, Newspaper, Eye
+  Newspaper
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
-import { getAllBlogsForAdmin, updateBlogStatus, deleteBlog } from '@/services/blogService';
+import { getAllBlogsForAdmin, deleteBlog, updateBlogStatus } from '@/services/blogService';
 import { BlogPost } from '@/types/blog';
 import Breadcrumb from '@/components/shared/Breadcrumb';
 import AdminBlogActionMenu from './AdminBlogActionMenu';
 import AdminBlogDetailModal from './AdminBlogDetailModal';
-
-const BLOG_CATEGORIES = [
-  { name: "Mẹo mua bán", slug: "meo-mua-ban", icon: ShoppingBag, color: "#FFBA00" },
-  { name: "Sống xanh", slug: "song-xanh", icon: Leaf, color: "#8cceae" },
-  { name: "Góc đời thường", slug: "goc-doi-thuong", icon: Smile, color: "#92d4da" },
-  { name: "Review đồ", slug: "review-do", icon: ClipboardCheck, color: "#ea8c98" },
-  { name: "Thông báo mới", slug: "thong-bao-moi", icon: Bell, color: "#c1a5e1" },
-];
 
 const AdminBlogManagement: React.FC = () => {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
@@ -66,11 +56,34 @@ const AdminBlogManagement: React.FC = () => {
     }
   };
 
-  const getCategoryIcon = (categorySlug: string) => {
-    const category = BLOG_CATEGORIES.find(c => c.slug === categorySlug);
-    if (!category) return <Newspaper size={16} />;
-    const Icon = category.icon;
-    return <Icon size={16} style={{ color: category.color }} />;
+  const handleChangeStatus = async (id: string, status: 'draft' | 'published' | 'archived') => {
+    try {
+      await updateBlogStatus(id, status);
+      toast.success('Cập nhật trạng thái bài viết thành công');
+      fetchBlogs(currentPage);
+    } catch (error) {
+      toast.error('Cập nhật trạng thái thất bại');
+    }
+  };
+
+  const renderStatusLabel = (status?: string) => {
+    if (status === 'published') {
+      return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Đã xuất bản</span>;
+    }
+    if (status === 'archived') {
+      return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Đã lưu trữ</span>;
+    }
+    return <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Bản nháp</span>;
+  };
+
+  const formatBlogDate = (blog: BlogPost) => {
+    const rawDate = blog.createdAt || blog.created_at;
+    if (!rawDate) return 'Đang cập nhật';
+
+    const date = new Date(rawDate);
+    if (Number.isNaN(date.getTime())) return 'Đang cập nhật';
+
+    return date.toLocaleDateString('vi-VN');
   };
 
   return (
@@ -96,6 +109,13 @@ const AdminBlogManagement: React.FC = () => {
                 <AlertCircle size={18} />
                 <span className="text-sm font-medium">{totalElements} bài viết</span>
             </div>
+            <a
+              href="/admin/blog/categories"
+              className="bg-white border border-emerald-200 px-4 py-2 rounded-xl text-emerald-700 flex items-center gap-2 hover:bg-emerald-50 transition shadow-sm"
+            >
+              <Newspaper size={18} />
+              <span className="text-sm font-medium">Danh mục blog</span>
+            </a>
             <a 
                href="/admin/blog/create" 
                className="bg-emerald-600 border border-emerald-600 px-4 py-2 rounded-xl text-white flex items-center gap-2 hover:bg-emerald-700 transition shadow-sm"
@@ -115,6 +135,7 @@ const AdminBlogManagement: React.FC = () => {
                 <th className="px-6 py-4">Bài viết</th>
                 <th className="px-6 py-4">Tác giả</th>
                 <th className="px-6 py-4">Chuyên mục</th>
+                <th className="px-6 py-4">Trạng thái</th>
                 <th className="px-6 py-4 text-right">Thao tác</th>
               </tr>
             </thead>
@@ -122,12 +143,12 @@ const AdminBlogManagement: React.FC = () => {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan={4} className="px-6 py-8"><div className="h-10 bg-gray-50 rounded-lg w-full" /></td>
+                    <td colSpan={5} className="px-6 py-8"><div className="h-10 bg-gray-50 rounded-lg w-full" /></td>
                   </tr>
                 ))
               ) : blogs.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-400">Không tìm thấy bài viết nào</td>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400">Không tìm thấy bài viết nào</td>
                 </tr>
               ) : (
                 blogs.map((blog) => (
@@ -146,29 +167,32 @@ const AdminBlogManagement: React.FC = () => {
                           <p className="font-semibold text-gray-900 truncate max-w-[300px]" title={blog.title}>
                              {blog.title}
                           </p>
-                          <p className="text-xs text-gray-400 mt-0.5">{new Date(blog.createdAt || '').toLocaleDateString('vi-VN')}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{formatBlogDate(blog)}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        {blog.author.avatar ? (
+                        {blog.author?.avatar ? (
                            <div className="relative w-6 h-6 rounded-full overflow-hidden shrink-0 border border-gray-100">
-                             <Image src={blog.author.avatar} alt={blog.author.fullName || ''} fill className="object-cover" />
+                             <Image src={blog.author?.avatar || '/user/avatar-user-profile-default.png'} alt={blog.author?.fullName || ''} fill className="object-cover" />
                            </div>
                         ) : (
                            <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-700">
-                             {blog.author.fullName?.charAt(0) || 'U'}
+                             {blog.author?.fullName?.charAt(0) || 'A'}
                            </div>
                         )}
-                        <span className="text-sm text-gray-700 font-medium">{blog.author.fullName || blog.author.name}</span>
+                        <span className="text-sm text-gray-700 font-medium">{blog.author?.fullName || blog.author?.name || 'Admin'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
-                        {getCategoryIcon(blog.category)}
-                        <span>{BLOG_CATEGORIES.find(c => c.slug === blog.category)?.name || blog.category}</span>
+                        <Newspaper size={16} />
+                        <span>{blog.blogCategory?.name || 'Chưa phân loại'}</span>
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {renderStatusLabel(blog.status)}
                     </td>
                     <td className="px-6 py-4 text-right overflow-visible relative">
                       <div className="flex items-center justify-end">
@@ -178,6 +202,7 @@ const AdminBlogManagement: React.FC = () => {
                            onToggle={() => setOpenMenuId(openMenuId === (blog.blogId || blog.id) ? null : (blog.blogId || blog.id) || null)}
                            onClose={() => setOpenMenuId(null)}
                            onDelete={handleDelete}
+                          onChangeStatus={handleChangeStatus}
                            onViewDetail={() => {
                               setSelectedBlog(blog);
                               setIsDetailOpen(true);
