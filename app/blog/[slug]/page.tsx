@@ -357,7 +357,7 @@ export default function BlogDetailPage() {
                         <div className="flex items-center justify-between">
                            <div className="flex items-center gap-2">
                               <div className="relative w-6 h-6 rounded-lg overflow-hidden border border-gray-100">
-                                 <Image src={post.author.avatar || "/user/avatar-user-profile-default.png"} alt="" fill className="object-cover" />
+                                 <Image src={post.author?.avatar || "/user/avatar-user-profile-default.png"} alt="" fill className="object-cover" />
                               </div>
                               <span className="text-[11px] font-bold text-gray-500">{post.author?.fullName || post.author?.name || 'Admin'}</span>
                            </div>
