@@ -18,13 +18,52 @@ interface ProductCommentsProps {
 }
 
 const formatCommentTime = (isoDate: string) => {
-  const diffInMinutes = Math.max(1, Math.floor((Date.now() - new Date(isoDate).getTime()) / 60000));
+  const MIN_VALID_YEAR = 2000;
+
+  const toValidDate = (date: Date): Date | null => {
+    if (Number.isNaN(date.getTime())) return null;
+    if (date.getUTCFullYear() < MIN_VALID_YEAR) return null;
+    return date;
+  };
+
+  const parseCommentDate = (value: unknown): Date | null => {
+    if (value === null || value === undefined) return null;
+
+    if (value instanceof Date) return toValidDate(value);
+
+    if (typeof value === "number") {
+      if (!Number.isFinite(value) || value <= 0) return null;
+      const millis = value < 1_000_000_000_000 ? value * 1000 : value;
+      return toValidDate(new Date(millis));
+    }
+
+    if (typeof value === "string") {
+      const normalized = value.trim();
+      if (!normalized) return null;
+
+      if (/^\d+$/.test(normalized)) {
+        const numericValue = Number(normalized);
+        if (!Number.isFinite(numericValue) || numericValue <= 0) return null;
+        const millis = numericValue < 1_000_000_000_000 ? numericValue * 1000 : numericValue;
+        return toValidDate(new Date(millis));
+      }
+
+      return toValidDate(new Date(normalized));
+    }
+
+    return null;
+  };
+
+  const createdDate = parseCommentDate(isoDate);
+  if (!createdDate) return "Vừa xong";
+
+  const diffInMinutes = Math.max(1, Math.floor((Date.now() - createdDate.getTime()) / 60000));
   if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) return `${diffInHours} giờ trước`;
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 7) return `${diffInDays} ngày trước`;
-  return new Date(isoDate).toLocaleDateString("vi-VN");
+  return createdDate.toLocaleDateString("vi-VN");
 };
 
 const countComments = (items: ProductCommentResponse[]): number =>
