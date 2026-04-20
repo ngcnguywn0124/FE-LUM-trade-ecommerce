@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8686';
+function resolveBackendOrigin() {
+  const configuredUrl =
+    process.env.BACKEND_URL ||
+    process.env.NEXT_PUBLIC_BACKEND_URL ||
+    'http://localhost:8686';
+
+  return configuredUrl
+    .replace(/\/api\/v1\/?$/i, '')
+    .replace(/\/+$/g, '');
+}
+
+const BACKEND_ORIGIN = resolveBackendOrigin();
 
 function sanitizeSetCookie(raw: string, isFrontendHttps: boolean) {
   let sanitized = raw
@@ -25,7 +36,7 @@ async function handler(
     const { path } = await params;
     const pathStr = path.join('/');
     const url = new URL(request.url);
-    const backendUrl = `${BACKEND_URL}/${pathStr}${url.search}`;
+    const backendUrl = `${BACKEND_ORIGIN}/${pathStr}${url.search}`;
 
     console.log('[Proxy] →', request.method, backendUrl);
 
@@ -87,7 +98,7 @@ async function handler(
 
       // Đổi domain backend → domain frontend trong redirect URL
       const redirectTarget = location
-        .replace(BACKEND_URL, '')           // bỏ backend URL nếu có
+        .replace(BACKEND_ORIGIN, '')        // bỏ backend URL nếu có
         || '/';
 
       const response = NextResponse.redirect(

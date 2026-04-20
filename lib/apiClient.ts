@@ -1,10 +1,9 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'api/proxy/api/v1'; // ← trỏ đến route proxy nội bộ
+  process.env.NEXT_PUBLIC_API_URL || '/api/proxy/api/v1'; // ← trỏ đến route proxy nội bộ
 
-const BACKEND_AUTH_BASE_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8686/api/v1';
+const REFRESH_TOKEN_URL = `${API_BASE_URL.replace(/\/+$/g, '')}/auth/refresh-token`;
 
 /**
  * Axios instance với withCredentials: true
@@ -55,7 +54,7 @@ apiClient.interceptors.response.use(
       try {
         // POST đến /auth/refresh-token − browser tự gửi refreshToken cookie (path=/api/v1/auth)
         await axios.post(
-          `${BACKEND_AUTH_BASE_URL}/auth/refresh-token`,
+          REFRESH_TOKEN_URL,
           {},
           { withCredentials: true },
         );

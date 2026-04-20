@@ -99,7 +99,6 @@ export async function getCurrentUser(): Promise<UserResponse> {
  * và redirect về frontend trang chủ.
  */
 export function loginWithGoogle(): void {
-  const backendUrl =
-    process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8686/api/v1';
-  window.location.href = `${backendUrl}/auth/google/authorize`;
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || '/api/proxy/api/v1';
+  window.location.href = `${apiBaseUrl}/auth/google/authorize`;
 }
