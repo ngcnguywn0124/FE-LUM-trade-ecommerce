@@ -37,6 +37,10 @@ const MESSAGES: Record<PostStatus | 'all', { title: string; desc: string }> = {
   admin_hidden: {
     title: 'Không có tin nào bị vi phạm',
     desc: 'Nếu tin của bạn vi phạm quy định, Admin sẽ ẩn tin và thông báo lý do tại đây.',
+  },
+  deleted: {
+    title: 'Không có tin nào đã xóa',
+    desc: 'Các tin bạn đã xóa sẽ xuất hiện ở đây để bạn tiện theo dõi lịch sử đăng tin.',
   }
 };
 
