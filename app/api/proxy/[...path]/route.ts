@@ -19,6 +19,14 @@ function sanitizeSetCookie(raw: string, isFrontendHttps: boolean) {
     .replace(/Domain=[^;]+;?\s*/gi, '')
     .replace(/SameSite=None/gi, 'SameSite=Lax');
 
+  // Rewrite cookie path để browser gửi cookie đúng qua proxy route.
+  // Backend set Path=/api/v1/auth → browser gửi request tới /api/proxy/api/v1/auth
+  // Nếu không rewrite, browser sẽ KHÔNG gửi cookie (path mismatch) → 401.
+  sanitized = sanitized.replace(
+    /Path=\/api\/v1/gi,
+    'Path=/api/proxy/api/v1'
+  );
+
   // Nếu frontend đang chạy HTTP (ví dụ localhost), cookie có `Secure`
   // sẽ không được browser lưu. Ta bỏ `Secure` ở phía proxy để dev hoạt động.
   if (!isFrontendHttps) {
