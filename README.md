@@ -1,6 +1,6 @@
 # Đồ Án Học Phần — Ngôn Ngữ Phát Triển Ứng Dụng Mới
 
-## Đề tài: Website mua bán đồ cũ sinh viên [Lum.vn](https://lum.vn)
+## Đề tài: Website mua bán đồ cũ sinh viên [lumvn.onrender.com](https://lumvn.onrender.com)
 
 ---
 
